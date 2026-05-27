@@ -13,8 +13,9 @@ class MBBZoneEfficiencyVisualizer:
         print(f"Loading {season} MBB season data... (This might take a minute)")
         self.season = season
 
-        # Add the season year directly to the root output folder
-        self.output_folder = f"{output_folder}_{self.season}"
+        # Use /tmp on cloud (read-only filesystem), local path otherwise
+        base = "/tmp" if not os.access(".", os.W_OK) else "."
+        self.output_folder = os.path.join(base, f"{output_folder}_{self.season}")
 
         # Switched to mbb endpoints
         self.pbp_df = mbb.load_mbb_pbp(seasons=[self.season], return_as_pandas=True)
