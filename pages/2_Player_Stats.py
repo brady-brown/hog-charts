@@ -121,7 +121,7 @@ with tab1:
     d.index += 1
 
     st.caption(f"{len(d)} players shown")
-    st.dataframe(d, use_container_width=True)
+    st.dataframe(d, width='stretch')
 
 # ── RAPM ───────────────────────────────────────────────────────────────────────
 with tab2:
@@ -141,7 +141,7 @@ with tab2:
     st.caption(f"{len(d)} players shown")
     st.dataframe(
         d,
-        use_container_width=True,
+        width='stretch',
         column_config={
             "RAPM": st.column_config.NumberColumn(format="%.2f"),
             "O-RAPM": st.column_config.NumberColumn(format="%.2f"),
@@ -165,4 +165,4 @@ with tab3:
     d.index += 1
 
     st.caption(f"{len(d)} players shown")
-    st.dataframe(d, use_container_width=True)
+    st.dataframe(d, width='stretch')

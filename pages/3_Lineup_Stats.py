@@ -86,4 +86,4 @@ display = display.reset_index(drop=True)
 display.index += 1
 
 st.caption(f"{len(display)} lineups shown")
-st.dataframe(display, use_container_width=True)
+st.dataframe(display, width='stretch')
