@@ -120,9 +120,13 @@ class MBBZoneEfficiencyVisualizer:
 
     def _get_shots(self, team_id, game_id=None):
         """Helper to filter shot data. If game_id is None, returns full season."""
-        shots = self.pbp_df[
-            (self.pbp_df["team_id"] == team_id) & (self.pbp_df["shooting_play"] == True)
-        ].copy()
+        # pbp_df may already be pre-filtered to shooting plays (parquet path)
+        if "shooting_play" in self.pbp_df.columns:
+            shots = self.pbp_df[
+                (self.pbp_df["team_id"] == team_id) & (self.pbp_df["shooting_play"] == True)
+            ].copy()
+        else:
+            shots = self.pbp_df[self.pbp_df["team_id"] == team_id].copy()
         if game_id:
             shots = shots[shots["game_id"] == game_id]
 
