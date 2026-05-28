@@ -1,4 +1,3 @@
-import sportsdataverse.mbb as mbb
 import pandas as pd
 import matplotlib.pyplot as plt
 from mplbasketball import Court
@@ -37,6 +36,7 @@ class MBBZoneEfficiencyVisualizer:
             del raw
         else:
             # ── Slow path: fetch from sportsdataverse (local dev only) ────────
+            import sportsdataverse.mbb as mbb
             raw_box = mbb.load_mbb_player_boxscore(seasons=[self.season], return_as_pandas=True)
             box_cols = ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
             self.box_df = raw_box[[c for c in box_cols if c in raw_box.columns]].copy()

@@ -4,4 +4,4 @@ numpy
 matplotlib
 scipy
 mplbasketball
-sportsdataverse
+pyarrow
