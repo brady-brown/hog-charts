@@ -8,19 +8,30 @@ from scipy.stats import gaussian_kde
 
 
 class MBBZoneEfficiencyVisualizer:
-    def __init__(self, season=2026, output_folder="charts/mbb_zone_efficiency"):
-        """Initializes the visualizer by loading MBB season data once."""
-        print(f"Loading {season} MBB season data... (This might take a minute)")
+    def __init__(self, season=2026, output_folder="charts/mbb_zone_efficiency", team_filter=None):
+        """Load shot data for one team only (team_filter) to keep memory low."""
+        print(f"Loading {season} MBB shot data{f' for {team_filter}' if team_filter else ''}...")
         self.season = season
 
-        # Use /tmp on cloud (read-only filesystem), local path otherwise
         base = "/tmp" if not os.access(".", os.W_OK) else "."
         self.output_folder = os.path.join(base, f"{output_folder}_{self.season}")
 
-        # Load full PBP then immediately slim it down to save memory
+        # ── Boxscores (small — keep all teams for team/player lookups) ────────
+        raw_box = mbb.load_mbb_player_boxscore(seasons=[self.season], return_as_pandas=True)
+        box_cols = ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
+        self.box_df = raw_box[[c for c in box_cols if c in raw_box.columns]].copy()
+        del raw_box
+
+        self.player_map = (
+            self.box_df[["athlete_id", "athlete_display_name"]]
+            .drop_duplicates(subset=["athlete_id"])
+            .copy()
+        )
+        self.player_map["athlete_id"] = self.player_map["athlete_id"].astype(float)
+
+        # ── PBP: load full dataset, then immediately filter + free ────────────
         raw_pbp = mbb.load_mbb_pbp(seasons=[self.season], return_as_pandas=True)
 
-        # Pull out game metadata before filtering to shots-only
         self._date_col = "game_date" if "game_date" in raw_pbp.columns else "date"
         game_cols = ["game_id", "home_team_id", "away_team_id", self._date_col]
         self.game_index = (
@@ -29,29 +40,26 @@ class MBBZoneEfficiencyVisualizer:
             .copy()
         )
 
-        # Keep only shot rows and only the columns we actually use
         shot_cols = ["game_id", "team_id", "athlete_id_1", "coordinate_x",
                      "coordinate_y", "scoring_play", "type_text", "text", "shooting_play"]
         available = [c for c in shot_cols if c in raw_pbp.columns]
-        self.pbp_df = raw_pbp.loc[raw_pbp["shooting_play"] == True, available].copy()
-        del raw_pbp
+        shots_mask = raw_pbp["shooting_play"] == True
 
-        # Load boxscores and keep only what's needed
-        raw_box = mbb.load_mbb_player_boxscore(seasons=[self.season], return_as_pandas=True)
-        box_cols = ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
-        self.box_df = raw_box[[c for c in box_cols if c in raw_box.columns]].copy()
-        del raw_box
+        # Filter to one team if requested
+        if team_filter is not None:
+            team_box = self.box_df[
+                self.box_df["team_display_name"].str.contains(team_filter, case=False, na=False)
+            ]
+            if not team_box.empty:
+                team_id = team_box.iloc[0]["team_id"]
+                shots_mask = shots_mask & (raw_pbp["team_id"] == team_id)
+
+        self.pbp_df = raw_pbp.loc[shots_mask, available].copy()
+        del raw_pbp
 
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
 
-        # Create a unified player map for the whole season to merge onto pbp data
-        self.player_map = (
-            self.box_df[["athlete_id", "athlete_display_name"]]
-            .drop_duplicates(subset=["athlete_id"])
-            .copy()
-        )
-        self.player_map["athlete_id"] = self.player_map["athlete_id"].astype(float)
         print("Data loaded successfully!\n")
 
     def _get_team_id(self, team_name):
