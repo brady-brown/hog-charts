@@ -31,8 +31,9 @@ draft_guide.db
 # Pre-generated chart cache (generated at runtime)
 charts/
 
-# Data build script (local dev only)
+# Data build scripts (local dev only)
 build_shots_data.py
+build_conf_stats.py
 
 # Streamlit secrets
 .streamlit/secrets.toml
