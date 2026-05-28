@@ -17,11 +17,30 @@ class MBBZoneEfficiencyVisualizer:
         base = "/tmp" if not os.access(".", os.W_OK) else "."
         self.output_folder = os.path.join(base, f"{output_folder}_{self.season}")
 
-        # Switched to mbb endpoints
-        self.pbp_df = mbb.load_mbb_pbp(seasons=[self.season], return_as_pandas=True)
-        self.box_df = mbb.load_mbb_player_boxscore(
-            seasons=[self.season], return_as_pandas=True
+        # Load full PBP then immediately slim it down to save memory
+        raw_pbp = mbb.load_mbb_pbp(seasons=[self.season], return_as_pandas=True)
+
+        # Pull out game metadata before filtering to shots-only
+        self._date_col = "game_date" if "game_date" in raw_pbp.columns else "date"
+        game_cols = ["game_id", "home_team_id", "away_team_id", self._date_col]
+        self.game_index = (
+            raw_pbp[[c for c in game_cols if c in raw_pbp.columns]]
+            .drop_duplicates(subset=["game_id"])
+            .copy()
         )
+
+        # Keep only shot rows and only the columns we actually use
+        shot_cols = ["game_id", "team_id", "athlete_id_1", "coordinate_x",
+                     "coordinate_y", "scoring_play", "type_text", "text", "shooting_play"]
+        available = [c for c in shot_cols if c in raw_pbp.columns]
+        self.pbp_df = raw_pbp.loc[raw_pbp["shooting_play"] == True, available].copy()
+        del raw_pbp
+
+        # Load boxscores and keep only what's needed
+        raw_box = mbb.load_mbb_player_boxscore(seasons=[self.season], return_as_pandas=True)
+        box_cols = ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
+        self.box_df = raw_box[[c for c in box_cols if c in raw_box.columns]].copy()
+        del raw_box
 
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
@@ -51,11 +70,9 @@ class MBBZoneEfficiencyVisualizer:
         team_id, team_full = self._get_team_id(team_name)
         opp_id, opp_full = self._get_team_id(opponent_name)
 
-        games = self.pbp_df.drop_duplicates(subset=["game_id"])
-
-        matchups = games[
-            ((games["home_team_id"] == team_id) & (games["away_team_id"] == opp_id))
-            | ((games["away_team_id"] == team_id) & (games["home_team_id"] == opp_id))
+        matchups = self.game_index[
+            ((self.game_index["home_team_id"] == team_id) & (self.game_index["away_team_id"] == opp_id))
+            | ((self.game_index["away_team_id"] == team_id) & (self.game_index["home_team_id"] == opp_id))
         ]
 
         if matchups.empty:
@@ -63,21 +80,18 @@ class MBBZoneEfficiencyVisualizer:
                 f"❌ Error: No games found between {team_full} and {opp_full} in this dataset."
             )
 
-        date_col = "game_date" if "game_date" in matchups.columns else "date"
         specific_game = matchups[
-            matchups[date_col].astype(str).str.contains(date, na=False)
+            matchups[self._date_col].astype(str).str.contains(date, na=False)
         ]
 
         if specific_game.empty:
-            available_dates = matchups[date_col].astype(str).str[:10].unique()
+            available_dates = matchups[self._date_col].astype(str).str[:10].unique()
             raise ValueError(
                 f"❌ Error: No game found on {date}. {team_full} and {opp_full} played on: {', '.join(available_dates)}"
             )
 
         game_row = specific_game.iloc[0]
-
         is_home = game_row["home_team_id"] == team_id
-
         return game_row["game_id"], is_home
 
     def _get_shots(self, team_id, game_id=None):
