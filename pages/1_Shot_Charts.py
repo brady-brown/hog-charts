@@ -11,13 +11,18 @@ st.title("🏀 Shot Charts")
 
 BASE = os.path.dirname(os.path.dirname(__file__))
 
-# ── Team/player lists from committed CSV — zero API calls on page load ────────
+# ── Team/player lists and game schedule from committed files ──────────────────
 @st.cache_data
 def get_roster_map():
     df = pd.read_csv(os.path.join(BASE, "player_stats.csv"))
     return df[["team_display_name", "athlete_display_name"]].dropna()
 
-roster = get_roster_map()
+@st.cache_data
+def get_game_schedule():
+    return pd.read_parquet(os.path.join(BASE, "game_schedule.parquet"))
+
+roster   = get_roster_map()
+schedule = get_game_schedule()
 all_teams = sorted(roster["team_display_name"].unique())
 
 # ── Sidebar controls ──────────────────────────────────────────────────────────
@@ -56,8 +61,17 @@ else:
     selected_player = None
 
 if is_game:
-    opponent  = st.sidebar.selectbox("Opponent", [t for t in all_teams if t != selected_team])
-    game_date = st.sidebar.text_input("Game Date (YYYY-MM-DD)", placeholder="e.g. 2026-01-20")
+    team_games = schedule[schedule["team"] == selected_team].sort_values("date")
+    game_labels = team_games["label"].tolist()
+    if game_labels:
+        selected_label = st.sidebar.selectbox("Game", game_labels)
+        selected_row   = team_games[team_games["label"] == selected_label].iloc[0]
+        opponent       = selected_row["opponent"]
+        game_date      = selected_row["date"]
+    else:
+        st.sidebar.warning("No games found for this team.")
+        opponent  = None
+        game_date = None
 else:
     opponent  = None
     game_date = None
@@ -99,9 +113,6 @@ if st.sidebar.button("Generate Chart", type="primary"):
                 fig = viz.plot_team_zone_leaders(selected_team, return_fig=True)
 
         elif chart_type == "Player — Single Game":
-            if not game_date:
-                st.error("Enter a game date.")
-                st.stop()
             header = f"{selected_player} vs {opponent} ({game_date})"
             with st.spinner("Generating chart..."):
                 if style == "Zone Efficiency":
@@ -110,9 +121,6 @@ if st.sidebar.button("Generate Chart", type="primary"):
                     fig = viz.player_game_scatter(selected_player, selected_team, opponent, game_date, return_fig=True)
 
         elif chart_type == "Team — Single Game":
-            if not game_date:
-                st.error("Enter a game date.")
-                st.stop()
             header = f"{selected_team} vs {opponent} ({game_date})"
             with st.spinner("Generating chart..."):
                 if style == "Zone Efficiency":
