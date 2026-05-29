@@ -14,57 +14,31 @@ POS_MAP = {
 }
 REVERSE_POS = {raw: broad for broad, raws in POS_MAP.items() for raw in raws}
 
-COUNTING_FILES = {
-    "Overall":          "player_stats.csv",
-    "Conference Only":  "player_stats_conf.csv",
-}
-RAPM_FILES = {
-    "Overall":          "mbb_rapm_202526.csv",
-    "Conference Only":  "mbb_rapm_202526_conf.csv",
-}
-ONOFF_FILES = {
-    "Overall":          "mbb_onoff_2026_v2.csv",
-    "Conference Only":  "mbb_onoff_2026_conf_v2.csv",
-}
+COUNTING_FILES = {"Overall": "player_stats.csv",         "Conference Only": "player_stats_conf.csv"}
+RAPM_FILES     = {"Overall": "mbb_rapm_202526.csv",      "Conference Only": "mbb_rapm_202526_conf.csv"}
+ONOFF_FILES    = {"Overall": "mbb_onoff_2026_v2.csv",    "Conference Only": "mbb_onoff_2026_conf_v2.csv"}
 
 
 @st.cache_data
 def load_conf_lookup():
     df = pd.read_csv(os.path.join(BASE, "player_stats.csv"))
-    return (
-        df[["team_display_name", "conf."]]
-        .dropna()
-        .drop_duplicates(subset=["team_display_name"])
-        .rename(columns={"team_display_name": "Team", "conf.": "Conf"})
-    )
+    return (df[["team_display_name", "conf."]].dropna()
+            .drop_duplicates("team_display_name")
+            .rename(columns={"team_display_name": "Team", "conf.": "Conf"}))
 
 
 @st.cache_data
 def load_counting(scope):
     df = pd.read_csv(os.path.join(BASE, COUNTING_FILES[scope]))
     keep = {
-        "athlete_display_name": "Player",
-        "team_display_name":    "Team",
-        "conf.":                "Conf",
-        "athlete_position_name": "_RawPos",
-        "games_played":         "GP",
-        "minute_avg":           "MPG",
-        "points_avg":           "PPG",
-        "reb_avg":              "RPG",
-        "ast_avg":              "APG",
-        "steal_avg":            "SPG",
-        "blocks_avg":           "BPG",
-        "to_avg":               "TOV",
-        "fg_pct":               "FG%",
-        "efg_pct":              "eFG%",
-        "3pt_pct":              "3P%",
-        "ft_pct":               "FT%",
-        "3ptm_avg":             "3PM",
-        "3pta_avg":             "3PA",
-        "fgm_avg":              "FGM",
-        "fga_avg":              "FGA",
-        "oreb_avg":             "OREB",
-        "dreb_avg":             "DREB",
+        "athlete_display_name": "Player", "team_display_name": "Team",
+        "conf.": "Conf", "athlete_position_name": "_RawPos",
+        "games_played": "GP", "minute_avg": "MPG",
+        "points_avg": "PPG", "reb_avg": "RPG", "ast_avg": "APG",
+        "steal_avg": "SPG", "blocks_avg": "BPG", "to_avg": "TOV",
+        "fg_pct": "FG%", "efg_pct": "eFG%", "3pt_pct": "3P%", "ft_pct": "FT%",
+        "3ptm_avg": "3PM", "3pta_avg": "3PA", "fgm_avg": "FGM", "fga_avg": "FGA",
+        "oreb_avg": "OREB", "dreb_avg": "DREB",
     }
     df = df.rename(columns=keep)
     df["Pos"] = df["_RawPos"].map(REVERSE_POS).fillna(df["_RawPos"])
@@ -73,25 +47,18 @@ def load_counting(scope):
             "3PM", "3PA", "FGM", "FGA", "OREB", "DREB"]
     df = df[[c for c in cols if c in df.columns]]
     for col in ["FG%", "eFG%", "3P%", "FT%"]:
-        if col in df.columns:
-            df[col] = (df[col] * 100).round(1)
+        if col in df.columns: df[col] = (df[col] * 100).round(1)
     for col in ["MPG","PPG","RPG","APG","SPG","BPG","TOV","3PM","3PA","FGM","FGA","OREB","DREB"]:
-        if col in df.columns:
-            df[col] = df[col].round(1)
+        if col in df.columns: df[col] = df[col].round(1)
     return df
 
 
 @st.cache_data
 def load_rapm(scope):
     df = pd.read_csv(os.path.join(BASE, RAPM_FILES[scope]))
-    df = df.rename(columns={
-        "athlete_display_name": "Player",
-        "team_display_name":    "Team",
-        "o_rapm":               "O-RAPM",
-        "d_rapm":               "D-RAPM",
-        "rapm":                 "RAPM",
-        "total_poss":           "Possessions",
-    })
+    df = df.rename(columns={"athlete_display_name": "Player", "team_display_name": "Team",
+                             "o_rapm": "O-RAPM", "d_rapm": "D-RAPM",
+                             "rapm": "RAPM", "total_poss": "Possessions"})
     df["Possessions"] = df["Possessions"].round(0).astype(int)
     df = df.merge(load_conf_lookup(), on="Team", how="left")
     return df[["Player", "Team", "Conf", "RAPM", "O-RAPM", "D-RAPM", "Possessions"]]
@@ -100,20 +67,11 @@ def load_rapm(scope):
 @st.cache_data
 def load_onoff(scope):
     df = pd.read_csv(os.path.join(BASE, ONOFF_FILES[scope]))
-    cols = {
-        "athlete_display_name": "Player",
-        "team_display_name":    "Team",
-        "poss_off_on":          "Poss On",
-        "nrtg_on":              "NetRtg On",
-        "ortg_on":              "ORtg On",
-        "drtg_on":              "DRtg On",
-        "nrtg_off":             "NetRtg Off",
-        "ortg_off":             "ORtg Off",
-        "drtg_off":             "DRtg Off",
-        "on_off":               "On-Off",
-        "efg_pct_on":           "eFG% On",
-        "3p_pct_on":            "3P% On",
-    }
+    cols = {"athlete_display_name": "Player", "team_display_name": "Team",
+            "poss_off_on": "Poss On", "nrtg_on": "NetRtg On",
+            "ortg_on": "ORtg On", "drtg_on": "DRtg On",
+            "nrtg_off": "NetRtg Off", "ortg_off": "ORtg Off", "drtg_off": "DRtg Off",
+            "on_off": "On-Off", "efg_pct_on": "eFG% On", "3p_pct_on": "3P% On"}
     df = df.rename(columns=cols)[list(cols.values())]
     for c in ["NetRtg On","ORtg On","DRtg On","NetRtg Off","ORtg Off","DRtg Off","On-Off"]:
         df[c] = df[c].round(1)
@@ -138,25 +96,57 @@ tab1, tab2, tab3 = st.tabs(["Counting Stats", "RAPM", "On/Off Splits"])
 # ── Counting Stats ──────────────────────────────────────────────────────────────
 with tab1:
     all_teams_c = sorted(counting_df["Team"].dropna().unique())
-    col1, col2, col3 = st.columns(3)
+
+    # Row 1 — identity filters
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        team_c = st.selectbox("Team", ["All Teams"] + all_teams_c, key="cnt_team")
+        search = st.text_input("Player Search", placeholder="e.g. Acuff")
     with col2:
-        conf_c = st.selectbox("Conference", ["All"] + all_confs, key="cnt_conf")
+        team_c = st.selectbox("Team", ["All Teams"] + all_teams_c, key="cnt_team")
     with col3:
+        conf_c = st.selectbox("Conference", ["All"] + all_confs, key="cnt_conf")
+    with col4:
         pos_c = st.selectbox("Position", ["All", "Guard", "Forward", "Center"], key="cnt_pos")
 
-    col4, col5 = st.columns(2)
-    with col4:
-        min_gp = st.number_input("Min Games Played", min_value=0, value=10, step=1, key="cnt_gp")
+    # Row 2 — volume minimums
+    col5, col6, col7, col8 = st.columns(4)
     with col5:
-        sort_c = st.selectbox("Sort By", ["PPG","RPG","APG","SPG","BPG","FG%","eFG%","3P%","3PM","MPG"], key="cnt_sort")
+        min_gp  = st.number_input("Min GP",  min_value=0, value=10,  step=1,   key="cnt_gp")
+    with col6:
+        min_mpg = st.number_input("Min MPG", min_value=0.0, value=0.0, step=1.0, key="cnt_mpg")
+    with col7:
+        min_ppg = st.number_input("Min PPG", min_value=0.0, value=0.0, step=1.0, key="cnt_ppg")
+    with col8:
+        min_rpg = st.number_input("Min RPG", min_value=0.0, value=0.0, step=1.0, key="cnt_rpg")
+
+    # Row 3 — per-game stat minimums
+    col9, col10, col11, col12 = st.columns(4)
+    with col9:
+        min_apg = st.number_input("Min APG", min_value=0.0, value=0.0, step=0.5, key="cnt_apg")
+    with col10:
+        min_3pm = st.number_input("Min 3PM", min_value=0.0, value=0.0, step=0.5, key="cnt_3pm")
+    with col11:
+        min_fg  = st.number_input("Min FG%", min_value=0.0, value=0.0, step=1.0, key="cnt_fg", help="Minimum field goal %")
+    with col12:
+        sort_c  = st.selectbox("Sort By",
+                               ["PPG","RPG","APG","SPG","BPG","FG%","eFG%","3P%","3PM","MPG","TOV"],
+                               key="cnt_sort")
 
     d = counting_df.copy()
+    if search:
+        d = d[d["Player"].str.contains(search, case=False, na=False)]
     if team_c != "All Teams": d = d[d["Team"] == team_c]
     if conf_c != "All":       d = d[d["Conf"] == conf_c]
-    if pos_c != "All":        d = d[d["Pos"] == pos_c]
-    d = d[d["GP"] >= min_gp].sort_values(sort_c, ascending=False).reset_index(drop=True)
+    if pos_c  != "All":       d = d[d["Pos"]  == pos_c]
+    d = d[d["GP"]  >= min_gp]
+    if min_mpg > 0: d = d[d["MPG"] >= min_mpg]
+    if min_ppg > 0: d = d[d["PPG"] >= min_ppg]
+    if min_rpg > 0: d = d[d["RPG"] >= min_rpg]
+    if min_apg > 0: d = d[d["APG"] >= min_apg]
+    if min_3pm > 0: d = d[d["3PM"] >= min_3pm]
+    if min_fg  > 0: d = d[d["FG%"] >= min_fg]
+
+    d = d.sort_values(sort_c, ascending=False).reset_index(drop=True)
     d.index += 1
 
     st.caption(f"{len(d)} players shown")

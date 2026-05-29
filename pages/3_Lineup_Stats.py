@@ -70,15 +70,15 @@ with col3:
 
 col_a, col_b = st.columns(2)
 with col_a:
-    min_mins = st.number_input("Min Minutes", min_value=0.0, value=10.0, step=5.0)
+    min_poss = st.number_input("Min Possessions", min_value=0.0, value=50.0, step=25.0)
 with col_b:
-    sort_col = st.selectbox("Sort By", ["NetRtg", "ORtg", "DRtg", "Mins"], index=0)
+    sort_col = st.selectbox("Sort By", ["NetRtg", "ORtg", "DRtg", "Poss", "Mins"], index=0)
 
 display = df.copy()
 if team_filter != "All Teams" and "Team" in display.columns:
     display = display[display["Team"] == team_filter]
-if "Mins" in display.columns:
-    display = display[display["Mins"] >= min_mins]
+if "Poss" in display.columns:
+    display = display[display["Poss"] >= min_poss]
 if sort_col in display.columns:
     display = display.sort_values(sort_col, ascending=(sort_col == "DRtg"))
 
