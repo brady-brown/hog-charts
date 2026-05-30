@@ -169,7 +169,11 @@ with tab2:
     d = d[d["Possessions"] >= min_poss_r].sort_values("RAPM", ascending=False).reset_index(drop=True)
     d.index += 1
 
-    st.caption(f"{len(d)} players shown")
+    st.caption(
+        f"{len(d)} players shown  ·  "
+        "RAPM = O-RAPM + D-RAPM (points per 100 possessions above average, ridge-regression estimate).  "
+        "Higher D-RAPM = better defender."
+    )
     st.dataframe(d, width='stretch', column_config={
         "RAPM":   st.column_config.NumberColumn(format="%.2f"),
         "O-RAPM": st.column_config.NumberColumn(format="%.2f"),
