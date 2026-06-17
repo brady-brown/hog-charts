@@ -86,4 +86,24 @@ display = display.reset_index(drop=True)
 display.index += 1
 
 st.caption(f"{len(display)} lineups shown")
-st.dataframe(display, width='stretch')
+LINEUP_HELP = {
+    "Combo": "The players in the lineup",
+    "Mins": "Minutes this lineup played together",
+    "Poss": "Possessions this lineup played together",
+    "NetRtg": "Net rating: points scored minus allowed per 100 possessions for this lineup",
+    "ORtg": "Offensive rating: points scored per 100 possessions",
+    "DRtg": "Defensive rating: points allowed per 100 possessions. Lower is better.",
+    "FGM/100": "Field goals made per 100 possessions",
+    "FGA/100": "Field goals attempted per 100 possessions",
+    "3PM/100": "Three-pointers made per 100 possessions",
+    "3PA/100": "Three-pointers attempted per 100 possessions",
+    "AST/100": "Assists per 100 possessions",
+    "TOV/100": "Turnovers per 100 possessions",
+    "ORB/100": "Offensive rebounds per 100 possessions",
+    "DRB/100": "Defensive rebounds per 100 possessions",
+    "STL/100": "Steals per 100 possessions",
+    "BLK/100": "Blocks per 100 possessions",
+}
+st.dataframe(display, width='stretch', column_config={
+    c: st.column_config.Column(help=h) for c, h in LINEUP_HELP.items() if c in display.columns
+})

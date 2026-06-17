@@ -189,9 +189,18 @@ with tab2:
         "Higher D-RAPM = better defender."
     )
     st.dataframe(d, width='stretch', column_config={
-        "RAPM":   st.column_config.NumberColumn(format="%.2f"),
-        "O-RAPM": st.column_config.NumberColumn(format="%.2f"),
-        "D-RAPM": st.column_config.NumberColumn(format="%.2f"),
+        "Conf": st.column_config.Column(help="Conference"),
+        "RAPM": st.column_config.NumberColumn(
+            format="%.2f",
+            help="Regularized Adjusted Plus-Minus: net impact in points per 100 possessions "
+                 "above an average player, adjusted for teammates and opponents"),
+        "O-RAPM": st.column_config.NumberColumn(
+            format="%.2f", help="Offensive RAPM: impact on team offense per 100 possessions"),
+        "D-RAPM": st.column_config.NumberColumn(
+            format="%.2f", help="Defensive RAPM: impact on team defense per 100 possessions. "
+                                "Higher is a better defender."),
+        "Possessions": st.column_config.Column(
+            help="Possessions the player was on the floor, the sample behind the estimate"),
     })
 
 # ── On/Off ──────────────────────────────────────────────────────────────────────
