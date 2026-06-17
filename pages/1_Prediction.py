@@ -1,11 +1,11 @@
 import json
 import os
-import pickle
 
 import pandas as pd
 import streamlit as st
 
 import ui
+from model_runtime import RuntimePredictor
 
 st.set_page_config(page_title="Prediction | Hog Charts", page_icon="🔮", layout="wide")
 ui.inject_css()
@@ -16,8 +16,7 @@ ART = os.path.join(BASE, "artifacts")
 
 @st.cache_resource
 def load_predictor():
-    with open(os.path.join(ART, "predictor.pkl"), "rb") as f:
-        return pickle.load(f)
+    return RuntimePredictor(ART)
 
 
 @st.cache_data
@@ -38,9 +37,9 @@ ranks = load_ranks()
 
 # League-average baselines for the projected-score estimate (efficiencies in this
 # rating system are not centered at 100, so anchor to the actual league means).
-LG_DEF = float(pred.current_efficiency["def_eff"].mean())
+LG_DEF = pred.lg_def
 
-teams = sorted(pred.team_lookup.keys())
+teams = pred.team_names()
 
 
 def proj_scores(r):
@@ -120,7 +119,7 @@ ui.render_verdict(r["team1"] if fav_t1 else r["team2"],
                   max(r["team1_win_prob"], r["team2_win_prob"]))
 
 # ------------------------------------------------------------------ context chips
-home_pts = pred.reg.coef_[1] * r["home_court_pts"]
+home_pts = pred.coef[1] * r["home_court_pts"]
 home_team = None if neutral else (r["team1"] if team1_home else r["team2"])
 home_chip = "Neutral floor" if neutral else f"{abs(home_pts):.1f} pts · {home_team.split()[-1]}"
 st.markdown(f"""
@@ -149,10 +148,10 @@ ui.card_close()
 with st.expander("How the model built this spread"):
     tempo_adj = (r["team1_net_eff"] - r["team2_net_eff"]) * r["pace_factor"]
     contrib = {
-        "Efficiency × tempo": pred.reg.coef_[0] * tempo_adj,
-        "Home court": pred.reg.coef_[1] * r["home_court_pts"],
-        "Recent form": pred.reg.coef_[2] * (r["team1_form"] - r["team2_form"]),
-        "Baseline": float(pred.reg.intercept_),
+        "Efficiency × tempo": pred.coef[0] * tempo_adj,
+        "Home court": pred.coef[1] * r["home_court_pts"],
+        "Recent form": pred.coef[2] * (r["team1_form"] - r["team2_form"]),
+        "Baseline": pred.intercept,
     }
     bd = pd.DataFrame(
         [{"Factor": k, f"Points toward {r['team1']}": round(v, 2)} for k, v in contrib.items()]

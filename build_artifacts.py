@@ -13,7 +13,6 @@ reads only these files and never touches the network.
 """
 
 import json
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -61,6 +60,36 @@ def build_net_ratings(pred):
                            'pace': 1, 'home_court': 1, 'form': 1})
 
 
+def build_teams_table(pred):
+    """Per-team inputs the runtime predictor needs (raw, unscaled)."""
+    eff = pred.current_efficiency.reset_index()
+    eff["team"] = eff["team_id"].map(pred.team_id_to_name)
+    eff["pace"] = eff["team_id"].map(lambda t: pred.current_pace.get(t, pred._league_avg_pace))
+    eff["home_adv"] = eff["team_id"].map(lambda t: pred.home_adv.get(t, pred._league_home_adv))
+    eff["form"] = eff["team_id"].map(lambda t: pred.current_form.get(t, 0.0))
+    eff = eff.dropna(subset=["team"])
+    return eff[["team_id", "team", "off_eff", "def_eff", "net_eff", "pace", "home_adv", "form"]]
+
+
+def build_model_json(pred, metrics):
+    """Everything the runtime needs to reproduce predict_game without sklearn."""
+    return {
+        "built_at": pd.Timestamp.now().isoformat(),
+        "season": int(pred.current_season),
+        "calibration_years": CALIBRATION_YEARS,
+        "form_mode": pred.FORM_MODE,
+        "form_games": pred.FORM_GAMES,
+        "league_avg_pace": float(pred._league_avg_pace),
+        "league_home_adv": float(pred._league_home_adv),
+        "coef": [float(c) for c in pred.reg.coef_],            # [tempo_adj, home_court, form_diff]
+        "intercept": float(pred.reg.intercept_),
+        "iso_x": [float(x) for x in pred.calibrator.X_thresholds_],
+        "iso_y": [float(y) for y in pred.calibrator.y_thresholds_],
+        "backtest_year": BACKTEST_YEAR,
+        "backtest": metrics,
+    }
+
+
 def main():
     ART.mkdir(exist_ok=True)
     print("=" * 60)
@@ -79,9 +108,16 @@ def main():
         print(f"   accuracy={m['accuracy']:.4f}  logloss={m['logloss']:.4f}  "
               f"auc={m['auc']:.4f}  spread_mae={m['spread_mae']:.2f}")
 
-    with open(ART / "predictor.pkl", "wb") as f:
-        pickle.dump(pred, f)
-    print(f"\nWrote {ART / 'predictor.pkl'}")
+    # Data-only model artifacts (no pickle): the deployed app reads these with
+    # pure numpy/pandas, so it needs neither sklearn nor sportsdataverse and is
+    # immune to version skew between this machine and the server.
+    teams = build_teams_table(pred)
+    teams.to_parquet(ART / "teams.parquet", index=False)
+    print(f"\nWrote {ART / 'teams.parquet'}  ({len(teams)} teams)")
+
+    with open(ART / "model.json", "w") as f:
+        json.dump(build_model_json(pred, metrics), f, indent=2)
+    print(f"Wrote {ART / 'model.json'}")
 
     ratings = build_net_ratings(pred)
     ratings.to_parquet(ART / "net_ratings.parquet", index=False)

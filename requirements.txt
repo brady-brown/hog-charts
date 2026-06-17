@@ -5,4 +5,3 @@ matplotlib
 scipy
 mplbasketball
 pyarrow
-scikit-learn
