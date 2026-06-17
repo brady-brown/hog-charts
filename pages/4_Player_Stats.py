@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Player Stats | Hog Charts", page_icon="📊", layout="wide")
-st.title("📊 Player Stats — 2025-26 Season")
+st.set_page_config(page_title="Player Stats | Hog Charts", layout="wide")
+st.title("Player Stats — 2025-26 Season")
 
 BASE = os.path.dirname(os.path.dirname(__file__))
 
@@ -150,7 +150,21 @@ with tab1:
     d.index += 1
 
     st.caption(f"{len(d)} players shown")
-    st.dataframe(d, width='stretch')
+    COUNTING_HELP = {
+        "Conf": "Conference", "Pos": "Position",
+        "GP": "Games played", "MPG": "Minutes per game", "PPG": "Points per game",
+        "RPG": "Rebounds per game", "APG": "Assists per game", "SPG": "Steals per game",
+        "BPG": "Blocks per game", "TOV": "Turnovers per game",
+        "FG%": "Field goal percentage", "FT%": "Free throw percentage",
+        "3P%": "Three-point percentage",
+        "eFG%": "Effective field goal percentage, which counts a 3-pointer as 1.5x a 2-pointer",
+        "3PM": "Three-pointers made per game", "3PA": "Three-pointers attempted per game",
+        "FGM": "Field goals made per game", "FGA": "Field goals attempted per game",
+        "OREB": "Offensive rebounds per game", "DREB": "Defensive rebounds per game",
+    }
+    st.dataframe(d, width='stretch', column_config={
+        c: st.column_config.Column(help=h) for c, h in COUNTING_HELP.items() if c in d.columns
+    })
 
 # ── RAPM ────────────────────────────────────────────────────────────────────────
 with tab2:
@@ -198,4 +212,19 @@ with tab3:
     d.index += 1
 
     st.caption(f"{len(d)} players shown")
-    st.dataframe(d, width='stretch')
+    ONOFF_HELP = {
+        "Poss On": "Possessions the player was on the floor",
+        "NetRtg On": "Team net rating per 100 possessions with the player on the floor",
+        "ORtg On": "Team offensive rating with the player on the floor",
+        "DRtg On": "Team defensive rating with the player on the floor",
+        "NetRtg Off": "Team net rating with the player on the bench",
+        "ORtg Off": "Team offensive rating with the player on the bench",
+        "DRtg Off": "Team defensive rating with the player on the bench",
+        "On-Off": "Net rating with the player on minus off. Higher means the team is "
+                  "better with him on the floor.",
+        "eFG% On": "Effective field goal percentage with the player on the floor",
+        "3P% On": "Three-point percentage with the player on the floor",
+    }
+    st.dataframe(d, width='stretch', column_config={
+        c: st.column_config.Column(help=h) for c, h in ONOFF_HELP.items() if c in d.columns
+    })

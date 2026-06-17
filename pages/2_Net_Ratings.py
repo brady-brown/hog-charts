@@ -6,7 +6,7 @@ import streamlit as st
 
 import ui
 
-st.set_page_config(page_title="Net Ratings | Hog Charts", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Net Ratings | Hog Charts", layout="wide")
 ui.inject_css()
 
 BASE = os.path.dirname(os.path.dirname(__file__))
@@ -42,11 +42,11 @@ conf_map = load_conf_lookup()
 df["conf"] = df["team"].map(conf_map).fillna("—")
 
 # ------------------------------------------------------------------ header
-st.markdown("## 📈 Net Ratings")
+st.markdown("## Net Ratings")
 st.markdown(
     f'<div style="color:{ui.MUTED};margin-top:-6px;margin-bottom:8px">'
-    f"Opponent-adjusted efficiency for every D-I team — the same ratings that power the predictor. "
-    f"<b>Net</b> = points scored minus allowed per 100 possessions, adjusted for strength of schedule. "
+    f"Opponent-adjusted efficiency for every Division I team. Net rating is points scored "
+    f"minus points allowed per 100 possessions, adjusted for opponent strength. "
     f"Click any column to sort.</div>",
     unsafe_allow_html=True,
 )
@@ -69,14 +69,17 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------ filters
-f1, f2 = st.columns([3, 2])
+f1, f2, f3 = st.columns([3, 2, 2])
 with f1:
     search = st.text_input("Search team", placeholder="e.g. Arkansas")
 with f2:
     confs = sorted(c for c in df["conf"].unique() if c != "—")
     sel_conf = st.multiselect("Conference", confs, placeholder="All conferences")
+with f3:
+    gmax = int(df["games"].max())
+    min_games = st.slider("Minimum games played", min_value=5, max_value=gmax, value=15, step=1)
 
-view = df
+view = df[df["games"] >= min_games]
 if search:
     view = view[view["team"].str.contains(search, case=False, na=False)]
 if sel_conf:
@@ -85,29 +88,45 @@ if sel_conf:
 st.caption(f"{len(view)} of {len(df)} teams")
 
 # ------------------------------------------------------------------ table
-cols = ["rank", "logo", "team", "conf", "record", "net_eff", "off_eff", "def_eff", "pace", "home_court", "form"]
+cols = ["rank", "logo", "team", "conf", "record", "net_eff", "off_eff", "def_eff",
+        "sos", "pace", "home_court", "form"]
 st.dataframe(
     view[cols],
     hide_index=True,
     use_container_width=True,
     height=620,
     column_config={
-        "rank": st.column_config.NumberColumn("Rk", width="small"),
+        "rank": st.column_config.NumberColumn("Rk", width="small",
+                                              help="National rank by net rating"),
         "logo": st.column_config.ImageColumn(" ", width="small"),
         "team": st.column_config.TextColumn("Team", width="medium"),
-        "conf": st.column_config.TextColumn("Conf", width="small"),
-        "record": st.column_config.TextColumn("Record", width="small"),
-        "net_eff": st.column_config.NumberColumn("Net", format="%+.1f",
-                                                 help="Adjusted points per 100 above/below average"),
-        "off_eff": st.column_config.NumberColumn("Off", format="%.1f",
-                                                 help="Adjusted offensive efficiency (higher better)"),
-        "def_eff": st.column_config.NumberColumn("Def", format="%.1f",
-                                                 help="Adjusted defensive efficiency (lower better)"),
-        "pace": st.column_config.NumberColumn("Pace", format="%.1f", help="Possessions per game"),
-        "home_court": st.column_config.NumberColumn("Home", format="%+.1f",
-                                                    help="Estimated home-court advantage in points"),
-        "form": st.column_config.NumberColumn("Form", format="%+.1f",
-                                              help="Opponent-adjusted margin over last 5 games"),
+        "conf": st.column_config.TextColumn("Conf", width="small", help="Conference"),
+        "record": st.column_config.TextColumn("Record", width="small", help="Wins-losses this season"),
+        "net_eff": st.column_config.NumberColumn(
+            "Net", format="%+.1f",
+            help="Net rating: points scored minus points allowed per 100 possessions, "
+                 "adjusted for opponent strength. Higher is better."),
+        "off_eff": st.column_config.NumberColumn(
+            "Off", format="%.1f",
+            help="Offensive rating: points scored per 100 possessions, adjusted for the "
+                 "defenses faced. Higher is better."),
+        "def_eff": st.column_config.NumberColumn(
+            "Def", format="%.1f",
+            help="Defensive rating: points allowed per 100 possessions, adjusted for the "
+                 "offenses faced. Lower is better."),
+        "sos": st.column_config.NumberColumn(
+            "SOS", format="%+.1f",
+            help="Strength of schedule: the average net rating of the opponents this team "
+                 "played. Higher means a tougher schedule."),
+        "pace": st.column_config.NumberColumn(
+            "Pace", format="%.1f", help="Average possessions per game. Higher means a faster team."),
+        "home_court": st.column_config.NumberColumn(
+            "Home", format="%+.1f",
+            help="Points this team's home court is worth, the edge built into a home prediction."),
+        "form": st.column_config.NumberColumn(
+            "Form", format="%+.1f",
+            help="Recent form: average margin over the last 5 games versus what the ratings "
+                 "expected. Positive means playing above their rating lately."),
     },
 )
 

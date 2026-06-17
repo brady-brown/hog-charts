@@ -6,8 +6,8 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from mbb_viz import MBBZoneEfficiencyVisualizer
 
-st.set_page_config(page_title="Shot Charts | Hog Charts", page_icon="🏀", layout="wide")
-st.title("🏀 Shot Charts")
+st.set_page_config(page_title="Shot Charts | Hog Charts", layout="wide")
+st.title("Shot Charts")
 
 BASE = os.path.dirname(os.path.dirname(__file__))
 
@@ -81,8 +81,8 @@ else:
 def load_viz(team_name):
     return MBBZoneEfficiencyVisualizer(season=2026, team_filter=team_name)
 
-st.info("Pick your options above, then click **Generate Chart**. "
-        "First load for a team takes ~30 seconds; same team is instant after that.")
+st.info("Set your options in the sidebar on the left, then click **Generate Chart**. "
+        "The first load for a team takes about 30 seconds; the same team is instant after that.")
 
 if st.sidebar.button("Generate Chart", type="primary"):
     try:

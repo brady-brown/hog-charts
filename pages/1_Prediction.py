@@ -7,7 +7,7 @@ import streamlit as st
 import ui
 from model_runtime import RuntimePredictor
 
-st.set_page_config(page_title="Prediction | Hog Charts", page_icon="🔮", layout="wide")
+st.set_page_config(page_title="Prediction | Hog Charts", layout="wide")
 ui.inject_css()
 
 BASE = os.path.dirname(os.path.dirname(__file__))
@@ -61,13 +61,11 @@ def rank_note(team, key):
 
 
 # ------------------------------------------------------------------ header
-st.markdown("## 🔮 Game Predictor")
+st.markdown("## Game Predictor")
 st.markdown(
     f'<div style="color:{ui.MUTED};margin-top:-6px;margin-bottom:14px">'
-    f"Pick two teams and where they play — get a projected score, win probability, "
-    f"and exactly what's driving it. Model calibrated on "
-    f'{min(meta["calibration_years"])}–{max(meta["calibration_years"])}, '
-    f'{meta["backtest"]["accuracy"]*100:.1f}% accurate on the held-out {meta["backtest_year"]} season.'
+    f"Predict a game based off of efficiency, tempo, recent form, and home court. "
+    f'{meta["backtest"]["accuracy"]*100:.1f}% accurate on the {meta["backtest_year"]} season.'
     f"</div>",
     unsafe_allow_html=True,
 )
@@ -92,7 +90,7 @@ if team1 == team2:
     st.stop()
 
 if not go and "predicted" not in st.session_state:
-    st.info("Choose your matchup and hit **Predict game**.")
+    st.info("Pick two teams and a location, then hit **Predict game**.")
     st.stop()
 st.session_state["predicted"] = True
 
@@ -155,7 +153,7 @@ with st.expander("How the model built this spread"):
     }
     bd = pd.DataFrame(
         [{"Factor": k, f"Points toward {r['team1']}": round(v, 2)} for k, v in contrib.items()]
-        + [{"Factor": "→ Predicted margin", f"Points toward {r['team1']}": round(r["team1_spread"], 2)}]
+        + [{"Factor": "Predicted margin", f"Points toward {r['team1']}": round(r["team1_spread"], 2)}]
     )
     st.dataframe(bd, hide_index=True, use_container_width=True)
     st.caption(

@@ -36,6 +36,14 @@ def build_net_ratings(pred):
               .reset_index())
     rec['losses'] = rec['games'] - rec['wins']
 
+    # Strength of schedule: average adjusted net rating of the opponents a team
+    # faced. Higher = tougher slate. (The ratings themselves are already opponent
+    # adjusted; this surfaces the schedule difficulty explicitly.)
+    net_by_id = pred.current_efficiency['net_eff']
+    opp = box[box['opponent_team_id'].isin(net_by_id.index)].copy()
+    opp['opp_net'] = opp['opponent_team_id'].map(net_by_id)
+    sos = opp.groupby('team_id')['opp_net'].mean().rename('sos').reset_index()
+
     eff = pred.current_efficiency.reset_index()  # team_id, off_eff, def_eff, net_eff
     eff['team'] = eff['team_id'].map(pred.team_id_to_name)
     eff['pace'] = eff['team_id'].map(lambda t: pred.current_pace.get(t, np.nan))
@@ -46,6 +54,7 @@ def build_net_ratings(pred):
     eff['form'] = eff['team_id'].map(lambda t: pred.current_form.get(t, 0.0))
 
     df = eff.merge(rec[['team_id', 'wins', 'losses', 'games']], on='team_id', how='left')
+    df = df.merge(sos, on='team_id', how='left')
     df = df[df['games'].fillna(0) >= MIN_GAMES].copy()
     df = df.dropna(subset=['team'])
 
@@ -53,11 +62,13 @@ def build_net_ratings(pred):
     df['rank'] = np.arange(1, len(df) + 1)
     df['off_rank'] = df['off_eff'].rank(ascending=False, method='min').astype(int)
     df['def_rank'] = df['def_eff'].rank(ascending=True, method='min').astype(int)  # lower is better
+    df['sos_rank'] = df['sos'].rank(ascending=False, method='min').astype(int)     # tougher = better rank
 
     cols = ['rank', 'team', 'wins', 'losses', 'net_eff', 'off_eff', 'def_eff',
-            'off_rank', 'def_rank', 'pace', 'home_court', 'form', 'games', 'team_id']
+            'off_rank', 'def_rank', 'sos', 'sos_rank', 'pace', 'home_court', 'form',
+            'games', 'team_id']
     return df[cols].round({'net_eff': 1, 'off_eff': 1, 'def_eff': 1,
-                           'pace': 1, 'home_court': 1, 'form': 1})
+                           'sos': 1, 'pace': 1, 'home_court': 1, 'form': 1})
 
 
 def build_teams_table(pred):

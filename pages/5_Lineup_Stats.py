@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Lineup Stats | Hog Charts", page_icon="📋", layout="wide")
-st.title("📋 Lineup Stats — 2025-26 Season")
+st.set_page_config(page_title="Lineup Stats | Hog Charts", layout="wide")
+st.title("Lineup Stats — 2025-26 Season")
 
 BASE = os.path.dirname(os.path.dirname(__file__))
 
