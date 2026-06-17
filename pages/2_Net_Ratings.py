@@ -88,8 +88,10 @@ if sel_conf:
 st.caption(f"{len(view)} of {len(df)} teams")
 
 # ------------------------------------------------------------------ table
-cols = ["rank", "logo", "team", "conf", "record", "net_eff", "off_eff", "def_eff",
-        "sos", "pace", "home_court", "form"]
+# Only display columns the data actually has, so a schema mismatch (e.g. an
+# artifact built before a column existed) degrades gracefully instead of crashing.
+cols = [c for c in ["rank", "logo", "team", "conf", "record", "net_eff", "off_eff",
+                    "def_eff", "sos", "pace", "home_court", "form"] if c in view.columns]
 st.dataframe(
     view[cols],
     hide_index=True,
