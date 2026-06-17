@@ -5,6 +5,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from mbb_viz import MBBZoneEfficiencyVisualizer
+from shot_charts_plotly import PlotlyShotCharts
 
 st.set_page_config(page_title="Shot Charts | Hog Charts", layout="wide")
 st.title("Shot Charts")
@@ -81,56 +82,57 @@ else:
 def load_viz(team_name):
     return MBBZoneEfficiencyVisualizer(season=2026, team_filter=team_name)
 
+PLOTLY_CONFIG = {
+    "displaylogo": False,
+    "scrollZoom": True,
+    "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
+}
+
 st.info("Set your options in the sidebar on the left, then click **Generate Chart**. "
-        "The first load for a team takes about 30 seconds; the same team is instant after that.")
+        "The first load for a team takes about 30 seconds; the same team is instant after that. "
+        "Hover any shot for the details, and scroll to zoom.")
 
 if st.sidebar.button("Generate Chart", type="primary"):
     try:
         with st.spinner(f"Loading {selected_team} shot data..."):
-            viz = load_viz(selected_team)
+            charts = PlotlyShotCharts(load_viz(selected_team))
 
         fig = None
 
         if chart_type == "Player — Full Season":
-            header = f"{selected_player} — {selected_team} | 2026 Season"
             with st.spinner(f"Generating chart for {selected_player}..."):
                 if style == "Zone Efficiency":
-                    fig = viz.player_season_chart(selected_player, selected_team, return_fig=True)
+                    fig = charts.player_season_chart(selected_player, selected_team)
                 else:
-                    fig = viz.player_season_density(selected_player, selected_team, return_fig=True)
+                    fig = charts.player_season_density(selected_player, selected_team)
 
         elif chart_type == "Team — Full Season":
-            header = f"{selected_team} — 2026 Season"
             with st.spinner(f"Generating chart for {selected_team}..."):
                 if style == "Zone Efficiency":
-                    fig = viz.team_season_chart(selected_team, return_fig=True)
+                    fig = charts.team_season_chart(selected_team)
                 else:
-                    fig = viz.team_season_density(selected_team, return_fig=True)
+                    fig = charts.team_season_density(selected_team)
 
         elif chart_type == "Territory Map":
-            header = f"{selected_team} — Territory Map | Top Scorer per Zone"
             with st.spinner(f"Building territory map for {selected_team}..."):
-                fig = viz.plot_team_zone_leaders(selected_team, return_fig=True)
+                fig = charts.plot_team_zone_leaders(selected_team)
 
         elif chart_type == "Player — Single Game":
-            header = f"{selected_player} vs {opponent} ({game_date})"
             with st.spinner("Generating chart..."):
                 if style == "Zone Efficiency":
-                    fig = viz.player_game_chart(selected_player, selected_team, opponent, game_date, return_fig=True)
+                    fig = charts.player_game_chart(selected_player, selected_team, opponent, game_date)
                 else:
-                    fig = viz.player_game_scatter(selected_player, selected_team, opponent, game_date, return_fig=True)
+                    fig = charts.player_game_scatter(selected_player, selected_team, opponent, game_date)
 
         elif chart_type == "Team — Single Game":
-            header = f"{selected_team} vs {opponent} ({game_date})"
             with st.spinner("Generating chart..."):
                 if style == "Zone Efficiency":
-                    fig = viz.team_game_chart(selected_team, opponent, game_date, return_fig=True)
+                    fig = charts.team_game_chart(selected_team, opponent, game_date)
                 else:
-                    fig = viz.team_game_scatter(selected_team, opponent, game_date, return_fig=True)
+                    fig = charts.team_game_scatter(selected_team, opponent, game_date)
 
-        if fig:
-            st.subheader(header)
-            st.pyplot(fig)
+        if fig is not None:
+            st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
         else:
             st.warning("No shot data found for this selection.")
 
