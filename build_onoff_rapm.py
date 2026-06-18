@@ -69,12 +69,17 @@ def run_pipeline(game_filter="all"):
     print(f"  {pbp['game_id'].nunique()} games, {len(pbp):,} plays")
 
     # ── Prepare PBP ──────────────────────────────────────────────────────────
-    pbp = pbp[[
+    base_cols = [
         "game_id", "sequence_number", "type_text", "text", "team_id",
         "athlete_id_1", "athlete_id_2", "scoring_play", "score_value",
-        "shooting_play", "points_attempted",
-        "home_team_id", "away_team_id",
-    ]].copy()
+        "shooting_play", "home_team_id", "away_team_id",
+    ]
+    has_pts_attempted = "points_attempted" in pbp.columns
+    if has_pts_attempted:
+        base_cols.append("points_attempted")
+    pbp = pbp[[c for c in base_cols if c in pbp.columns]].copy()
+    if not has_pts_attempted:
+        pbp["points_attempted"] = float("nan")
 
     pbp["sequence_number"]  = pd.to_numeric(pbp["sequence_number"],  errors="coerce")
     pbp["score_value"]      = pd.to_numeric(pbp["score_value"],      errors="coerce").fillna(0).astype(int)

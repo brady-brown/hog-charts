@@ -16,7 +16,7 @@ import sys
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-FIRST_SEASON = 2020  # sportsdataverse MBB PBP starts here
+FIRST_SEASON = 2022  # 2022 is the first season with enough prior data to calibrate
 
 
 def current_season():
@@ -55,8 +55,8 @@ def build_season(season):
         ("build_artifacts.py",    True),
         ("build_player_stats.py", True),
         ("build_lineups.py",      True),
-        ("build_onoff_rapm.py",   True),
-        ("build_site.py",         True),  # shots skipped automatically (no parquet)
+        ("build_onoff_rapm.py",   False),  # on/off may fail on older data — non-fatal
+        ("build_site.py",         True),   # shots skipped automatically (no parquet)
     ]
 
     for script, required in steps:
@@ -64,6 +64,8 @@ def build_season(season):
         if not ok and required:
             print(f"  Skipping remaining steps for season {season}.")
             return False
+        elif not ok:
+            print(f"  [WARNING] {script} failed — continuing without on/off data.")
 
     return True
 

@@ -39,12 +39,20 @@ nav {
   z-index: 100;
 }
 .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 900;
   font-size: 1rem;
   color: var(--ink);
   letter-spacing: -.03em;
   text-decoration: none;
   margin-right: 12px;
+}
+.nav-brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 nav a {
   color: var(--muted);
@@ -272,6 +280,13 @@ details[open] summary { border-bottom: 1px solid var(--line); }
 .home-hero {
   text-align: center;
   padding: 48px 24px 36px;
+}
+.home-logo {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.5));
 }
 .home-hero .wordmark {
   font-size: 3.2rem; font-weight: 900; letter-spacing: -.04em; line-height: 1;
