@@ -21,9 +21,14 @@ import sportsdataverse.mbb as mbb
 
 warnings.filterwarnings("ignore")
 
+import os as _os
 from datetime import date as _date
-_today      = _date.today()
-SEASON      = _today.year + 1 if _today.month >= 11 else _today.year
+_override   = _os.environ.get("OVERRIDE_SEASON")
+if _override:
+    SEASON = int(_override)
+else:
+    _today = _date.today()
+    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 SEASON_TYPE = 2
 
 # ── Load data (once) ──────────────────────────────────────────────────────────

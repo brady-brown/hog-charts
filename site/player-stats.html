@@ -159,12 +159,16 @@
 
   <h2>Player Stats</h2>
   <p class="page-sub">
-    Advanced stats for every Division&nbsp;I player — 2026 season.
+    Advanced stats for every Division&nbsp;I player.
     On/Off = net rating differential when on vs. off the court (min 200 poss).
     Click any column to sort.
   </p>
 
   <div class="filters">
+    <div class="form-group narrow">
+      <label for="season-sel">Season</label>
+      <select id="season-sel"></select>
+    </div>
     <div class="form-group">
       <label for="search">Player / team</label>
       <input type="text" id="search" placeholder="e.g. Boozer, Duke">
@@ -295,11 +299,36 @@ let sortCol    = "ppg";
 let sortDir    = "desc";
 let colGroup   = "box";
 let curScope   = "all";
+let SEASON     = null;
 
+function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeScope() { return curScope === "conf" ? PS_CONF : PS_ALL; }
 
 async function init() {
-  const data = await loadJSON("data/player-stats.json");
+  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  const sSel = document.getElementById("season-sel");
+  if (seasons?.length) {
+    seasons.forEach(s => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = seasonLabel(s);
+      sSel.appendChild(o);
+    });
+    SEASON = seasons[0];
+  } else {
+    SEASON = new Date().getFullYear();
+  }
+  sSel.value = SEASON;
+  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
+
+  await reload();
+}
+
+async function reload() {
+  PS_ALL = null; PS_CONF = null; allPlayers = [];
+  curScope = "all";
+  document.getElementById("ps-btn-all").classList.add("active");
+  document.getElementById("ps-btn-conf").classList.remove("active");
+  const data = await loadJSON(`data/${SEASON}/player-stats.json`);
   if (!data?.players) {
     document.getElementById("count-label").textContent =
       "Data not found — run build_site.py first.";
@@ -345,7 +374,7 @@ async function setScope(scope) {
 
   if (scope === "conf" && !PS_CONF) {
     document.getElementById("count-label").textContent = "Loading conference data…";
-    const data = await loadJSON("data/player-stats-conf.json");
+    const data = await loadJSON(`data/${SEASON}/player-stats-conf.json`);
     if (!data?.players) {
       document.getElementById("count-label").textContent = "Conference data not found.";
       curScope = "all";

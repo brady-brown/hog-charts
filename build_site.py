@@ -17,13 +17,17 @@ import numpy as np
 import pandas as pd
 import requests
 
-_today  = _date.today()
-SEASON  = _today.year + 1 if _today.month >= 11 else _today.year
+_override = os.environ.get("OVERRIDE_SEASON")
+if _override:
+    SEASON = int(_override)
+else:
+    _today  = _date.today()
+    SEASON  = _today.year + 1 if _today.month >= 11 else _today.year
 
 BASE      = os.path.dirname(os.path.abspath(__file__))
-ART       = os.path.join(BASE, "artifacts")
-OUT       = os.path.join(BASE, "site", "data")
-SHOTS_DIR = os.path.join(OUT, "shots")
+ART       = os.path.join(BASE, "artifacts", str(SEASON))
+OUT       = os.path.join(BASE, "site", "data", str(SEASON))
+SHOTS_DIR = os.path.join(BASE, "site", "data", "shots")  # current season only, no subdir
 
 os.makedirs(OUT, exist_ok=True)
 os.makedirs(SHOTS_DIR, exist_ok=True)
@@ -50,8 +54,10 @@ def _clean(obj):
         return [_clean(v) for v in obj]
     return obj
 
-def write_json(data, filename):
-    path = os.path.join(OUT, filename)
+ROOT_DATA = os.path.join(BASE, "site", "data")
+
+def write_json(data, filename, out_dir=None):
+    path = os.path.join(out_dir or OUT, filename)
     with open(path, "w") as f:
         f.write(json.dumps(_clean(data), separators=(",", ":")))
     kb = os.path.getsize(path) / 1024
@@ -108,7 +114,7 @@ nr_raw   = pd.read_parquet(os.path.join(ART, "net_ratings.parquet"))
 
 
 # ── conference lookup ─────────────────────────────────────────────────────────
-ps_path = os.path.join(BASE, "player_stats.csv")
+ps_path = os.path.join(BASE, f"player_stats_{SEASON}.csv")
 if os.path.exists(ps_path):
     _ps_conf = pd.read_csv(ps_path, usecols=["team_display_name", "conf."])
     conf_map = (_ps_conf.dropna()
@@ -117,7 +123,7 @@ if os.path.exists(ps_path):
                         .to_dict())
 else:
     conf_map = {}
-    print("  [warn] player_stats.csv not found — conf will be empty")
+    print(f"  [warn] player_stats_{SEASON}.csv not found — conf will be empty")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -296,7 +302,7 @@ player_bios = build_player_bios(ps_path)
 
 overall_records = build_player_json(
     ps_path,
-    os.path.join(BASE, f"mbb_onoff_{SEASON}_v2.csv"),
+    os.path.join(BASE, f"mbb_onoff_{SEASON}_v2.csv") if os.path.exists(os.path.join(BASE, f"mbb_onoff_{SEASON}_v2.csv")) else None,
     bios=player_bios, min_gp=8, min_mpg=8, onoff_min_poss=200, label="(overall)"
 )
 if overall_records is not None:
@@ -305,7 +311,7 @@ if overall_records is not None:
 ps_conf_path = os.path.join(BASE, "player_stats_conf.csv")
 conf_records = build_player_json(
     ps_conf_path,
-    os.path.join(BASE, f"mbb_onoff_{SEASON}_conf_v2.csv"),
+    os.path.join(BASE, f"mbb_onoff_{SEASON}_conf_v2.csv") if os.path.exists(os.path.join(BASE, f"mbb_onoff_{SEASON}_conf_v2.csv")) else None,
     bios=player_bios, min_gp=4, min_mpg=8, onoff_min_poss=100, label="(conference)"
 )
 if conf_records is not None:
@@ -325,7 +331,7 @@ ROUND_COLS  = ["Mins", "Avg_Poss", "NetRtg", "ORtg", "DRtg",
 
 def load_lineup_file(size, variant, min_poss):
     suffix = "overall" if variant == "all" else "conference"
-    fname  = os.path.join(BASE, f"{size}_man_{suffix}_stats.csv")
+    fname  = os.path.join(BASE, f"{size}_man_{suffix}_stats_{SEASON}.csv")
     if not os.path.exists(fname):
         return {}, set()
     df   = pd.read_csv(fname)
@@ -493,10 +499,19 @@ if os.path.exists(shots_path) and os.path.exists(box_path):
         "player_zones": player_zones,
         "territory":    territory,
         "meta":         meta,
-    }, "shots-meta.json")
+    }, "shots-meta.json", out_dir=ROOT_DATA)
 
 else:
     print(f"\n  [warn] shots_{SEASON}.parquet not found — shot data skipped")
+
+# ── seasons.json — list of built seasons for the UI dropdown ─────────────────
+_built = sorted(
+    [int(d) for d in os.listdir(ROOT_DATA)
+     if d.isdigit() and os.path.isdir(os.path.join(ROOT_DATA, d))],
+    reverse=True
+)
+write_json(_built, "seasons.json", out_dir=ROOT_DATA)
+print(f"\nAvailable seasons: {_built}")
 
 
 # ── summary ───────────────────────────────────────────────────────────────────

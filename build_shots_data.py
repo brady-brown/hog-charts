@@ -6,13 +6,18 @@ Generates shots_{SEASON}.parquet — commit that file and the cloud app
 will load from it instead of downloading the full PBP at runtime.
 """
 
+import os
 from datetime import date as _date
 
 import pandas as pd
 import sportsdataverse.mbb as mbb
 
-_today   = _date.today()
-SEASON   = _today.year + 1 if _today.month >= 11 else _today.year
+_override = os.environ.get("OVERRIDE_SEASON")
+if _override:
+    SEASON = int(_override)
+else:
+    _today = _date.today()
+    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 OUT_FILE = f"shots_{SEASON}.parquet"
 
 SHOT_COLS = [

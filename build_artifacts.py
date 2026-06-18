@@ -22,10 +22,16 @@ import pandas as pd
 import sportsdataverse.mbb.mbb_loaders as mbb_loaders
 from predictor import TempoPredictor
 
-_today = _date.today()
-_season = _today.year + 1 if _today.month >= 11 else _today.year
+import os as _os
+_override = _os.environ.get("OVERRIDE_SEASON")
+if _override:
+    _season = int(_override)
+else:
+    _today = _date.today()
+    _season = _today.year + 1 if _today.month >= 11 else _today.year
 
-ART = Path(__file__).parent / "artifacts"
+ART = Path(__file__).parent / "artifacts" / str(_season)
+ART.mkdir(parents=True, exist_ok=True)
 CALIBRATION_YEARS = list(range(2021, _season))  # all complete seasons before current
 BACKTEST_YEAR = _season - 1                       # most recently completed season
 MIN_GAMES = 5                 # teams below this are dropped from the ratings table

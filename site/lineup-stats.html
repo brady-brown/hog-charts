@@ -80,6 +80,10 @@
   <div style="border-bottom:1px solid var(--line);margin-bottom:18px"></div>
 
   <div class="filters">
+    <div class="form-group narrow">
+      <label for="season-sel">Season</label>
+      <select id="season-sel"></select>
+    </div>
     <div class="form-group">
       <label for="team-sel">Team</label>
       <select id="team-sel" disabled><option>Loading…</option></select>
@@ -130,16 +134,44 @@ let curSize  = "1";
 let curScope = "all"; // "all" | "conf"
 let sortCol  = "Avg_Poss";
 let sortDir  = "desc";
+let SEASON   = null;
 
+function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeData() {
   return curScope === "conf" ? LU_CONF : LU_ALL;
 }
 
 async function init() {
-  LU_ALL = await loadJSON("data/lineup-stats.json");
+  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  const sSel = document.getElementById("season-sel");
+  if (seasons?.length) {
+    seasons.forEach(s => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = seasonLabel(s);
+      sSel.appendChild(o);
+    });
+    SEASON = seasons[0];
+  } else {
+    SEASON = new Date().getFullYear();
+  }
+  sSel.value = SEASON;
+  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
+
+  tSel.addEventListener("change", render);
+  document.getElementById("min-poss").addEventListener("input", render);
+  await reload();
+}
+
+async function reload() {
+  LU_ALL = null; LU_CONF = null;
+  curScope = "all";
+  document.getElementById("btn-all").classList.add("active");
+  document.getElementById("btn-conf").classList.remove("active");
+
+  LU_ALL = await loadJSON(`data/${SEASON}/lineup-stats.json`);
   if (!LU_ALL?.lineups) {
     document.getElementById("count-label").textContent =
-      "Data not found — run build_site.py first.";
+      "Data not found for this season.";
     return;
   }
 
@@ -149,9 +181,6 @@ async function init() {
   const defTeam = teams.find(t => t.includes("Arkansas")) || teams[0];
   if (defTeam) tSel.value = defTeam;
   tSel.disabled = false;
-
-  tSel.addEventListener("change", render);
-  document.getElementById("min-poss").addEventListener("input", render);
 
   document.querySelectorAll("thead th[data-col]").forEach(th => {
     th.addEventListener("click", () => {
@@ -186,7 +215,7 @@ async function setScope(scope) {
 
   if (scope === "conf" && !LU_CONF) {
     document.getElementById("count-label").textContent = "Loading conference data…";
-    LU_CONF = await loadJSON("data/lineup-conf-stats.json");
+    LU_CONF = await loadJSON(`data/${SEASON}/lineup-conf-stats.json`);
     if (!LU_CONF) {
       document.getElementById("count-label").textContent = "Conference data not found.";
       curScope = "all";

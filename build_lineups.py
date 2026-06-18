@@ -15,11 +15,16 @@ import pandas as pd
 import numpy as np
 from itertools import combinations
 from tqdm import tqdm
+import os
 from datetime import date as _date
 import sportsdataverse.mbb as mbb
 
-_today = _date.today()
-SEASON = _today.year + 1 if _today.month >= 11 else _today.year
+_override = os.environ.get("OVERRIDE_SEASON")
+if _override:
+    SEASON = int(_override)
+else:
+    _today = _date.today()
+    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 print("Loading data...")
@@ -212,8 +217,8 @@ def process_all_teams(teams, mode="overall"):
         if frames:
             out = (pd.concat(frames, ignore_index=True)
                    .sort_values(["Team","NetRtg"], ascending=[True,False]))
-            out.to_csv(f"{n}_man_{mode}_stats.csv", index=False)
-            print(f"  Saved {n}_man_{mode}_stats.csv — {len(out)} combos")
+            out.to_csv(f"{n}_man_{mode}_stats_{SEASON}.csv", index=False)
+            print(f"  Saved {n}_man_{mode}_stats_{SEASON}.csv — {len(out)} combos")
 
 
 process_all_teams(eligible, "overall")

@@ -73,6 +73,10 @@
   <div id="top1-card" class="top1-card" style="display:none"></div>
 
   <div class="filters">
+    <div class="form-group narrow">
+      <label for="season-sel">Season</label>
+      <select id="season-sel"></select>
+    </div>
     <div class="form-group">
       <label for="search">Search team</label>
       <input type="text" id="search" placeholder="e.g. Arkansas">
@@ -133,11 +137,33 @@ let allRows  = [];
 let NR_META  = null;
 let sortCol  = "rank";
 let sortDir  = "asc"; // asc = rank 1 first
+let SEASON   = null;
+
+function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
 async function init() {
-  const data = await loadJSON("data/net-ratings.json");
+  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  const sSel = document.getElementById("season-sel");
+  if (seasons?.length) {
+    seasons.forEach(s => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = seasonLabel(s);
+      sSel.appendChild(o);
+    });
+    SEASON = seasons[0];
+  } else {
+    SEASON = new Date().getFullYear();
+  }
+  sSel.value = SEASON;
+  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
+  await reload();
+}
+
+async function reload() {
+  allRows = []; NR_META = null;
+  const data = await loadJSON(`data/${SEASON}/net-ratings.json`);
   if (!data?.net_ratings) {
-    document.getElementById("count-label").textContent = "Data not found — run build_site.py first.";
+    document.getElementById("count-label").textContent = "Data not found for this season.";
     return;
   }
 
@@ -147,6 +173,7 @@ async function init() {
   // Populate conference dropdown
   const confs = [...new Set(allRows.map(r => r.conf).filter(Boolean))].sort();
   const sel = document.getElementById("conf-sel");
+  sel.innerHTML = '<option value="">All conferences</option>';
   confs.forEach(c => {
     const o = document.createElement("option");
     o.value = o.textContent = c;

@@ -19,8 +19,12 @@ import numpy as np
 import pandas as pd
 import sportsdataverse.mbb as mbb
 
-_today = _date.today()
-SEASON = _today.year + 1 if _today.month >= 11 else _today.year
+_override = os.environ.get("OVERRIDE_SEASON")
+if _override:
+    SEASON = int(_override)
+else:
+    _today = _date.today()
+    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 MIN_MINS = 1.0   # drop DNP rows
 
 # ── Load schedule to get conference_competition flag ──────────────────────────
@@ -139,12 +143,12 @@ def aggregate(df):
 # ── Build and write ───────────────────────────────────────────────────────────
 print("Aggregating overall stats…")
 overall = aggregate(box)
-overall.to_csv("player_stats.csv", index=False)
-print(f"  player_stats.csv  — {len(overall):,} players")
+overall.to_csv(f"player_stats_{SEASON}.csv", index=False)
+print(f"  player_stats_{SEASON}.csv  — {len(overall):,} players")
 
 print("Aggregating conference-only stats…")
 conf_df = aggregate(box[box["is_conf"]])
-conf_df.to_csv("player_stats_conf.csv", index=False)
-print(f"  player_stats_conf.csv  — {len(conf_df):,} players")
+conf_df.to_csv(f"player_stats_conf_{SEASON}.csv", index=False)
+print(f"  player_stats_conf_{SEASON}.csv  — {len(conf_df):,} players")
 
 print("\nDone.")
