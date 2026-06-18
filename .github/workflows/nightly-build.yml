@@ -1,0 +1,62 @@
+name: Nightly Site Build
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 2 AM CT (7 AM UTC)
+  push:
+    branches: [main]
+  workflow_dispatch:        # manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Data pipeline ────────────────────────────────────────────────────
+      # Each script fetches from ESPN/sportsdataverse and writes local files
+      # that the next script reads. Run in dependency order.
+
+      - name: Build predictor artifacts + net ratings
+        run: python build_artifacts.py
+
+      - name: Build shot + box parquets
+        run: python build_shots_data.py
+
+      - name: Build player stats CSVs
+        run: python build_player_stats.py
+
+      - name: Build lineup CSVs
+        run: python build_lineups.py
+
+      - name: Build on/off + RAPM CSVs
+        run: python build_onoff_rapm.py
+
+      # ── Site build ───────────────────────────────────────────────────────
+
+      - name: Build site JSON
+        run: python build_site.py
+
+      # ── Commit & push site/data → triggers Netlify deploy ───────────────
+
+      - name: Commit updated site/data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add site/data/
+          git diff --cached --quiet || git commit -m "chore: nightly site rebuild [skip ci]"
+          git push

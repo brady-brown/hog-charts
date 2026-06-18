@@ -13,6 +13,7 @@ reads only these files and never touches the network.
 """
 
 import json
+from datetime import date as _date
 from pathlib import Path
 
 import numpy as np
@@ -21,9 +22,12 @@ import pandas as pd
 import sportsdataverse.mbb.mbb_loaders as mbb_loaders
 from predictor import TempoPredictor
 
+_today = _date.today()
+_season = _today.year + 1 if _today.month >= 11 else _today.year
+
 ART = Path(__file__).parent / "artifacts"
-CALIBRATION_YEARS = [2021, 2022, 2023, 2024, 2025]
-BACKTEST_YEAR = 2026          # set to None to skip the (slower) held-out backtest
+CALIBRATION_YEARS = list(range(2021, _season))  # all complete seasons before current
+BACKTEST_YEAR = _season - 1                       # most recently completed season
 MIN_GAMES = 5                 # teams below this are dropped from the ratings table
 
 

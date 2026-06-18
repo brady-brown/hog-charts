@@ -4,5 +4,9 @@ numpy
 matplotlib
 plotly
 scipy
+scikit-learn
 mplbasketball
 pyarrow
+requests
+sportsdataverse
+tqdm

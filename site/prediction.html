@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Predictor | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">Hog Charts</a>
+  <a href="index.html"        data-page="index.html">Home</a>
+  <a href="prediction.html"   data-page="prediction.html">Predictor</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
+  <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
+  <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+</nav>
+
+<div class="container">
+
+  <h2>Game Predictor</h2>
+  <p class="page-sub" id="page-sub">Loading…</p>
+
+  <!-- ── Inputs ─────────────────────────────────────────────────────────── -->
+  <div class="hc-card">
+    <div class="form-row">
+
+      <div class="form-group">
+        <label for="team1">Team 1</label>
+        <select id="team1" disabled><option>Loading…</option></select>
+      </div>
+
+      <div class="form-group">
+        <label for="team2">Team 2</label>
+        <select id="team2" disabled><option>Loading…</option></select>
+      </div>
+
+      <div class="form-group" style="flex:0 0 auto;min-width:190px">
+        <label>Location</label>
+        <div class="radio-group">
+          <label><input type="radio" name="venue" value="home1" checked>
+            <span id="lbl-home1">Team 1 home</span></label>
+          <label><input type="radio" name="venue" value="home2">
+            <span id="lbl-home2">Team 2 home</span></label>
+          <label><input type="radio" name="venue" value="neutral">
+            Neutral site</label>
+        </div>
+      </div>
+
+    </div>
+    <button class="btn" id="predict-btn" disabled>Predict game</button>
+  </div>
+
+  <!-- ── Results (hidden until first prediction) ────────────────────────── -->
+  <div id="results" style="display:none">
+
+    <div class="hc-hero" id="hero"></div>
+
+    <div class="hc-chips" id="chips"></div>
+
+    <div class="hc-card">
+      <div class="hc-sec">Matchup factors</div>
+      <div id="factors"></div>
+    </div>
+
+    <details>
+      <summary>How the model built this spread</summary>
+      <div class="details-body" id="breakdown"></div>
+    </details>
+
+  </div>
+
+  <hr>
+  <p class="caption">Built by Brady Brown &amp; Wyatt Thompson. Follow @hogcharts on Instagram.</p>
+
+</div>
+
+<script src="js/common.js"></script>
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+// Loaded via fetch() from data/predictor.json — requires HTTP (not file://).
+let MODEL  = null;
+let TEAMS  = null;
+let BYNAME = null;
+let LG_DEF = null;
+
+async function initFromData() {
+  const data = await loadJSON("data/predictor.json");
+  if (!data) {
+    document.getElementById("page-sub").innerHTML =
+      `<span style="color:var(--t1)">Data not found.</span>
+       Run <code style="background:var(--card2);padding:2px 6px;border-radius:4px">python build_site.py</code>
+       to generate <code>site/data/predictor.json</code>.`;
+    return;
+  }
+
+  const { model, teams, meta } = data;
+  MODEL  = model;
+  TEAMS  = teams;
+  BYNAME = new Map(teams.map(t => [t.team, t]));
+  LG_DEF = teams.reduce((s, t) => s + t.def_eff, 0) / teams.length;
+
+  const names = teams.map(t => t.team).sort();
+  const t1El  = document.getElementById("team1");
+  const t2El  = document.getElementById("team2");
+  [t1El, t2El].forEach(el => {
+    el.innerHTML = "";
+    names.forEach(n => {
+      const o = document.createElement("option");
+      o.value = o.textContent = n;
+      el.appendChild(o);
+    });
+    el.disabled = false;
+  });
+
+  setDefault(t1El, "Duke Blue Devils");
+  setDefault(t2El, "Arkansas Razorbacks");
+  syncVenueLabels();
+  document.getElementById("predict-btn").disabled = false;
+
+  const acc = meta?.backtest?.accuracy;
+  const yr  = meta?.backtest_year;
+  document.getElementById("page-sub").textContent = acc && yr
+    ? `Predict any game — efficiency, tempo, recent form, and home court. ${(acc * 100).toFixed(1)}% accurate on the ${yr} season.`
+    : "Predict any game based on efficiency, tempo, recent form, and home court.";
+}
+
+document.addEventListener("DOMContentLoaded", initFromData);
+
+function setDefault(el, name) {
+  const opt = [...el.options].find(o => o.value === name);
+  if (opt) el.value = name;
+}
+
+// ── Venue label sync ──────────────────────────────────────────────────────────
+function syncVenueLabels() {
+  const n1 = document.getElementById("team1").value;
+  const n2 = document.getElementById("team2").value;
+  document.getElementById("lbl-home1").textContent = n1 ? `${n1} home` : "Team 1 home";
+  document.getElementById("lbl-home2").textContent = n2 ? `${n2} home` : "Team 2 home";
+}
+document.getElementById("team1").addEventListener("change", syncVenueLabels);
+document.getElementById("team2").addEventListener("change", syncVenueLabels);
+
+// ── Prediction logic (mirrors model_runtime.py predict_game) ─────────────────
+function predictGame(t1, t2, venue) {
+  const neutral  = venue === "neutral";
+  const team1Home = venue === "home1";
+  const lgAdv    = MODEL.league_home_adv;
+
+  let homeCourt = 0;
+  if (!neutral) {
+    homeCourt = team1Home
+      ? (t1.home_adv ?? lgAdv)
+      : -(t2.home_adv ?? lgAdv);
+  }
+
+  const netDiff    = t1.net_eff  - t2.net_eff;
+  const expPace    = (t1.pace    + t2.pace) / 2;
+  const paceFactor = expPace / MODEL.league_avg_pace;
+  const tempoAdj   = netDiff * paceFactor;
+  const formDiff   = t1.form - t2.form;
+
+  const [c0, c1, c2] = MODEL.coef;
+  const spread = MODEL.intercept + c0 * tempoAdj + c1 * homeCourt + c2 * formDiff;
+  const prob   = interp(spread, MODEL.iso_x, MODEL.iso_y);
+
+  return { spread, prob, homeCourt, expPace, paceFactor, tempoAdj, formDiff,
+           coef: MODEL.coef, intercept: MODEL.intercept };
+}
+
+// Mirrors pages/1_Prediction.py proj_scores()
+function projScores(t1, t2, spread, expPace) {
+  const pp1   = t1.off_eff + (t2.def_eff - LG_DEF);
+  const pp2   = t2.off_eff + (t1.def_eff - LG_DEF);
+  const total = (pp1 + pp2) / 100 * expPace;
+  return { s1: Math.round((total + spread) / 2),
+           s2: Math.round((total - spread) / 2) };
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────────
+const T1 = "var(--t1)";
+const T2 = "var(--t2)";
+const INK = "var(--ink)";
+
+function heroHTML(t1, t2, r, s1, s2, sub1, sub2) {
+  const w1 = Math.max(6, Math.round(r.prob * 100));
+  const w2 = 100 - w1;
+  const fav = r.spread >= 0 ? t1.team : t2.team;
+  const favC = r.spread >= 0 ? T1 : T2;
+  return `
+    <div class="hc-teams">
+      <div class="hc-team">
+        <img src="${logoUrl(t1.team_id)}" alt="${t1.team}" onerror="this.style.opacity=0">
+        <div class="hc-team-name" style="color:${T1}">${t1.team}</div>
+        <div class="hc-team-sub">${sub1}</div>
+      </div>
+      <div style="text-align:center">
+        <div class="hc-score">
+          <span style="color:${T1}">${s1}</span>
+          <span style="color:#42506A">&ndash;</span>
+          <span style="color:${T2}">${s2}</span>
+        </div>
+        <div class="hc-vs" style="margin-top:6px">PROJECTED</div>
+      </div>
+      <div class="hc-team">
+        <img src="${logoUrl(t2.team_id)}" alt="${t2.team}" onerror="this.style.opacity=0">
+        <div class="hc-team-name" style="color:${T2}">${t2.team}</div>
+        <div class="hc-team-sub">${sub2}</div>
+      </div>
+    </div>
+    <div class="hc-bar">
+      <div class="hc-bar-l" style="width:${w1}%;background:${T1}">${w1}%</div>
+      <div class="hc-bar-r" style="width:${w2}%;background:${T2}">${w2}%</div>
+    </div>
+    <div class="hc-bar-labels">
+      <span>${t1.team} win probability</span>
+      <span>${t2.team} win probability</span>
+    </div>
+    <div class="hc-verdict">
+      <b style="color:${favC}">${fav}</b> by
+      <b>${Math.abs(r.spread).toFixed(1)}</b>
+      &nbsp;·&nbsp; ${Math.round(Math.max(r.prob, 1 - r.prob) * 100)}% to win
+    </div>`;
+}
+
+function rankNote(t, key) {
+  const v = t[key];
+  return v != null ? `#${Math.round(v)} in D-I` : "";
+}
+
+function factorHTML(label, v1, v2, higherBetter = true, note = "", signed = true) {
+  const better1  = higherBetter ? v1 > v2 : v1 < v2;
+  const diff     = v1 - v2;
+  const edgeC    = better1 ? T1 : T2;
+  const c1       = better1 ? T1 : INK;
+  const c2       = !better1 ? T2 : INK;
+  const display  = signed ? fmt : fmtPlain;
+  const noteHTML = note ? `<div class="hc-note">${note}</div>` : "";
+  const edgeSign = diff >= 0 ? "+" : "";
+  return `
+    <div class="hc-factor">
+      <div class="v1" style="color:${c1}">${display(v1)}</div>
+      <div class="mid">
+        <div class="lab">${label}</div>
+        <span class="hc-edge" style="background:${edgeC}22;color:${edgeC}">
+          ${edgeSign}${Math.abs(diff).toFixed(1)}
+        </span>
+        ${noteHTML}
+      </div>
+      <div class="v2" style="color:${c2}">${display(v2)}</div>
+    </div>`;
+}
+
+function chipsHTML(s1, s2, expPace, homeLabel, spread) {
+  return `
+    <div class="hc-chip"><div class="n">${s1 + s2}</div><div class="l">Proj. total</div></div>
+    <div class="hc-chip"><div class="n">${expPace.toFixed(0)}</div><div class="l">Pace / poss</div></div>
+    <div class="hc-chip"><div class="n">${homeLabel}</div><div class="l">Home edge</div></div>
+    <div class="hc-chip"><div class="n">${Math.abs(spread).toFixed(1)}</div><div class="l">Spread</div></div>`;
+}
+
+function breakdownHTML(t1, t2, r) {
+  const [c0, c1, c2] = r.coef;
+  const effContrib  = c0 * r.tempoAdj;
+  const homeContrib = c1 * r.homeCourt;
+  const formContrib = c2 * r.formDiff;
+  const rows = [
+    ["Efficiency × tempo", effContrib],
+    ["Home court",          homeContrib],
+    ["Recent form",         formContrib],
+    ["Baseline",            r.intercept],
+  ];
+  const rowsHTML = rows.map(([lbl, v]) => `
+    <tr>
+      <td>${lbl}</td>
+      <td class="num">${v >= 0 ? "+" : ""}${v.toFixed(2)}</td>
+    </tr>`).join("");
+  return `
+    <table class="breakdown-table">
+      <thead><tr>
+        <th>Factor</th>
+        <th class="num" style="text-align:right">Points toward ${t1.team}</th>
+      </tr></thead>
+      <tbody>${rowsHTML}
+        <tr>
+          <td>Predicted margin</td>
+          <td class="num">${r.spread >= 0 ? "+" : ""}${r.spread.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="caption" style="margin-top:12px">
+      Win probability is a calibrated, monotone transform of the predicted margin,
+      so the spread favorite is always the win-probability favorite.
+      Pace factor ${r.paceFactor.toFixed(3)} means this game projects
+      ${((r.paceFactor - 1) * 100) >= 0 ? "+" : ""}${((r.paceFactor - 1) * 100).toFixed(1)}%
+      vs the average tempo.
+    </p>`;
+}
+
+// ── Main predict handler ──────────────────────────────────────────────────────
+document.getElementById("predict-btn").addEventListener("click", () => {
+  const name1  = document.getElementById("team1").value;
+  const name2  = document.getElementById("team2").value;
+  const venue  = document.querySelector('input[name="venue"]:checked').value;
+
+  if (name1 === name2) {
+    alert("Pick two different teams.");
+    return;
+  }
+
+  const t1 = BYNAME.get(name1);
+  const t2 = BYNAME.get(name2);
+  if (!t1 || !t2) { alert("Team data not found."); return; }
+
+  const r = predictGame(t1, t2, venue);
+  const { s1, s2 } = projScores(t1, t2, r.spread, r.expPace);
+
+  const neutral   = venue === "neutral";
+  const team1Home = venue === "home1";
+  const sub1 = neutral ? "Neutral floor" : (team1Home ? "Home" : "Away");
+  const sub2 = neutral ? "Neutral floor" : (team1Home ? "Away" : "Home");
+
+  const homeC  = MODEL.coef[1];
+  const homePts = homeC * r.homeCourt;
+  const homeLabel = neutral
+    ? "Neutral floor"
+    : `${Math.abs(homePts).toFixed(1)} pts · ${(team1Home ? t1 : t2).team.split(" ").pop()}`;
+
+  document.getElementById("hero").innerHTML =
+    heroHTML(t1, t2, r, s1, s2, sub1, sub2);
+
+  document.getElementById("chips").innerHTML =
+    chipsHTML(s1, s2, r.expPace, homeLabel, r.spread);
+
+  document.getElementById("factors").innerHTML = [
+    factorHTML("Net rating",        t1.net_eff, t2.net_eff, true,
+      `${rankNote(t1,"rank")} vs ${rankNote(t2,"rank")}`, true),
+    factorHTML("Offense (pts/100)", t1.off_eff, t2.off_eff, true,
+      `${rankNote(t1,"off_rank")} vs ${rankNote(t2,"off_rank")}`, false),
+    factorHTML("Defense (pts/100)", t1.def_eff, t2.def_eff, false,
+      `${rankNote(t1,"def_rank")} vs ${rankNote(t2,"def_rank")} · lower is better`, false),
+    factorHTML("Recent form (L5)",  t1.form, t2.form, true,
+      "opponent-adjusted margin over last 5 games", true),
+  ].join("");
+
+  document.getElementById("breakdown").innerHTML = breakdownHTML(t1, t2, r);
+
+  document.getElementById("results").style.display = "";
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lineup Stats | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    thead th {
+      background: var(--card2); color: var(--muted);
+      font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 9px 10px; border-bottom: 1px solid var(--line);
+      cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1;
+    }
+    thead th:hover { color: var(--ink); }
+    thead th.sort-asc::after  { content: " ↑"; color: var(--t1); }
+    thead th.sort-desc::after { content: " ↓"; color: var(--t1); }
+    tbody tr { border-bottom: 1px solid #1a2235; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    tbody td { padding: 7px 10px; vertical-align: middle; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.combo { max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .good { color: #16A34A; font-weight: 700; }
+    .bad  { color: #DC2626; font-weight: 700; }
+    .filters {
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px;
+    }
+    .filters .form-group { flex: 1; min-width: 160px; }
+    .filters .form-group.narrow { flex: 0 0 110px; }
+    .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
+
+    /* Size tab bar */
+    .size-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+    .size-tabs button {
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      color: var(--muted); padding: 10px 18px;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .12s;
+    }
+    .size-tabs button:hover { color: var(--ink); }
+    .size-tabs button.active { color: var(--ink); border-bottom-color: var(--t1); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">Hog Charts</a>
+  <a href="index.html"        data-page="index.html">Home</a>
+  <a href="prediction.html"   data-page="prediction.html">Predictor</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
+  <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
+  <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+</nav>
+
+<div class="container">
+
+  <h2>Lineup Stats</h2>
+  <p class="page-sub">
+    Per-100 possession efficiency for 1–5 man unit combinations — 2026 season.
+    Select a team, then browse by lineup size. NetRtg = points scored minus allowed per 100 possessions.
+  </p>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:0">
+    <div class="size-tabs" style="border-bottom:none;margin-bottom:0">
+      <button class="active" onclick="setSize('1')">1-Man</button>
+      <button onclick="setSize('2')">2-Man</button>
+      <button onclick="setSize('3')">3-Man</button>
+      <button onclick="setSize('5')">5-Man</button>
+    </div>
+    <div class="size-tabs" style="border-bottom:none;margin-bottom:0">
+      <button class="active" id="btn-all"  onclick="setScope('all')">All games</button>
+      <button id="btn-conf" onclick="setScope('conf')">Conference only</button>
+    </div>
+  </div>
+  <div style="border-bottom:1px solid var(--line);margin-bottom:18px"></div>
+
+  <div class="filters">
+    <div class="form-group">
+      <label for="team-sel">Team</label>
+      <select id="team-sel" disabled><option>Loading…</option></select>
+    </div>
+    <div class="form-group narrow">
+      <label for="min-poss">Min poss</label>
+      <input type="number" id="min-poss" value="0" min="0" max="2000" step="25">
+    </div>
+  </div>
+
+  <div class="count-label" id="count-label">Loading…</div>
+
+  <div class="tbl-wrap">
+    <table id="lu-table">
+      <thead>
+        <tr>
+          <th data-col="Combo"   data-dir="asc"  style="min-width:220px">Lineup</th>
+          <th data-col="Avg_Poss" data-dir="desc" class="num sort-desc">Poss</th>
+          <th data-col="Mins"    data-dir="desc" class="num">Mins</th>
+          <th data-col="NetRtg"  data-dir="desc" class="num">NetRtg</th>
+          <th data-col="ORtg"    data-dir="desc" class="num">ORtg</th>
+          <th data-col="DRtg"    data-dir="asc"  class="num">DRtg</th>
+          <th data-col="AST_100" data-dir="desc" class="num">AST</th>
+          <th data-col="TOV_100" data-dir="asc"  class="num">TOV</th>
+          <th data-col="REB_100" data-dir="desc" class="num">REB</th>
+          <th data-col="STL_100" data-dir="desc" class="num">STL</th>
+          <th data-col="BLK_100" data-dir="desc" class="num">BLK</th>
+        </tr>
+      </thead>
+      <tbody id="lu-body"></tbody>
+    </table>
+  </div>
+
+  <p class="caption" style="margin-top:10px">
+    All rate stats are per 100 possessions. Minimum possessions filter removes small-sample lineups.
+    1-Man = individual on/off; 5-Man = full 5-player units.
+  </p>
+  <hr>
+  <p class="caption">Built by Brady Brown &amp; Wyatt Thompson. Follow @hogcharts on Instagram.</p>
+
+</div>
+
+<script src="js/common.js"></script>
+<script>
+let LU_ALL  = null;   // overall data
+let LU_CONF = null;   // conference data (lazy loaded)
+let curSize  = "1";
+let curScope = "all"; // "all" | "conf"
+let sortCol  = "Avg_Poss";
+let sortDir  = "desc";
+
+function activeData() {
+  return curScope === "conf" ? LU_CONF : LU_ALL;
+}
+
+async function init() {
+  LU_ALL = await loadJSON("data/lineup-stats.json");
+  if (!LU_ALL?.lineups) {
+    document.getElementById("count-label").textContent =
+      "Data not found — run build_site.py first.";
+    return;
+  }
+
+  const teams = LU_ALL.teams ?? [];
+  const tSel  = document.getElementById("team-sel");
+  tSel.innerHTML = teams.map(t => `<option value="${t}">${t}</option>`).join("");
+  const defTeam = teams.find(t => t.includes("Arkansas")) || teams[0];
+  if (defTeam) tSel.value = defTeam;
+  tSel.disabled = false;
+
+  tSel.addEventListener("change", render);
+  document.getElementById("min-poss").addEventListener("input", render);
+
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      sortDir = (sortCol === col)
+        ? (sortDir === "desc" ? "asc" : "desc")
+        : (th.dataset.dir || "desc");
+      sortCol = col;
+      updateSortHeaders();
+      render();
+    });
+  });
+
+  render();
+}
+
+function setSize(s) {
+  curSize = s;
+  sortCol = "Avg_Poss";
+  sortDir = "desc";
+  // highlight correct size button (first row of size-tabs)
+  document.querySelectorAll(".size-tabs")[0].querySelectorAll("button")
+    .forEach((b,i) => b.classList.toggle("active", ["1","2","3","5"][i] === s));
+  updateSortHeaders();
+  render();
+}
+
+async function setScope(scope) {
+  curScope = scope;
+  document.getElementById("btn-all").classList.toggle("active",  scope === "all");
+  document.getElementById("btn-conf").classList.toggle("active", scope === "conf");
+
+  if (scope === "conf" && !LU_CONF) {
+    document.getElementById("count-label").textContent = "Loading conference data…";
+    LU_CONF = await loadJSON("data/lineup-conf-stats.json");
+    if (!LU_CONF) {
+      document.getElementById("count-label").textContent = "Conference data not found.";
+      curScope = "all";
+      document.getElementById("btn-all").classList.add("active");
+      document.getElementById("btn-conf").classList.remove("active");
+      return;
+    }
+  }
+  render();
+}
+
+function getRows() {
+  const team    = document.getElementById("team-sel").value;
+  const minPoss = parseFloat(document.getElementById("min-poss").value) || 0;
+  const data    = activeData();
+  const byTeam  = data?.lineups?.[curSize] ?? {};
+  const rows    = (byTeam[team] ?? []).filter(r => (r.Avg_Poss ?? 0) >= minPoss);
+  return [...rows].sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const cmp = typeof av === "string" ? av.localeCompare(bv) : av - bv;
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+}
+
+function v(val, dec = 1) {
+  return val != null ? Number(val).toFixed(dec) : "—";
+}
+
+function netClass(val) {
+  if (val == null) return "";
+  return val > 0 ? "good" : val < 0 ? "bad" : "";
+}
+
+function render() {
+  const rows = getRows();
+  document.getElementById("count-label").textContent = `${rows.length} lineups`;
+
+  const tbody = document.getElementById("lu-body");
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td class="combo" title="${r.Combo}">${r.Combo}</td>
+    <td class="num">${v(r.Avg_Poss, 0)}</td>
+    <td class="num">${v(r.Mins, 0)}</td>
+    <td class="num ${netClass(r.NetRtg)}">${r.NetRtg != null ? (r.NetRtg > 0 ? "+" : "") + v(r.NetRtg) : "—"}</td>
+    <td class="num">${v(r.ORtg)}</td>
+    <td class="num">${v(r.DRtg)}</td>
+    <td class="num">${v(r.AST_100)}</td>
+    <td class="num">${v(r.TOV_100)}</td>
+    <td class="num">${v(r.REB_100)}</td>
+    <td class="num">${v(r.STL_100)}</td>
+    <td class="num">${v(r.BLK_100)}</td>
+  </tr>`).join("");
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll("thead th").forEach(th => {
+    th.classList.remove("sort-asc","sort-desc");
+    if (th.dataset.col === sortCol)
+      th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
+  });
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

@@ -1,425 +1,425 @@
 game_date,matchup,predicted_winner,win_probability,predicted_spread,actual_winner,actual_score,actual_margin,correct_prediction,spread_error
-2026-01-20,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,68-93,25.0,✅,25.18735083541982
-2026-01-20,UNLV Rebels @ Utah State Aggies,Utah State Aggies,94.7%,+12.6,UNLV Rebels,86-76,10.0,❌,-22.628125124773277
+2026-03-15,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,75-86,11.0,✅,11.18735083541982
+2026-03-12,UNLV Rebels @ Utah State Aggies,Utah State Aggies,94.7%,+12.6,Utah State Aggies,60-80,20.0,✅,7.371874875226723
 2026-01-20,Kansas Jayhawks @ Colorado Buffaloes,Kansas Jayhawks,87.6%,+6.9,Kansas Jayhawks,75-69,6.0,✅,-0.9049094528487611
-2026-01-20,Purdue Boilermakers @ UCLA Bruins,Purdue Boilermakers,81.9%,+5.6,UCLA Bruins,67-69,2.0,❌,-7.619673743125424
-2026-01-20,San José State Spartans @ Nevada Wolf Pack,Nevada Wolf Pack,93.7%,+12.0,Nevada Wolf Pack,54-87,33.0,✅,21.00921587674611
+2026-03-14,Purdue Boilermakers @ UCLA Bruins,Purdue Boilermakers,81.9%,+5.6,Purdue Boilermakers,73-66,7.0,✅,1.380326256874576
+2026-02-17,Nevada Wolf Pack @ San José State Spartans,Nevada Wolf Pack,93.7%,+12.0,San José State Spartans,71-87,16.0,❌,-27.99078412325389
 2026-01-20,Michigan State Spartans @ Oregon Ducks,Michigan State Spartans,87.6%,+6.9,Michigan State Spartans,68-52,16.0,✅,9.095090547151239
 2026-01-20,Texas Tech Red Raiders @ Baylor Bears,Texas Tech Red Raiders,68.4%,+3.1,Texas Tech Red Raiders,92-73,19.0,✅,15.928442676466034
 2026-01-20,Georgia Bulldogs @ Missouri Tigers,Georgia Bulldogs,68.4%,+3.1,Georgia Bulldogs,74-72,2.0,✅,-1.071557323533967
 2026-01-20,Utah Utes @ Kansas State Wildcats,Kansas State Wildcats,77.2%,+4.3,Kansas State Wildcats,78-81,3.0,✅,-1.306612958452062
 2026-01-20,SMU Mustangs @ Wake Forest Demon Deacons,SMU Mustangs,64.3%,+2.7,SMU Mustangs,91-79,12.0,✅,9.345838317634309
-2026-01-20,Air Force Falcons @ Colorado State Rams,Colorado State Rams,95.8%,+19.4,Colorado State Rams,52-81,29.0,✅,9.63949812873954
-2026-01-20,Auburn Tigers @ Ole Miss Rebels,Auburn Tigers,75.5%,+4.6,Auburn Tigers,78-66,12.0,✅,7.443572218341026
+2026-02-10,Colorado State Rams @ Air Force Falcons,Colorado State Rams,95.8%,+19.4,Colorado State Rams,91-74,17.0,✅,-2.3605018712604604
+2026-02-28,Ole Miss Rebels @ Auburn Tigers,Auburn Tigers,75.5%,+4.6,Ole Miss Rebels,85-79,6.0,❌,-10.556427781658975
 2026-01-20,Rutgers Scarlet Knights @ Iowa Hawkeyes,Iowa Hawkeyes,95.4%,+14.2,Iowa Hawkeyes,62-68,6.0,✅,-8.20277447307985
-2026-01-20,Boise State Broncos @ Wyoming Cowboys,Boise State Broncos,67.4%,+3.1,Boise State Broncos,81-65,16.0,✅,12.928442676466034
-2026-01-20,UT Martin Skyhawks @ Southeast Missouri State Redhawks,Southeast Missouri State Redhawks,52.5%,-0.2,Southeast Missouri State Redhawks,50-66,16.0,✅,16.18735083541982
-2026-01-20,Evansville Purple Aces @ UIC Flames,UIC Flames,82.7%,+6.1,UIC Flames,49-76,27.0,✅,20.85227879495838
-2026-01-20,Oklahoma State Cowboys @ TCU Horned Frogs,TCU Horned Frogs,77.2%,+4.3,TCU Horned Frogs,65-68,3.0,✅,-1.306612958452062
-2026-01-20,DePaul Blue Demons @ Butler Bulldogs,Butler Bulldogs,83.6%,+7.0,Butler Bulldogs,80-87,7.0,✅,0.04252058986935747
+2026-02-24,Wyoming Cowboys @ Boise State Broncos,Boise State Broncos,67.4%,+3.1,Boise State Broncos,62-72,10.0,✅,6.928442676466033
+2026-02-17,Southeast Missouri State Redhawks @ UT Martin Skyhawks,Southeast Missouri State Redhawks,52.5%,-0.2,Southeast Missouri State Redhawks,56-53,3.0,✅,3.1873508354198212
+2026-02-18,UIC Flames @ Evansville Purple Aces,UIC Flames,82.7%,+6.1,UIC Flames,84-46,38.0,✅,31.85227879495838
+2026-03-11,Oklahoma State Cowboys @ TCU Horned Frogs,TCU Horned Frogs,77.2%,+4.3,TCU Horned Frogs,88-95,7.0,✅,2.693387041547938
+2026-03-07,Butler Bulldogs @ DePaul Blue Demons,Butler Bulldogs,83.6%,+7.0,Butler Bulldogs,81-71,10.0,✅,3.0425205898693575
 2026-01-20,UCF Knights @ Iowa State Cyclones,Iowa State Cyclones,90.8%,+9.0,Iowa State Cyclones,57-87,30.0,✅,21.040907384607763
 2026-01-20,Indiana Hoosiers @ Michigan Wolverines,Michigan Wolverines,93.7%,+10.9,Michigan Wolverines,72-86,14.0,✅,3.093570026164574
 2026-01-20,LSU Tigers @ Florida Gators,Florida Gators,91.3%,+10.9,Florida Gators,61-79,18.0,✅,7.093570026164574
 2026-01-20,NC State Wolfpack @ Clemson Tigers,Clemson Tigers,74.4%,+4.0,NC State Wolfpack,80-76,4.0,❌,-8.010199987005672
-2026-01-20,Seton Hall Pirates @ St. John's Red Storm,St. John's Red Storm,91.3%,+10.9,St. John's Red Storm,60-65,5.0,✅,-5.906429973835426
+2026-03-13,Seton Hall Pirates @ St. John's Red Storm,St. John's Red Storm,91.3%,+10.9,St. John's Red Storm,68-78,10.0,✅,-0.9064299738354258
 2026-01-20,Mid-Atlantic Christian Mustangs @ South Carolina State Bulldogs,South Carolina State Bulldogs,95.8%,+30.0,South Carolina State Bulldogs,50-56,6.0,✅,-24.019727080302182
 2026-01-20,Loyola Chicago Ramblers @ St. Bonaventure Bonnies,St. Bonaventure Bonnies,86.7%,+7.7,St. Bonaventure Bonnies,70-84,14.0,✅,6.301705559217194
-2026-01-20,Saint Louis Billikens @ Duquesne Dukes,Saint Louis Billikens,88.6%,+8.7,Saint Louis Billikens,81-77,4.0,✅,-4.716422364528272
-2026-01-20,Florida State Seminoles @ Miami Hurricanes,Miami Hurricanes,82.7%,+6.1,Florida State Seminoles,65-63,2.0,❌,-8.147721205041622
-2026-01-20,Northern Illinois Huskies @ Ohio Bobcats,Ohio Bobcats,90.8%,+9.7,Ohio Bobcats,77-80,3.0,✅,-6.673135993411249
+2026-02-28,Duquesne Dukes @ Saint Louis Billikens,Saint Louis Billikens,88.6%,+8.7,Saint Louis Billikens,76-91,15.0,✅,6.283577635471728
+2026-02-24,Miami Hurricanes @ Florida State Seminoles,Miami Hurricanes,82.7%,+6.1,Miami Hurricanes,83-73,10.0,✅,3.8522787949583783
+2026-02-21,Ohio Bobcats @ Northern Illinois Huskies,Ohio Bobcats,90.8%,+9.7,Ohio Bobcats,74-66,8.0,✅,-1.6731359934112486
 2026-01-20,Miami (OH) RedHawks @ Kent State Golden Flashes,Miami (OH) RedHawks,56.9%,+1.6,Miami (OH) RedHawks,107-101,6.0,✅,4.447184090885449
-2026-01-20,Bowling Green Falcons @ Western Michigan Broncos,Bowling Green Falcons,77.8%,+5.2,Bowling Green Falcons,72-54,18.0,✅,12.838376442938646
-2026-01-20,Ball State Cardinals @ Central Michigan Chippewas,Central Michigan Chippewas,61.3%,+1.4,Ball State Cardinals,68-67,1.0,❌,-2.383718737459569
-2026-01-20,Oklahoma Sooners @ South Carolina Gamecocks,Oklahoma Sooners,56.9%,+1.6,South Carolina Gamecocks,76-85,9.0,❌,-10.55281590911455
+2026-02-24,Western Michigan Broncos @ Bowling Green Falcons,Bowling Green Falcons,77.8%,+5.2,Western Michigan Broncos,88-79,9.0,❌,-14.161623557061354
+2026-03-06,Central Michigan Chippewas @ Ball State Cardinals,Central Michigan Chippewas,61.3%,+1.4,Ball State Cardinals,69-85,16.0,❌,-17.383718737459567
+2026-03-11,South Carolina Gamecocks @ Oklahoma Sooners,Oklahoma Sooners,56.9%,+1.6,Oklahoma Sooners,74-86,12.0,✅,10.44718409088545
 2026-01-20,Minnesota Golden Gophers @ Ohio State Buckeyes,Ohio State Buckeyes,86.7%,+7.7,Ohio State Buckeyes,74-82,8.0,✅,0.30170555921719444
-2026-01-20,Akron Zips @ Buffalo Bulls,Akron Zips,88.6%,+8.0,Akron Zips,82-63,19.0,✅,10.98486552905292
-2026-01-20,Virginia-Lynchburg Dragons @ Morgan State Bears,Morgan State Bears,95.8%,+41.5,Morgan State Bears,53-128,75.0,✅,33.511343744202755
-2026-01-20,Toledo Rockets @ Massachusetts Minutemen,Massachusetts Minutemen,61.3%,+1.4,Massachusetts Minutemen,82-84,2.0,✅,0.6162812625404313
-2026-01-20,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,68-93,25.0,✅,25.18735083541982
-2026-01-20,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,68-93,25.0,✅,25.18735083541982
+2026-03-12,Buffalo Bulls @ Akron Zips,Akron Zips,88.6%,+8.0,Akron Zips,70-73,3.0,✅,-5.01513447094708
+2026-01-19,Virginia-Lynchburg Dragons @ Morgan State Bears,Morgan State Bears,95.8%,+41.5,NOT PLAYED,N/A,,,
+2026-03-13,Massachusetts Minutemen @ Toledo Rockets,Massachusetts Minutemen,61.3%,+1.4,Toledo Rockets,67-77,10.0,❌,-11.383718737459569
+2026-03-15,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,75-86,11.0,✅,11.18735083541982
+2026-03-15,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,52.5%,-0.2,Arkansas Razorbacks,75-86,11.0,✅,11.18735083541982
 2026-01-21,Oregon State Beavers @ Saint Mary's Gaels,Saint Mary's Gaels,95.8%,+14.5,Saint Mary's Gaels,51-81,30.0,✅,15.511992642706746
 2026-01-21,Northwestern Wildcats @ USC Trojans,USC Trojans,61.3%,+1.4,Northwestern Wildcats,74-68,6.0,❌,-7.383718737459569
-2026-01-21,San Diego State Aztecs @ Grand Canyon Lopes,San Diego State Aztecs,68.4%,+3.1,Grand Canyon Lopes,69-70,1.0,❌,-4.071557323533967
-2026-01-21,Loyola Marymount Lions @ Seattle U Redhawks,Seattle U Redhawks,66.7%,+2.8,Seattle U Redhawks,59-69,10.0,✅,7.239795407374936
-2026-01-21,Utah Tech Trailblazers @ California Baptist Lancers,California Baptist Lancers,83.6%,+7.0,California Baptist Lancers,64-73,9.0,✅,2.0425205898693575
+2026-02-17,Grand Canyon Lopes @ San Diego State Aztecs,San Diego State Aztecs,68.4%,+3.1,Grand Canyon Lopes,73-63,10.0,❌,-13.071557323533966
+2026-02-28,Seattle U Redhawks @ Loyola Marymount Lions,Seattle U Redhawks,66.7%,+2.8,Seattle U Redhawks,71-66,5.0,✅,2.2397954073749364
+2026-03-13,Utah Tech Trailblazers @ California Baptist Lancers,California Baptist Lancers,83.6%,+7.0,California Baptist Lancers,72-86,14.0,✅,7.0425205898693575
 2026-01-21,Washington State Cougars @ San Diego Toreros,Washington State Cougars,75.5%,+4.6,San Diego Toreros,92-96,4.0,❌,-8.556427781658975
 2026-01-21,Cincinnati Bearcats @ Arizona Wildcats,Arizona Wildcats,93.7%,+10.9,Arizona Wildcats,51-77,26.0,✅,15.093570026164574
 2026-01-21,Washington Huskies @ Nebraska Cornhuskers,Nebraska Cornhuskers,88.3%,+8.4,Nebraska Cornhuskers,66-76,10.0,✅,1.5900718905361853
 2026-01-21,Pepperdine Waves @ Gonzaga Bulldogs,Gonzaga Bulldogs,95.8%,+32.2,Gonzaga Bulldogs,60-84,24.0,✅,-8.248925343983394
-2026-01-21,Northern Iowa Panthers @ Illinois State Redbirds,Illinois State Redbirds,63.4%,+2.1,Illinois State Redbirds,54-59,5.0,✅,2.9287167125655076
-2026-01-21,Fresno State Bulldogs @ New Mexico Lobos,New Mexico Lobos,94.2%,+12.6,New Mexico Lobos,74-83,9.0,✅,-3.628125124773277
+2026-03-06,Northern Iowa Panthers @ Illinois State Redbirds,Illinois State Redbirds,63.4%,+2.1,Northern Iowa Panthers,74-52,22.0,❌,-24.071283287434493
+2026-02-21,New Mexico Lobos @ Fresno State Bulldogs,New Mexico Lobos,94.2%,+12.6,New Mexico Lobos,80-78,2.0,✅,-10.628125124773277
 2026-01-21,West Virginia Mountaineers @ Arizona State Sun Devils,West Virginia Mountaineers,64.3%,+2.7,West Virginia Mountaineers,75-63,12.0,✅,9.345838317634309
 2026-01-21,Virginia Tech Hokies @ Syracuse Orange,Syracuse Orange,56.2%,+0.2,Virginia Tech Hokies,76-74,2.0,❌,-2.1797539932136987
 2026-01-21,Mississippi State Bulldogs @ Texas A&M Aggies,Texas A&M Aggies,80.1%,+5.5,Texas A&M Aggies,68-88,20.0,✅,14.545261168303139
-2026-01-21,Utah Valley Wolverines @ Southern Utah Thunderbirds,Utah Valley Wolverines,91.9%,+12.2,Southern Utah Thunderbirds,70-84,14.0,❌,-26.17739036243872
+2026-03-05,Utah Valley Wolverines @ Southern Utah Thunderbirds,Utah Valley Wolverines,91.9%,+12.2,Utah Valley Wolverines,92-88,4.0,✅,-8.177390362438722
 2026-01-21,Southern Illinois Salukis @ Valparaiso Beacons,Valparaiso Beacons,52.5%,-0.2,Valparaiso Beacons,63-69,6.0,✅,6.187350835419821
-2026-01-21,UTSA Roadrunners @ North Texas Mean Green,North Texas Mean Green,95.4%,+14.5,North Texas Mean Green,62-81,19.0,✅,4.511992642706746
-2026-01-21,Temple Owls @ Rice Owls,Temple Owls,67.4%,+3.1,Temple Owls,69-65,4.0,✅,0.928442676466033
+2026-02-07,North Texas Mean Green @ UTSA Roadrunners,North Texas Mean Green,95.4%,+14.5,North Texas Mean Green,81-58,23.0,✅,8.511992642706746
+2026-03-01,Rice Owls @ Temple Owls,Temple Owls,67.4%,+3.1,Rice Owls,80-74,6.0,❌,-9.071557323533966
 2026-01-21,Memphis Tigers @ Tulsa Golden Hurricane,Tulsa Golden Hurricane,52.5%,-0.2,Tulsa Golden Hurricane,66-83,17.0,✅,17.18735083541982
-2026-01-21,South Dakota Coyotes @ Omaha Mavericks,Omaha Mavericks,66.7%,+2.8,South Dakota Coyotes,68-64,4.0,❌,-6.760204592625064
-2026-01-21,Tarleton State Texans @ UT Arlington Mavericks,UT Arlington Mavericks,73.0%,+4.0,UT Arlington Mavericks,64-71,7.0,✅,2.989800012994328
-2026-01-21,East Carolina Pirates @ Wichita State Shockers,Wichita State Shockers,93.7%,+10.9,Wichita State Shockers,60-77,17.0,✅,6.093570026164574
-2026-01-21,Liberty Flames @ Western Kentucky Hilltoppers,Liberty Flames,67.4%,+3.1,Liberty Flames,76-69,7.0,✅,3.928442676466033
-2026-01-21,Kennesaw State Owls @ Sam Houston Bearkats,Sam Houston Bearkats,66.7%,+2.8,Sam Houston Bearkats,87-93,6.0,✅,3.2397954073749364
-2026-01-21,Maryland Terrapins @ Illinois Fighting Illini,Illinois Fighting Illini,95.8%,+14.5,Illinois Fighting Illini,70-89,19.0,✅,4.511992642706746
+2026-03-06,Omaha Mavericks @ South Dakota Coyotes,Omaha Mavericks,66.7%,+2.8,Omaha Mavericks,76-62,14.0,✅,11.239795407374936
+2026-03-05,UT Arlington Mavericks @ Tarleton State Texans,UT Arlington Mavericks,73.0%,+4.0,UT Arlington Mavericks,65-60,5.0,✅,0.9898000129943281
+2026-02-18,Wichita State Shockers @ East Carolina Pirates,Wichita State Shockers,93.7%,+10.9,Wichita State Shockers,92-89,3.0,✅,-7.906429973835426
+2026-02-21,Western Kentucky Hilltoppers @ Liberty Flames,Liberty Flames,67.4%,+3.1,Western Kentucky Hilltoppers,94-73,21.0,❌,-24.071557323533966
+2026-03-13,Kennesaw State Owls @ Sam Houston Bearkats,Sam Houston Bearkats,66.7%,+2.8,Kennesaw State Owls,79-73,6.0,❌,-8.760204592625064
+2026-03-08,Illinois Fighting Illini @ Maryland Terrapins,Illinois Fighting Illini,95.8%,+14.5,Illinois Fighting Illini,78-72,6.0,✅,-8.488007357293254
 2026-01-21,Notre Dame Fighting Irish @ North Carolina Tar Heels,North Carolina Tar Heels,86.7%,+7.7,North Carolina Tar Heels,69-91,22.0,✅,14.301705559217194
 2026-01-21,Murray State Racers @ Drake Bulldogs,Murray State Racers,56.9%,+1.6,Drake Bulldogs,90-101,11.0,❌,-12.55281590911455
 2026-01-21,Indiana State Sycamores @ Bradley Braves,Bradley Braves,86.7%,+7.5,Bradley Braves,68-75,7.0,✅,-0.46035296099754675
 2026-01-21,Colgate Raiders @ American University Eagles,American University Eagles,52.5%,-0.2,American University Eagles,66-70,4.0,✅,4.187350835419821
-2026-01-21,Rhode Island Rams @ Richmond Spiders,Richmond Spiders,50.8%,-0.8,Rhode Island Rams,69-68,1.0,❌,-0.1739804270469748
-2026-01-21,Fordham Rams @ Davidson Wildcats,Davidson Wildcats,82.7%,+6.1,Davidson Wildcats,63-68,5.0,✅,-1.1477212050416217
+2026-02-07,Richmond Spiders @ Rhode Island Rams,Richmond Spiders,50.8%,-0.8,Rhode Island Rams,77-82,5.0,❌,-4.173980427046975
+2026-02-21,Davidson Wildcats @ Fordham Rams,Davidson Wildcats,82.7%,+6.1,Fordham Rams,59-63,4.0,❌,-10.147721205041622
 2026-01-21,Tulane Green Wave @ Florida Atlantic Owls,Florida Atlantic Owls,88.3%,+8.2,Florida Atlantic Owls,74-79,5.0,✅,-3.1560655756950187
-2026-01-21,Army Black Knights @ Bucknell Bison,Bucknell Bison,73.0%,+3.4,Army Black Knights,87-84,3.0,❌,-6.43427443286421
+2026-03-03,Army Black Knights @ Bucknell Bison,Bucknell Bison,73.0%,+3.4,Bucknell Bison,55-65,10.0,✅,6.56572556713579
 2026-01-21,Lafayette Leopards @ Boston University Terriers,Boston University Terriers,66.7%,+2.8,Boston University Terriers,73-77,4.0,✅,1.2397954073749364
 2026-02-04,Longwood Lancers @ Gardner-Webb Runnin' Bulldogs,Longwood Lancers,90.8%,+9.2,Longwood Lancers,86-66,20.0,✅,10.81100123437934
-2026-01-21,Charleston Southern Buccaneers @ Presbyterian Blue Hose,Presbyterian Blue Hose,52.5%,-0.2,Presbyterian Blue Hose,83-87,4.0,✅,4.187350835419821
-2026-01-21,Georgetown Hoyas @ Villanova Wildcats,Villanova Wildcats,90.8%,+10.1,Villanova Wildcats,51-66,15.0,✅,4.88366688651133
+2026-02-12,Presbyterian Blue Hose @ Charleston Southern Buccaneers,Presbyterian Blue Hose,52.5%,-0.2,Charleston Southern Buccaneers,67-84,17.0,❌,-16.81264916458018
+2026-03-12,Georgetown Hoyas @ Villanova Wildcats,Villanova Wildcats,90.8%,+10.1,Georgetown Hoyas,78-64,14.0,❌,-24.116333113488672
 2026-01-21,Xavier Musketeers @ Creighton Bluejays,Creighton Bluejays,77.6%,+4.9,Creighton Bluejays,93-94,1.0,✅,-3.935105384647793
 2026-01-21,Pittsburgh Panthers @ Boston College Eagles,Pittsburgh Panthers,75.5%,+4.8,Boston College Eagles,62-65,3.0,❌,-7.756965718920644
 2026-01-21,Holy Cross Crusaders @ Navy Midshipmen,Navy Midshipmen,86.7%,+7.5,Navy Midshipmen,68-85,17.0,✅,9.539647039002453
-2026-01-21,Cleveland State Vikings @ Wright State Raiders,Wright State Raiders,91.7%,+10.9,Cleveland State Vikings,85-79,6.0,❌,-16.906429973835426
+2026-03-04,Cleveland State Vikings @ Wright State Raiders,Wright State Raiders,91.7%,+10.9,Wright State Raiders,61-90,29.0,✅,18.093570026164574
 2026-01-21,Purdue Fort Wayne Mastodons @ Detroit Mercy Titans,Purdue Fort Wayne Mastodons,72.4%,+4.3,Purdue Fort Wayne Mastodons,83-76,7.0,✅,2.729688640667286
-2026-01-21,IU Indianapolis Jaguars @ Oakland Golden Grizzlies,Oakland Golden Grizzlies,95.4%,+14.2,IU Indianapolis Jaguars,103-85,18.0,❌,-32.20277447307985
-2026-01-21,Furman Paladins @ The Citadel Bulldogs,Furman Paladins,91.6%,+12.2,The Citadel Bulldogs,75-77,2.0,❌,-14.177390362438722
-2026-01-21,Western Carolina Catamounts @ Mercer Bears,Mercer Bears,90.8%,+9.2,Mercer Bears,76-88,12.0,✅,2.81100123437934
-2026-01-21,East Tennessee State Buccaneers @ Chattanooga Mocs,East Tennessee State Buccaneers,72.4%,+4.3,East Tennessee State Buccaneers,67-66,1.0,✅,-3.270311359332714
+2026-02-25,Oakland Golden Grizzlies @ IU Indianapolis Jaguars,Oakland Golden Grizzlies,95.4%,+14.2,Oakland Golden Grizzlies,86-74,12.0,✅,-2.2027744730798506
+2026-02-25,The Citadel Bulldogs @ Furman Paladins,Furman Paladins,91.6%,+12.2,Furman Paladins,51-72,21.0,✅,8.822609637561278
+2026-03-07,Western Carolina Catamounts @ Mercer Bears,Mercer Bears,90.8%,+9.2,Western Carolina Catamounts,77-73,4.0,❌,-13.18899876562066
+2026-02-11,Chattanooga Mocs @ East Tennessee State Buccaneers,East Tennessee State Buccaneers,72.4%,+4.3,East Tennessee State Buccaneers,61-73,12.0,✅,7.729688640667286
 2026-01-21,Troy Trojans @ Old Dominion Monarchs,Troy Trojans,83.4%,+6.9,Troy Trojans,83-77,6.0,✅,-0.9049094528487611
 2026-01-21,Texas Longhorns @ Kentucky Wildcats,Kentucky Wildcats,80.1%,+5.5,Kentucky Wildcats,80-85,5.0,✅,-0.45473883169686236
-2026-01-21,North Alabama Lions @ Queens University Royals,Queens University Royals,81.7%,+6.1,Queens University Royals,62-87,25.0,✅,18.85227879495838
+2026-02-18,Queens University Royals @ North Alabama Lions,Queens University Royals,81.7%,+6.1,Queens University Royals,85-78,7.0,✅,0.8522787949583783
 2026-01-21,Dayton Flyers @ La Salle Explorers,Dayton Flyers,88.6%,+8.7,La Salle Explorers,64-67,3.0,❌,-11.716422364528272
 2026-02-04,Winthrop Eagles @ Radford Highlanders,Winthrop Eagles,86.7%,+7.5,Winthrop Eagles,80-78,2.0,✅,-5.460352960997547
 2026-02-04,South Carolina Upstate Spartans @ UNC Asheville Bulldogs,South Carolina Upstate Spartans,52.5%,-0.2,UNC Asheville Bulldogs,67-76,9.0,❌,-8.81264916458018
-2026-01-21,Samford Bulldogs @ Wofford Terriers,Wofford Terriers,63.4%,+1.9,Wofford Terriers,78-88,10.0,✅,8.134707468804333
-2026-01-21,UNC Greensboro Spartans @ VMI Keydets,UNC Greensboro Spartans,76.6%,+5.2,UNC Greensboro Spartans,85-78,7.0,✅,1.838376442938646
-2026-01-20,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,53.5%,-0.0,Arkansas Razorbacks,68-93,25.0,✅,25.031185764092818
-2026-01-22,Cal State Bakersfield Roadrunners @ Hawai'i Rainbow Warriors,Hawai'i Rainbow Warriors,94.2%,+12.6,Hawai'i Rainbow Warriors,71-98,27.0,✅,14.371874875226723
-2026-01-22,Long Beach State Beach @ Cal State Fullerton Titans,Cal State Fullerton Titans,61.3%,+1.4,Cal State Fullerton Titans,61-71,10.0,✅,8.616281262540431
+2026-02-11,Wofford Terriers @ Samford Bulldogs,Wofford Terriers,63.4%,+1.9,Samford Bulldogs,80-97,17.0,❌,-18.865292531195667
+2026-03-06,VMI Keydets @ UNC Greensboro Spartans,UNC Greensboro Spartans,76.6%,+5.2,UNC Greensboro Spartans,70-84,14.0,✅,8.838376442938646
+2026-03-15,Vanderbilt Commodores @ Arkansas Razorbacks,Arkansas Razorbacks,53.5%,-0.0,Arkansas Razorbacks,75-86,11.0,✅,11.03118576409282
+2026-02-12,Hawai'i Rainbow Warriors @ Cal State Bakersfield Roadrunners,Hawai'i Rainbow Warriors,94.2%,+12.6,Hawai'i Rainbow Warriors,89-74,15.0,✅,2.371874875226723
+2026-02-12,Cal State Fullerton Titans @ Long Beach State Beach,Cal State Fullerton Titans,61.3%,+1.4,Cal State Fullerton Titans,86-82,4.0,✅,2.616281262540431
 2026-01-22,UC Irvine Anteaters @ UC Riverside Highlanders,UC Irvine Anteaters,83.4%,+6.9,UC Irvine Anteaters,80-66,14.0,✅,7.095090547151239
-2026-02-04,St. Thomas-Minnesota Tommies @ South Dakota State Jackrabbits,St. Thomas-Minnesota Tommies,72.1%,+3.4,St. Thomas-Minnesota Tommies,77-62,15.0,✅,11.56572556713579
-2026-01-22,North Dakota State Bison @ Denver Pioneers,North Dakota State Bison,78.9%,+5.2,North Dakota State Bison,82-77,5.0,✅,-0.161623557061354
-2026-01-22,Cal Poly Mustangs @ UC Santa Barbara Gauchos,UC Santa Barbara Gauchos,77.6%,+4.9,UC Santa Barbara Gauchos,67-107,40.0,✅,35.06489461535221
-2026-01-22,UC San Diego Tritons @ UC Davis Aggies,UC San Diego Tritons,79.7%,+5.2,UC San Diego Tritons,80-74,6.0,✅,0.838376442938646
-2026-01-22,Weber State Wildcats @ Montana Grizzlies,Montana Grizzlies,74.4%,+4.0,Montana Grizzlies,65-81,16.0,✅,11.989800012994328
-2026-01-22,Idaho State Bengals @ Montana State Bobcats,Montana State Bobcats,74.4%,+4.0,Montana State Bobcats,62-74,12.0,✅,7.989800012994328
-2026-01-22,Sacramento State Hornets @ Idaho Vandals,Idaho Vandals,83.6%,+7.0,Idaho Vandals,76-86,10.0,✅,3.0425205898693575
-2026-01-22,Portland State Vikings @ Eastern Washington Eagles,Portland State Vikings,56.9%,+1.6,Portland State Vikings,65-61,4.0,✅,2.4471840908854494
-2026-01-22,Tennessee State Tigers @ SIU Edwardsville Cougars,SIU Edwardsville Cougars,63.4%,+2.1,SIU Edwardsville Cougars,66-74,8.0,✅,5.928716712565508
+2026-03-05,South Dakota State Jackrabbits @ St. Thomas-Minnesota Tommies,St. Thomas-Minnesota Tommies,72.1%,+3.4,St. Thomas-Minnesota Tommies,67-80,13.0,✅,9.56572556713579
+2026-02-05,Denver Pioneers @ North Dakota State Bison,North Dakota State Bison,78.9%,+5.2,Denver Pioneers,78-71,7.0,❌,-12.161623557061354
+2026-02-14,UC Santa Barbara Gauchos @ Cal Poly Mustangs,UC Santa Barbara Gauchos,77.6%,+4.9,Cal Poly Mustangs,79-89,10.0,❌,-14.935105384647793
+2026-02-12,UC Davis Aggies @ UC San Diego Tritons,UC San Diego Tritons,79.7%,+5.2,UC San Diego Tritons,51-68,17.0,✅,11.838376442938646
+2026-02-21,Montana Grizzlies @ Weber State Wildcats,Montana Grizzlies,74.4%,+4.0,Weber State Wildcats,72-92,20.0,❌,-24.01019998700567
+2026-02-21,Montana State Bobcats @ Idaho State Bengals,Montana State Bobcats,74.4%,+4.0,Idaho State Bengals,76-91,15.0,❌,-19.01019998700567
+2026-03-07,Sacramento State Hornets @ Idaho Vandals,Idaho Vandals,83.6%,+7.0,Idaho Vandals,45-68,23.0,✅,16.04252058986936
+2026-02-21,Eastern Washington Eagles @ Portland State Vikings,Portland State Vikings,56.9%,+1.6,Eastern Washington Eagles,67-55,12.0,❌,-13.55281590911455
+2026-02-21,SIU Edwardsville Cougars @ Tennessee State Tigers,SIU Edwardsville Cougars,63.4%,+2.1,Tennessee State Tigers,53-80,27.0,❌,-29.071283287434493
 2026-01-22,Missouri State Bears @ New Mexico State Aggies,New Mexico State Aggies,81.7%,+6.1,Missouri State Bears,84-75,9.0,❌,-15.147721205041622
 2026-01-22,Florida International Panthers @ UTEP Miners,Florida International Panthers,52.2%,+1.1,UTEP Miners,77-83,6.0,❌,-7.07674049420217
-2026-01-22,Little Rock Trojans @ Southeast Missouri State Redhawks,Southeast Missouri State Redhawks,81.6%,+6.0,Southeast Missouri State Redhawks,65-70,5.0,✅,-0.994359905108527
-2026-01-22,Tennessee Tech Golden Eagles @ Lindenwood Lions,Lindenwood Lions,80.6%,+6.0,Lindenwood Lions,68-89,21.0,✅,15.005640094891472
-2026-01-22,Eastern Illinois Panthers @ Southern Indiana Screaming Eagles,Southern Indiana Screaming Eagles,50.8%,-0.2,Eastern Illinois Panthers,59-51,8.0,❌,-7.812649164580179
+2026-02-21,Southeast Missouri State Redhawks @ Little Rock Trojans,Southeast Missouri State Redhawks,81.6%,+6.0,Southeast Missouri State Redhawks,70-65,5.0,✅,-0.994359905108527
+2026-02-21,Lindenwood Lions @ Tennessee Tech Golden Eagles,Lindenwood Lions,80.6%,+6.0,Tennessee Tech Golden Eagles,57-72,15.0,❌,-20.994359905108528
+2026-02-21,Southern Indiana Screaming Eagles @ Eastern Illinois Panthers,Southern Indiana Screaming Eagles,50.8%,-0.2,Southern Indiana Screaming Eagles,70-68,2.0,✅,2.1873508354198212
 2026-01-22,North Dakota Fighting Hawks @ Oral Roberts Golden Eagles,Oral Roberts Golden Eagles,52.5%,-0.2,North Dakota Fighting Hawks,79-62,17.0,❌,-16.81264916458018
 2026-01-22,Stetson Hatters @ Lipscomb Bisons,Lipscomb Bisons,95.8%,+14.5,Lipscomb Bisons,74-79,5.0,✅,-9.488007357293254
 2026-01-22,Florida Gulf Coast Eagles @ Austin Peay Governors,Austin Peay Governors,61.3%,+1.4,Austin Peay Governors,62-83,21.0,✅,19.616281262540433
-2026-01-22,Western Illinois Leathernecks @ Morehead State Eagles,Morehead State Eagles,86.7%,+7.5,Morehead State Eagles,66-71,5.0,✅,-2.4603529609975467
+2026-02-21,Morehead State Eagles @ Western Illinois Leathernecks,Morehead State Eagles,86.7%,+7.5,Morehead State Eagles,81-59,22.0,✅,14.539647039002453
 2026-01-22,South Florida Bulls @ UAB Blazers,UAB Blazers,50.8%,-0.2,South Florida Bulls,82-69,13.0,❌,-12.81264916458018
 2026-01-22,Wisconsin Badgers @ Penn State Nittany Lions,Wisconsin Badgers,81.2%,+5.6,Wisconsin Badgers,98-71,27.0,✅,21.380326256874575
-2026-01-22,Merrimack Warriors @ Iona Gaels,Iona Gaels,61.3%,+1.4,Iona Gaels,60-61,1.0,✅,-0.38371873745956875
+2026-02-22,Iona Gaels @ Merrimack Warriors,Iona Gaels,61.3%,+1.4,Merrimack Warriors,86-88,2.0,❌,-3.383718737459569
 2026-01-22,Milwaukee Panthers @ Robert Morris Colonials,Robert Morris Colonials,66.7%,+2.8,Robert Morris Colonials,76-88,12.0,✅,9.239795407374936
 2026-01-22,Quinnipiac Bobcats @ Mount St. Mary's Mountaineers,Quinnipiac Bobcats,75.5%,+4.6,Quinnipiac Bobcats,77-62,15.0,✅,10.443572218341025
 2026-01-22,Niagara Purple Eagles @ Fairfield Stags,Fairfield Stags,90.0%,+8.4,Fairfield Stags,61-62,1.0,✅,-7.409928109463815
 2026-01-22,Canisius Golden Griffins @ Sacred Heart Pioneers,Sacred Heart Pioneers,88.3%,+8.4,Sacred Heart Pioneers,66-69,3.0,✅,-5.409928109463815
-2026-01-22,Marist Red Foxes @ Siena Saints,Marist Red Foxes,52.2%,+1.1,Siena Saints,50-69,19.0,❌,-20.07674049420217
-2026-01-22,UNC Wilmington Seahawks @ William & Mary Tribe,UNC Wilmington Seahawks,58.9%,+1.7,William & Mary Tribe,70-77,7.0,❌,-8.710053188790015
-2026-01-22,Campbell Fighting Camels @ Charleston Cougars,Charleston Cougars,71.7%,+3.0,Charleston Cougars,83-87,4.0,✅,1.0024666397394904
-2026-01-22,Towson Tigers @ Elon Phoenix,Elon Phoenix,61.3%,+1.4,Towson Tigers,72-59,13.0,❌,-14.383718737459569
+2026-02-15,Siena Saints @ Marist Red Foxes,Marist Red Foxes,52.2%,+1.1,Siena Saints,67-63,4.0,❌,-5.07674049420217
+2026-02-05,William & Mary Tribe @ UNC Wilmington Seahawks,UNC Wilmington Seahawks,58.9%,+1.7,William & Mary Tribe,85-78,7.0,❌,-8.710053188790015
+2026-02-15,Charleston Cougars @ Campbell Fighting Camels,Charleston Cougars,71.7%,+3.0,Charleston Cougars,62-57,5.0,✅,2.0024666397394904
+2026-02-26,Elon Phoenix @ Towson Tigers,Elon Phoenix,61.3%,+1.4,Towson Tigers,56-58,2.0,❌,-3.383718737459569
 2026-01-22,Monmouth Hawks @ Hampton Pirates,Hampton Pirates,56.2%,+0.2,Hampton Pirates,63-65,2.0,✅,1.820246006786301
 2026-01-22,Hofstra Pride @ North Carolina A&T Aggies,Hofstra Pride,87.6%,+8.0,North Carolina A&T Aggies,78-79,1.0,❌,-9.01513447094708
-2026-01-22,Stony Brook Seawolves @ Northeastern Huskies,Northeastern Huskies,77.2%,+4.3,Stony Brook Seawolves,95-80,15.0,❌,-19.306612958452064
+2026-02-07,Northeastern Huskies @ Stony Brook Seawolves,Northeastern Huskies,77.2%,+4.3,Stony Brook Seawolves,55-69,14.0,❌,-18.306612958452064
 2026-01-22,UL Monroe Warhawks @ Marshall Thundering Herd,Marshall Thundering Herd,95.8%,+14.5,Marshall Thundering Herd,60-115,55.0,✅,40.511992642706744
 2026-01-22,South Alabama Jaguars @ James Madison Dukes,James Madison Dukes,50.8%,-0.2,South Alabama Jaguars,90-83,7.0,❌,-6.812649164580179
 2026-01-22,Southern Miss Golden Eagles @ Georgia State Panthers,Southern Miss Golden Eagles,52.2%,+1.1,Georgia State Panthers,62-69,7.0,❌,-8.07674049420217
-2026-01-22,Arkansas State Red Wolves @ Georgia Southern Eagles,Arkansas State Red Wolves,72.4%,+4.3,Arkansas State Red Wolves,85-68,17.0,✅,12.729688640667286
+2026-03-05,Georgia Southern Eagles @ Arkansas State Red Wolves,Arkansas State Red Wolves,72.4%,+4.3,Georgia Southern Eagles,80-77,3.0,❌,-7.270311359332714
 2026-01-22,Texas State Bobcats @ Coastal Carolina Chanticleers,Coastal Carolina Chanticleers,52.5%,-0.2,Coastal Carolina Chanticleers,70-72,2.0,✅,2.1873508354198212
 2026-01-22,Eastern Kentucky Colonels @ North Florida Ospreys,Eastern Kentucky Colonels,75.5%,+4.8,North Florida Ospreys,85-87,2.0,❌,-6.756965718920644
-2026-01-22,Central Arkansas Bears @ West Georgia Wolves,Central Arkansas Bears,72.4%,+4.3,Central Arkansas Bears,86-65,21.0,✅,16.729688640667284
-2026-01-22,Bellarmine Knights @ Jacksonville Dolphins,Jacksonville Dolphins,74.4%,+4.0,Bellarmine Knights,77-70,7.0,❌,-11.010199987005672
-2026-01-22,Green Bay Phoenix @ Youngstown State Penguins,Youngstown State Penguins,77.2%,+4.3,Youngstown State Penguins,81-88,7.0,✅,2.693387041547938
+2026-02-14,West Georgia Wolves @ Central Arkansas Bears,Central Arkansas Bears,72.4%,+4.3,Central Arkansas Bears,62-79,17.0,✅,12.729688640667286
+2026-03-04,Jacksonville Dolphins @ Bellarmine Knights,Jacksonville Dolphins,74.4%,+4.0,Bellarmine Knights,79-82,3.0,❌,-7.010199987005672
+2026-02-28,Youngstown State Penguins @ Green Bay Phoenix,Youngstown State Penguins,77.2%,+4.3,Green Bay Phoenix,63-85,22.0,❌,-26.306612958452064
 2026-01-22,Louisiana Ragin' Cajuns @ App State Mountaineers,App State Mountaineers,90.0%,+8.4,App State Mountaineers,58-72,14.0,✅,5.590071890536185
-2026-01-22,Vermont Catamounts @ UMass Lowell River Hawks,Vermont Catamounts,67.4%,+3.1,Vermont Catamounts,77-68,9.0,✅,5.928442676466033
-2026-01-22,NJIT Highlanders @ UMBC Retrievers,UMBC Retrievers,82.7%,+6.1,UMBC Retrievers,74-87,13.0,✅,6.852278794958378
-2026-01-22,Binghamton Bearcats @ New Hampshire Wildcats,New Hampshire Wildcats,80.6%,+6.0,New Hampshire Wildcats,82-88,6.0,✅,0.005640094891472991
-2026-01-22,UAlbany Great Danes @ Maine Black Bears,UAlbany Great Danes,58.9%,+1.7,Maine Black Bears,49-52,3.0,❌,-4.710053188790014
+2026-02-26,UMass Lowell River Hawks @ Vermont Catamounts,Vermont Catamounts,67.4%,+3.1,Vermont Catamounts,64-66,2.0,✅,-1.071557323533967
+2026-03-03,UMBC Retrievers @ NJIT Highlanders,UMBC Retrievers,82.7%,+6.1,UMBC Retrievers,91-52,39.0,✅,32.85227879495838
+2026-02-26,New Hampshire Wildcats @ Binghamton Bearcats,New Hampshire Wildcats,80.6%,+6.0,Binghamton Bearcats,63-65,2.0,❌,-7.994359905108527
+2026-02-26,Maine Black Bears @ UAlbany Great Danes,UAlbany Great Danes,58.9%,+1.7,Maine Black Bears,70-59,11.0,❌,-12.710053188790015
 2026-01-23,Utah State Aggies @ Colorado State Rams,Utah State Aggies,64.9%,+2.8,Utah State Aggies,65-61,4.0,✅,1.2255178199006465
-2026-01-23,Ohio State Buckeyes @ Michigan Wolverines,Michigan Wolverines,92.2%,+13.0,Michigan Wolverines,62-74,12.0,✅,-0.9856047758790165
-2026-01-23,Marquette Golden Eagles @ Butler Bulldogs,Butler Bulldogs,78.4%,+6.4,Butler Bulldogs,76-87,11.0,✅,4.585763743981117
+2026-03-13,Ohio State Buckeyes @ Michigan Wolverines,Michigan Wolverines,92.2%,+13.0,Michigan Wolverines,67-71,4.0,✅,-8.985604775879017
+2026-02-07,Butler Bulldogs @ Marquette Golden Eagles,Butler Bulldogs,78.4%,+6.4,Marquette Golden Eagles,55-70,15.0,❌,-21.41423625601888
 2026-01-23,Akron Zips @ Ohio Bobcats,Akron Zips,81.8%,+7.7,Akron Zips,86-65,21.0,✅,13.285645200847828
-2026-01-23,Tulane Green Wave @ Charlotte 49ers,Charlotte 49ers,62.0%,+2.9,Charlotte 49ers,70-73,3.0,✅,0.14561587236653795
-2026-01-23,South Carolina Upstate Spartans @ Gardner-Webb Runnin' Bulldogs,South Carolina Upstate Spartans,82.5%,+7.9,Gardner-Webb Runnin' Bulldogs,65-67,2.0,❌,-9.938437272313505
-2026-01-23,Massachusetts Minutemen @ Buffalo Bulls,Massachusetts Minutemen,54.0%,+1.2,Massachusetts Minutemen,68-67,1.0,✅,-0.22797126224873399
-2026-01-23,Chicago State Cougars @ Saint Francis Red Flash,Saint Francis Red Flash,64.3%,+3.0,Saint Francis Red Flash,60-81,21.0,✅,17.964674238711144
-2026-01-23,Long Island University Sharks @ Stonehill Skyhawks,Long Island University Sharks,77.9%,+6.0,Long Island University Sharks,66-63,3.0,✅,-3.0344727462360277
-2026-01-23,Wagner Seahawks @ Le Moyne Dolphins,Le Moyne Dolphins,77.6%,+5.8,Le Moyne Dolphins,67-69,2.0,✅,-3.803218849893881
-2026-01-23,Fairleigh Dickinson Knights @ Central Connecticut Blue Devils,Central Connecticut Blue Devils,83.8%,+8.7,Fairleigh Dickinson Knights,76-66,10.0,❌,-18.716434441607856
-2026-01-23,The Citadel Bulldogs @ East Tennessee State Buccaneers,East Tennessee State Buccaneers,97.2%,+19.8,East Tennessee State Buccaneers,55-84,29.0,✅,9.151212344458639
+2026-03-12,Tulane Green Wave @ Charlotte 49ers,Charlotte 49ers,62.0%,+2.9,Charlotte 49ers,60-74,14.0,✅,11.145615872366538
+2026-03-04,Gardner-Webb Runnin' Bulldogs @ South Carolina Upstate Spartans,South Carolina Upstate Spartans,82.5%,+7.9,Gardner-Webb Runnin' Bulldogs,65-64,1.0,❌,-8.938437272313505
+2026-02-21,Buffalo Bulls @ Massachusetts Minutemen,Massachusetts Minutemen,54.0%,+1.2,Buffalo Bulls,86-82,4.0,❌,-5.227971262248734
+2026-02-09,Saint Francis Red Flash @ Chicago State Cougars,Saint Francis Red Flash,64.3%,+3.0,Chicago State Cougars,75-80,5.0,❌,-8.035325761288856
+2026-02-07,Stonehill Skyhawks @ Long Island University Sharks,Long Island University Sharks,77.9%,+6.0,Long Island University Sharks,54-61,7.0,✅,0.9655272537639723
+2026-02-05,Le Moyne Dolphins @ Wagner Seahawks,Le Moyne Dolphins,77.6%,+5.8,Wagner Seahawks,78-79,1.0,❌,-6.803218849893881
+2026-02-14,Central Connecticut Blue Devils @ Fairleigh Dickinson Knights,Central Connecticut Blue Devils,83.8%,+8.7,Central Connecticut Blue Devils,63-57,6.0,✅,-2.7164344416078556
+2026-03-07,The Citadel Bulldogs @ East Tennessee State Buccaneers,East Tennessee State Buccaneers,97.2%,+19.8,East Tennessee State Buccaneers,76-83,7.0,✅,-12.848787655541361
 2026-01-23,Indiana Hoosiers @ Rutgers Scarlet Knights,Indiana Hoosiers,85.7%,+8.1,Indiana Hoosiers,82-59,23.0,✅,14.939199797161374
 2026-01-23,Saint Louis Billikens @ St. Bonaventure Bonnies,Saint Louis Billikens,85.7%,+8.1,Saint Louis Billikens,97-62,35.0,✅,26.939199797161372
-2026-01-23,Furman Paladins @ UNC Greensboro Spartans,Furman Paladins,63.2%,+2.6,Furman Paladins,89-66,23.0,✅,20.41710957632662
-2026-01-23,Kennesaw State Owls @ Louisiana Tech Bulldogs,Kennesaw State Owls,57.8%,+1.7,Louisiana Tech Bulldogs,76-82,6.0,❌,-7.740756386189786
+2026-03-08,UNC Greensboro Spartans @ Furman Paladins,Furman Paladins,63.2%,+2.6,Furman Paladins,75-81,6.0,✅,3.41710957632662
+2026-03-14,Kennesaw State Owls @ Louisiana Tech Bulldogs,Kennesaw State Owls,57.8%,+1.7,Kennesaw State Owls,71-60,11.0,✅,9.259243613810215
 2026-01-29,New Haven Chargers @ Mercyhurst Lakers,New Haven Chargers,62.0%,+2.3,Mercyhurst Lakers,51-70,19.0,❌,-21.320658376847636
-2026-01-23,Stetson Hatters @ Austin Peay Governors,Austin Peay Governors,93.2%,+12.9,Austin Peay Governors,65-73,8.0,✅,-4.909196814264231
-2026-01-23,Florida Gulf Coast Eagles @ Lipscomb Bisons,Lipscomb Bisons,77.6%,+5.9,Lipscomb Bisons,71-86,15.0,✅,9.134798409124148
+2026-03-06,Stetson Hatters @ Austin Peay Governors,Austin Peay Governors,93.2%,+12.9,Austin Peay Governors,60-69,9.0,✅,-3.909196814264231
+2026-03-06,Florida Gulf Coast Eagles @ Lipscomb Bisons,Lipscomb Bisons,77.6%,+5.9,Florida Gulf Coast Eagles,77-53,24.0,❌,-29.865201590875852
 2026-01-23,UL Monroe Warhawks @ App State Mountaineers,App State Mountaineers,94.5%,+14.6,App State Mountaineers,43-59,16.0,✅,1.4399224825347243
-2026-01-24,Southern Illinois Salukis @ Evansville Purple Aces,Southern Illinois Salukis,77.8%,+5.2,NOT PLAYED,N/A,,,
+2026-03-01,Southern Illinois Salukis @ Evansville Purple Aces,Southern Illinois Salukis,77.8%,+5.2,Southern Illinois Salukis,81-67,14.0,✅,8.838376442938646
 2026-01-25,USC Trojans @ Wisconsin Badgers,Wisconsin Badgers,80.6%,+6.0,USC Trojans,73-71,2.0,❌,-7.994359905108527
-2026-01-25,Oregon Ducks @ Washington Huskies,Washington Huskies,63.4%,+2.1,Washington Huskies,57-72,15.0,✅,12.928716712565507
-2026-01-24,Wagner Seahawks @ Long Island University Sharks,Long Island University Sharks,86.7%,+7.7,NOT PLAYED,N/A,,,
+2026-03-07,Washington Huskies @ Oregon Ducks,Washington Huskies,63.4%,+2.1,Oregon Ducks,79-85,6.0,❌,-8.071283287434493
+2026-03-07,Wagner Seahawks @ Long Island University Sharks,Long Island University Sharks,86.7%,+7.7,Long Island University Sharks,56-64,8.0,✅,0.30170555921719444
 2026-01-31,Mercyhurst Lakers @ Chicago State Cougars,Mercyhurst Lakers,83.6%,+7.0,Chicago State Cougars,74-78,4.0,❌,-10.957479410130642
-2026-01-24,Purdue Fort Wayne Mastodons @ IU Indianapolis Jaguars,Purdue Fort Wayne Mastodons,75.5%,+4.8,NOT PLAYED,N/A,,,
+2026-02-28,Purdue Fort Wayne Mastodons @ IU Indianapolis Jaguars,Purdue Fort Wayne Mastodons,75.5%,+4.8,Purdue Fort Wayne Mastodons,87-81,6.0,✅,1.243034281079356
 2026-01-26,Central Connecticut Blue Devils @ Stonehill Skyhawks,Central Connecticut Blue Devils,75.5%,+4.6,Stonehill Skyhawks,59-61,2.0,❌,-6.556427781658974
-2026-01-25,Florida Atlantic Owls @ South Florida Bulls,South Florida Bulls,66.7%,+2.8,South Florida Bulls,75-89,14.0,✅,11.239795407374936
-2026-01-31,New Haven Chargers @ Saint Francis Red Flash,New Haven Chargers,77.6%,+4.9,New Haven Chargers,81-69,12.0,✅,7.064894615352207
-2026-01-26,Le Moyne Dolphins @ Fairleigh Dickinson Knights,Fairleigh Dickinson Knights,52.5%,-0.2,Le Moyne Dolphins,87-74,13.0,❌,-12.81264916458018
-2026-01-26,Arizona Wildcats @ BYU Cougars,Arizona Wildcats,66.6%,+3.1,Arizona Wildcats,86-83,3.0,✅,-0.07155732353396704
+2026-02-15,South Florida Bulls @ Florida Atlantic Owls,South Florida Bulls,66.7%,+2.8,South Florida Bulls,83-81,2.0,✅,-0.7602045926250636
+2026-02-24,Saint Francis Red Flash @ New Haven Chargers,New Haven Chargers,77.6%,+4.9,Saint Francis Red Flash,73-67,6.0,❌,-10.935105384647793
+2026-02-26,Fairleigh Dickinson Knights @ Le Moyne Dolphins,Fairleigh Dickinson Knights,52.5%,-0.2,Le Moyne Dolphins,59-76,17.0,❌,-16.81264916458018
+2026-02-18,BYU Cougars @ Arizona Wildcats,Arizona Wildcats,66.6%,+3.1,Arizona Wildcats,68-75,7.0,✅,3.928442676466033
 2026-01-27,Alabama State Hornets @ Texas Southern Tigers,Texas Southern Tigers,52.5%,-0.2,Texas Southern Tigers,64-96,32.0,✅,32.18735083541982
 2026-01-27,Incarnate Word Cardinals @ Houston Christian Huskies,Incarnate Word Cardinals,69.9%,+4.1,Houston Christian Huskies,75-81,6.0,❌,-10.070239848586208
 2026-01-26,UT Rio Grande Valley Vaqueros @ Texas A&M-Corpus Christi Islanders,Texas A&M-Corpus Christi Islanders,61.3%,+1.4,UT Rio Grande Valley Vaqueros,64-55,9.0,❌,-10.383718737459569
-2026-01-26,Delaware State Hornets @ South Carolina State Bulldogs,South Carolina State Bulldogs,61.3%,+1.4,South Carolina State Bulldogs,64-70,6.0,✅,4.616281262540431
+2026-03-02,South Carolina State Bulldogs @ Delaware State Hornets,South Carolina State Bulldogs,61.3%,+1.4,South Carolina State Bulldogs,61-59,2.0,✅,0.6162812625404313
 2026-01-27,New Orleans Privateers @ Nicholls Colonels,Nicholls Colonels,77.2%,+4.3,New Orleans Privateers,80-62,18.0,❌,-22.306612958452064
 2026-01-26,Louisville Cardinals @ Duke Blue Devils,Duke Blue Devils,86.7%,+7.5,Duke Blue Devils,52-83,31.0,✅,23.539647039002453
-2026-01-26,Morgan State Bears @ Norfolk State Spartans,Norfolk State Spartans,90.8%,+9.2,Morgan State Bears,79-78,1.0,❌,-10.18899876562066
-2026-01-26,Jackson State Tigers @ Florida A&M Rattlers,Florida A&M Rattlers,80.1%,+5.5,Jackson State Tigers,66-65,1.0,❌,-6.454738831696862
-2026-01-26,Alcorn State Braves @ Bethune-Cookman Wildcats,Bethune-Cookman Wildcats,90.8%,+9.2,Bethune-Cookman Wildcats,73-82,9.0,✅,-0.18899876562065998
-2026-01-27,Alabama A&M Bulldogs @ Prairie View A&M Panthers,Prairie View A&M Panthers,66.7%,+2.8,Alabama A&M Bulldogs,80-60,20.0,❌,-22.760204592625065
-2026-01-26,Penn State Nittany Lions @ Ohio State Buckeyes,Ohio State Buckeyes,90.8%,+10.1,Ohio State Buckeyes,78-84,6.0,✅,-4.11633311348867
+2026-03-02,Norfolk State Spartans @ Morgan State Bears,Norfolk State Spartans,90.8%,+9.2,Morgan State Bears,84-90,6.0,❌,-15.18899876562066
+2026-03-11,Jackson State Tigers @ Florida A&M Rattlers,Florida A&M Rattlers,80.1%,+5.5,Florida A&M Rattlers,60-70,10.0,✅,4.545261168303138
+2026-02-14,Bethune-Cookman Wildcats @ Alcorn State Braves,Bethune-Cookman Wildcats,90.8%,+9.2,Alcorn State Braves,55-57,2.0,❌,-11.18899876562066
+2026-03-13,Prairie View A&M Panthers @ Alabama A&M Bulldogs,Prairie View A&M Panthers,66.7%,+2.8,Prairie View A&M Panthers,74-55,19.0,✅,16.239795407374935
+2026-03-04,Ohio State Buckeyes @ Penn State Nittany Lions,Ohio State Buckeyes,90.8%,+10.1,Ohio State Buckeyes,94-62,32.0,✅,21.883666886511328
 2026-01-27,Northwestern State Demons @ Stephen F. Austin Lumberjacks,Stephen F. Austin Lumberjacks,93.7%,+10.9,Stephen F. Austin Lumberjacks,67-69,2.0,✅,-8.906429973835426
 2026-01-27,East Texas A&M Lions @ Lamar Cardinals,Lamar Cardinals,80.6%,+6.0,Lamar Cardinals,61-82,21.0,✅,15.005640094891472
-2026-01-08,Abilene Christian Wildcats @ Tarleton State Texans,Tarleton State Texans,77.2%,+4.3,Abilene Christian Wildcats,84-80,4.0,❌,-8.306612958452062
-2026-02-02,Howard Bison @ Coppin State Eagles,Howard Bison,91.6%,+11.2,Howard Bison,72-53,19.0,✅,7.848416354565751
+2026-03-11,Tarleton State Texans @ Abilene Christian Wildcats,Tarleton State Texans,77.2%,+4.3,Abilene Christian Wildcats,78-84,6.0,❌,-10.306612958452062
+2026-03-02,Coppin State Eagles @ Howard Bison,Howard Bison,91.6%,+11.2,Howard Bison,70-90,20.0,✅,8.848416354565751
 2026-01-27,New Mexico Lobos @ UNLV Rebels,New Mexico Lobos,81.9%,+5.6,New Mexico Lobos,89-61,28.0,✅,22.380326256874575
-2026-01-27,Grand Canyon Lopes @ Nevada Wolf Pack,Nevada Wolf Pack,74.4%,+4.0,Nevada Wolf Pack,60-66,6.0,✅,1.989800012994328
-2026-01-27,Boise State Broncos @ San José State Spartans,Boise State Broncos,90.8%,+10.4,Boise State Broncos,89-58,31.0,✅,20.61442427364925
+2026-03-12,Nevada Wolf Pack @ Grand Canyon Lopes,Nevada Wolf Pack,74.4%,+4.0,Nevada Wolf Pack,84-80,4.0,✅,-0.010199987005671929
+2026-03-11,San José State Spartans @ Boise State Broncos,Boise State Broncos,90.8%,+10.4,San José State Spartans,84-74,10.0,❌,-20.38557572635075
 2026-01-27,Creighton Bluejays @ Marquette Golden Eagles,Creighton Bluejays,67.4%,+3.1,Marquette Golden Eagles,62-86,24.0,❌,-27.071557323533966
-2026-01-27,Purdue Boilermakers @ Indiana Hoosiers,Purdue Boilermakers,75.5%,+4.6,Indiana Hoosiers,67-72,5.0,❌,-9.556427781658975
-2026-01-27,Kentucky Wildcats @ Vanderbilt Commodores,Vanderbilt Commodores,61.3%,+1.4,Vanderbilt Commodores,55-80,25.0,✅,23.616281262540433
-2026-01-27,Massachusetts Minutemen @ Miami (OH) RedHawks,Miami (OH) RedHawks,81.7%,+6.1,Miami (OH) RedHawks,84-86,2.0,✅,-4.147721205041622
-2026-01-27,Saint Joseph's Hawks @ Loyola Chicago Ramblers,Saint Joseph's Hawks,75.5%,+4.6,Saint Joseph's Hawks,85-64,21.0,✅,16.443572218341025
-2026-01-27,Kansas State Wildcats @ West Virginia Mountaineers,West Virginia Mountaineers,74.4%,+4.0,West Virginia Mountaineers,54-59,5.0,✅,0.9898000129943281
+2026-02-20,Indiana Hoosiers @ Purdue Boilermakers,Purdue Boilermakers,75.5%,+4.6,Purdue Boilermakers,64-93,29.0,✅,24.443572218341025
+2026-02-28,Vanderbilt Commodores @ Kentucky Wildcats,Vanderbilt Commodores,61.3%,+1.4,Kentucky Wildcats,77-91,14.0,❌,-15.383718737459569
+2026-03-12,Massachusetts Minutemen @ Miami (OH) RedHawks,Miami (OH) RedHawks,81.7%,+6.1,Massachusetts Minutemen,87-83,4.0,❌,-10.147721205041622
+2026-02-21,Loyola Chicago Ramblers @ Saint Joseph's Hawks,Saint Joseph's Hawks,75.5%,+4.6,Saint Joseph's Hawks,61-75,14.0,✅,9.443572218341025
+2026-03-03,West Virginia Mountaineers @ Kansas State Wildcats,West Virginia Mountaineers,74.4%,+4.0,Kansas State Wildcats,63-65,2.0,❌,-6.010199987005672
 2026-02-02,Tennessee Tech Golden Eagles @ Tennessee State Tigers,Tennessee State Tigers,81.6%,+6.1,Tennessee Tech Golden Eagles,90-85,5.0,❌,-11.147721205041622
 2026-01-27,Missouri Tigers @ Alabama Crimson Tide,Alabama Crimson Tide,90.0%,+9.0,Alabama Crimson Tide,64-90,26.0,✅,17.040907384607763
-2026-01-27,George Washington Revolutionaries @ Saint Louis Billikens,Saint Louis Billikens,86.7%,+7.5,Saint Louis Billikens,76-79,3.0,✅,-4.460352960997547
-2026-01-27,Indiana State Sycamores @ UIC Flames,UIC Flames,80.1%,+5.5,UIC Flames,74-76,2.0,✅,-3.4547388316968624
+2026-03-13,George Washington Revolutionaries @ Saint Louis Billikens,Saint Louis Billikens,86.7%,+7.5,Saint Louis Billikens,81-88,7.0,✅,-0.46035296099754675
+2026-03-01,UIC Flames @ Indiana State Sycamores,UIC Flames,80.1%,+5.5,Indiana State Sycamores,63-79,16.0,❌,-21.45473883169686
 2026-01-27,Georgia Tech Yellow Jackets @ Virginia Tech Hokies,Virginia Tech Hokies,81.7%,+6.1,Virginia Tech Hokies,65-71,6.0,✅,-0.14772120504162167
 2026-01-27,Western Michigan Broncos @ Northern Illinois Huskies,Western Michigan Broncos,68.4%,+3.5,Northern Illinois Huskies,65-85,20.0,❌,-23.461389138307084
 2026-01-27,Providence Friars @ UConn Huskies,UConn Huskies,93.7%,+12.0,UConn Huskies,81-87,6.0,✅,-5.9907841232538885
 2026-02-04,Arkansas-Pine Bluff Golden Lions @ Grambling Tigers,Grambling Tigers,80.1%,+5.5,Arkansas-Pine Bluff Golden Lions,67-64,3.0,❌,-8.454738831696861
 2026-01-27,Nebraska Cornhuskers @ Michigan Wolverines,Michigan Wolverines,86.7%,+7.7,Michigan Wolverines,72-75,3.0,✅,-4.698294440782806
 2026-01-27,Virginia Cavaliers @ Notre Dame Fighting Irish,Virginia Cavaliers,81.2%,+5.6,Virginia Cavaliers,100-97,3.0,✅,-2.619673743125424
-2026-01-27,Arkansas Razorbacks @ Oklahoma Sooners,Arkansas Razorbacks,75.5%,+5.2,Arkansas Razorbacks,83-79,4.0,✅,-1.161623557061354
-2026-01-27,Richmond Spiders @ VCU Rams,VCU Rams,93.7%,+12.0,VCU Rams,69-77,8.0,✅,-3.9907841232538885
+2026-03-13,Oklahoma Sooners @ Arkansas Razorbacks,Arkansas Razorbacks,75.5%,+5.2,Arkansas Razorbacks,79-82,3.0,✅,-2.161623557061354
+2026-02-14,VCU Rams @ Richmond Spiders,VCU Rams,93.7%,+12.0,VCU Rams,78-67,11.0,✅,-0.9907841232538885
 2026-01-27,Rhode Island Rams @ Dayton Flyers,Dayton Flyers,80.1%,+5.5,Rhode Island Rams,81-76,5.0,❌,-10.454738831696861
 2026-01-27,Arizona State Sun Devils @ UCF Knights,UCF Knights,77.6%,+4.3,UCF Knights,76-79,3.0,✅,-1.306612958452062
 2026-01-28,Mississippi Valley State Delta Devils @ Southern Jaguars,Southern Jaguars,95.8%,+20.7,Southern Jaguars,69-80,11.0,✅,-9.724692641985836
 2026-01-27,Syracuse Orange @ NC State Wolfpack,NC State Wolfpack,83.6%,+7.0,NC State Wolfpack,68-88,20.0,✅,13.042520589869358
-2026-01-27,Toledo Rockets @ Akron Zips,Akron Zips,90.0%,+9.0,Akron Zips,81-91,10.0,✅,1.040907384607765
-2026-01-27,Ohio Bobcats @ Kent State Golden Flashes,Kent State Golden Flashes,80.1%,+5.5,Kent State Golden Flashes,57-72,15.0,✅,9.545261168303139
-2026-01-27,Eastern Michigan Eagles @ Central Michigan Chippewas,Eastern Michigan Eagles,75.5%,+4.6,Central Michigan Chippewas,65-100,35.0,❌,-39.556427781658975
+2026-03-14,Toledo Rockets @ Akron Zips,Akron Zips,90.0%,+9.0,Akron Zips,76-79,3.0,✅,-5.959092615392235
+2026-03-12,Ohio Bobcats @ Kent State Golden Flashes,Kent State Golden Flashes,80.1%,+5.5,Kent State Golden Flashes,75-86,11.0,✅,5.545261168303138
+2026-02-17,Central Michigan Chippewas @ Eastern Michigan Eagles,Eastern Michigan Eagles,75.5%,+4.6,Eastern Michigan Eagles,54-66,12.0,✅,7.443572218341026
 2026-01-27,Buffalo Bulls @ Bowling Green Falcons,Bowling Green Falcons,83.6%,+7.0,Buffalo Bulls,89-78,11.0,❌,-17.95747941013064
 2026-01-27,McNeese Cowboys @ SE Louisiana Lions,McNeese Cowboys,91.6%,+11.2,McNeese Cowboys,76-66,10.0,✅,-1.1515836454342487
-2026-01-27,Michigan State Spartans @ Rutgers Scarlet Knights,Michigan State Spartans,91.9%,+14.4,Michigan State Spartans,88-79,9.0,✅,-5.425987902548544
+2026-03-05,Rutgers Scarlet Knights @ Michigan State Spartans,Michigan State Spartans,91.9%,+14.4,Michigan State Spartans,87-91,4.0,✅,-10.425987902548544
 2026-01-27,Wake Forest Demon Deacons @ Pittsburgh Panthers,Wake Forest Demon Deacons,52.2%,+1.1,Pittsburgh Panthers,76-80,4.0,❌,-5.07674049420217
-2026-01-28,San Francisco Dons @ Santa Clara Broncos,Santa Clara Broncos,86.7%,+7.5,Santa Clara Broncos,73-88,15.0,✅,7.539647039002453
+2026-02-21,Santa Clara Broncos @ San Francisco Dons,Santa Clara Broncos,86.7%,+7.5,Santa Clara Broncos,94-73,21.0,✅,13.539647039002453
 2026-01-28,UCLA Bruins @ Oregon Ducks,UCLA Bruins,67.4%,+3.1,UCLA Bruins,73-57,16.0,✅,12.928442676466034
-2026-01-28,Colorado State Rams @ San Diego State Aztecs,San Diego State Aztecs,74.4%,+4.0,San Diego State Aztecs,50-73,23.0,✅,18.98980001299433
+2026-03-12,Colorado State Rams @ San Diego State Aztecs,San Diego State Aztecs,74.4%,+4.0,San Diego State Aztecs,62-71,9.0,✅,4.989800012994328
 2026-01-28,Portland Pilots @ Pacific Tigers,Pacific Tigers,77.8%,+4.9,Pacific Tigers,51-74,23.0,✅,18.06489461535221
 2026-01-28,Oregon State Beavers @ Loyola Marymount Lions,Loyola Marymount Lions,71.7%,+3.0,Oregon State Beavers,72-69,3.0,❌,-5.99753336026051
 2026-01-28,Seattle U Redhawks @ Washington State Cougars,Washington State Cougars,59.8%,+0.7,Washington State Cougars,58-70,12.0,✅,11.301888904110509
 2026-01-28,Houston Cougars @ TCU Horned Frogs,Houston Cougars,88.6%,+8.0,Houston Cougars,79-70,9.0,✅,0.9848655290529198
-2026-01-28,Florida Gators @ South Carolina Gamecocks,Florida Gators,90.3%,+10.0,Florida Gators,95-48,47.0,✅,37.04733322445006
-2026-01-28,Wyoming Cowboys @ Utah State Aggies,Utah State Aggies,91.3%,+10.9,Utah State Aggies,62-94,32.0,✅,21.093570026164574
-2026-01-28,Illinois State Redbirds @ Murray State Racers,Murray State Racers,56.2%,+0.2,Illinois State Redbirds,70-65,5.0,❌,-5.179753993213699
+2026-02-17,South Carolina Gamecocks @ Florida Gators,Florida Gators,90.3%,+10.0,Florida Gators,62-76,14.0,✅,4.04733322445006
+2026-02-07,Utah State Aggies @ Wyoming Cowboys,Utah State Aggies,91.3%,+10.9,Utah State Aggies,85-83,2.0,✅,-8.906429973835426
+2026-02-18,Murray State Racers @ Illinois State Redbirds,Murray State Racers,56.2%,+0.2,Illinois State Redbirds,61-78,17.0,❌,-17.179753993213698
 2026-01-28,San Diego Toreros @ Pepperdine Waves,San Diego Toreros,52.2%,+1.1,San Diego Toreros,92-88,4.0,✅,2.9232595057978306
-2026-01-28,South Florida Bulls @ Tulane Green Wave,South Florida Bulls,81.9%,+5.6,South Florida Bulls,97-83,14.0,✅,8.380326256874575
+2026-03-01,Tulane Green Wave @ South Florida Bulls,South Florida Bulls,81.9%,+5.6,South Florida Bulls,62-90,28.0,✅,22.380326256874575
 2026-01-28,Minnesota Golden Gophers @ Wisconsin Badgers,Wisconsin Badgers,86.7%,+7.7,Wisconsin Badgers,63-67,4.0,✅,-3.6982944407828056
 2026-01-28,Stanford Cardinal @ Miami Hurricanes,Miami Hurricanes,71.7%,+3.0,Miami Hurricanes,70-79,9.0,✅,6.00246663973949
 2026-01-28,Delaware Blue Hens @ New Mexico State Aggies,New Mexico State Aggies,90.8%,+9.7,Delaware Blue Hens,73-64,9.0,❌,-18.67313599341125
 2026-01-28,Louisiana Tech Bulldogs @ UTEP Miners,UTEP Miners,52.5%,-0.2,Louisiana Tech Bulldogs,69-59,10.0,❌,-9.81264916458018
-2026-01-28,DePaul Blue Demons @ Georgetown Hoyas,Georgetown Hoyas,61.3%,+1.4,Georgetown Hoyas,61-70,9.0,✅,7.616281262540431
+2026-03-11,Georgetown Hoyas @ DePaul Blue Demons,Georgetown Hoyas,61.3%,+1.4,Georgetown Hoyas,63-56,7.0,✅,5.616281262540431
 2026-01-28,Belmont Bruins @ Valparaiso Beacons,Belmont Bruins,75.5%,+4.6,Belmont Bruins,78-77,1.0,✅,-3.556427781658974
-2026-01-28,North Texas Mean Green @ Tulsa Golden Hurricane,Tulsa Golden Hurricane,80.6%,+5.5,Tulsa Golden Hurricane,66-82,16.0,✅,10.545261168303139
+2026-03-13,North Texas Mean Green @ Tulsa Golden Hurricane,Tulsa Golden Hurricane,80.6%,+5.5,Tulsa Golden Hurricane,84-90,6.0,✅,0.5452611683031376
 2026-01-28,UAB Blazers @ UTSA Roadrunners,UAB Blazers,91.6%,+12.2,UAB Blazers,83-73,10.0,✅,-2.1773903624387216
 2026-01-28,Denver Pioneers @ Kansas City Roos,Denver Pioneers,68.4%,+3.1,Denver Pioneers,69-61,8.0,✅,4.928442676466033
 2026-01-28,South Dakota State Jackrabbits @ Omaha Mavericks,South Dakota State Jackrabbits,68.4%,+3.1,Omaha Mavericks,71-80,9.0,❌,-12.071557323533966
 2026-01-28,Marshall Thundering Herd @ Texas State Bobcats,Marshall Thundering Herd,81.2%,+5.6,Texas State Bobcats,68-72,4.0,❌,-9.619673743125425
 2026-01-28,Old Dominion Monarchs @ Arkansas State Red Wolves,Arkansas State Red Wolves,86.7%,+7.5,Old Dominion Monarchs,75-71,4.0,❌,-11.460352960997547
-2026-01-28,Sam Houston Bearkats @ Missouri State Bears,Sam Houston Bearkats,67.4%,+3.1,Sam Houston Bearkats,80-71,9.0,✅,5.928442676466033
+2026-02-28,Missouri State Bears @ Sam Houston Bearkats,Sam Houston Bearkats,67.4%,+3.1,Sam Houston Bearkats,81-86,5.0,✅,1.928442676466033
 2026-01-28,Evansville Purple Aces @ Drake Bulldogs,Drake Bulldogs,92.7%,+10.9,Drake Bulldogs,78-82,4.0,✅,-6.906429973835426
-2026-01-28,Xavier Musketeers @ Seton Hall Pirates,Seton Hall Pirates,59.8%,+0.7,Seton Hall Pirates,68-86,18.0,✅,17.30188890411051
+2026-03-03,Seton Hall Pirates @ Xavier Musketeers,Seton Hall Pirates,59.8%,+0.7,Seton Hall Pirates,77-68,9.0,✅,8.301888904110509
 2026-01-28,Butler Bulldogs @ St. John's Red Storm,St. John's Red Storm,86.7%,+7.7,St. John's Red Storm,70-92,22.0,✅,14.301705559217194
-2026-01-28,Northern Iowa Panthers @ Southern Illinois Salukis,Northern Iowa Panthers,67.4%,+3.1,Southern Illinois Salukis,50-65,15.0,❌,-18.071557323533966
+2026-02-21,Southern Illinois Salukis @ Northern Iowa Panthers,Northern Iowa Panthers,67.4%,+3.1,Southern Illinois Salukis,59-57,2.0,❌,-5.071557323533967
 2026-01-28,Bucknell Bison @ Lafayette Leopards,Lafayette Leopards,61.3%,+1.4,Lafayette Leopards,79-81,2.0,✅,0.6162812625404313
-2026-01-28,La Salle Explorers @ Fordham Rams,Fordham Rams,63.4%,+2.1,Fordham Rams,58-64,6.0,✅,3.9287167125655076
-2026-01-28,St. Bonaventure Bonnies @ Duquesne Dukes,Duquesne Dukes,63.4%,+1.9,St. Bonaventure Bonnies,87-79,8.0,❌,-9.865292531195667
+2026-03-04,Fordham Rams @ La Salle Explorers,Fordham Rams,63.4%,+2.1,La Salle Explorers,84-87,3.0,❌,-5.071283287434492
+2026-02-14,Duquesne Dukes @ St. Bonaventure Bonnies,Duquesne Dukes,63.4%,+1.9,Duquesne Dukes,78-73,5.0,✅,3.1347074688043333
 2026-01-28,Davidson Wildcats @ George Mason Patriots,George Mason Patriots,80.6%,+6.0,George Mason Patriots,52-60,8.0,✅,2.005640094891473
-2026-01-28,Rice Owls @ East Carolina Pirates,East Carolina Pirates,52.5%,-0.2,Rice Owls,83-77,6.0,❌,-5.812649164580179
+2026-02-14,East Carolina Pirates @ Rice Owls,East Carolina Pirates,52.5%,-0.2,East Carolina Pirates,85-75,10.0,✅,10.18735083541982
 2026-01-28,Charlotte 49ers @ Temple Owls,Temple Owls,72.1%,+3.4,Charlotte 49ers,80-76,4.0,❌,-7.43427443286421
 2026-01-28,USC Trojans @ Iowa Hawkeyes,Iowa Hawkeyes,83.6%,+7.0,Iowa Hawkeyes,72-73,1.0,✅,-5.9574794101306425
-2026-01-28,Holy Cross Crusaders @ Colgate Raiders,Colgate Raiders,90.0%,+9.0,Colgate Raiders,74-79,5.0,✅,-3.959092615392235
-2026-01-28,California Golden Bears @ Florida State Seminoles,California Golden Bears,56.9%,+1.6,Florida State Seminoles,61-63,2.0,❌,-3.5528159091145506
+2026-02-11,Colgate Raiders @ Holy Cross Crusaders,Colgate Raiders,90.0%,+9.0,Colgate Raiders,74-70,4.0,✅,-4.959092615392235
+2026-03-11,California Golden Bears @ Florida State Seminoles,California Golden Bears,56.9%,+1.6,Florida State Seminoles,89-95,6.0,❌,-7.552815909114551
 2026-01-28,American University Eagles @ Loyola Maryland Greyhounds,American University Eagles,75.5%,+5.2,Loyola Maryland Greyhounds,68-77,9.0,❌,-14.161623557061354
-2026-01-28,Navy Midshipmen @ Boston University Terriers,Navy Midshipmen,68.4%,+3.1,Navy Midshipmen,58-50,8.0,✅,4.928442676466033
+2026-03-08,Boston University Terriers @ Navy Midshipmen,Navy Midshipmen,68.4%,+3.1,Boston University Terriers,73-72,1.0,❌,-4.071557323533967
 2026-01-28,Oakland Golden Grizzlies @ Purdue Fort Wayne Mastodons,Oakland Golden Grizzlies,65.1%,+2.7,Oakland Golden Grizzlies,74-65,9.0,✅,6.345838317634309
 2026-01-28,IU Indianapolis Jaguars @ Robert Morris Colonials,Robert Morris Colonials,90.0%,+8.4,Robert Morris Colonials,58-74,16.0,✅,7.590071890536185
 2026-01-28,Mississippi State Bulldogs @ LSU Tigers,LSU Tigers,77.2%,+4.3,Mississippi State Bulldogs,80-66,14.0,❌,-18.306612958452064
 2026-01-28,Tennessee Volunteers @ Georgia Bulldogs,Tennessee Volunteers,61.9%,+2.7,Tennessee Volunteers,86-85,1.0,✅,-1.6541616823656908
 2026-01-28,Texas Longhorns @ Auburn Tigers,Auburn Tigers,77.8%,+4.9,Auburn Tigers,82-88,6.0,✅,1.0648946153522072
 2026-01-28,West Georgia Wolves @ Bellarmine Knights,Bellarmine Knights,71.7%,+3.0,Bellarmine Knights,74-77,3.0,✅,0.0024666397394903505
-2026-01-28,Central Arkansas Bears @ Queens University Royals,Queens University Royals,71.7%,+3.0,Central Arkansas Bears,100-90,10.0,❌,-12.99753336026051
+2026-03-08,Queens University Royals @ Central Arkansas Bears,Queens University Royals,71.7%,+3.0,Queens University Royals,98-93,5.0,✅,2.0024666397394904
 2026-01-28,Austin Peay Governors @ Eastern Kentucky Colonels,Austin Peay Governors,56.9%,+1.6,Austin Peay Governors,90-82,8.0,✅,6.447184090885449
 2026-01-28,Jacksonville State Gamecocks @ Florida International Panthers,Florida International Panthers,52.5%,-0.2,Jacksonville State Gamecocks,78-74,4.0,❌,-3.8126491645801788
-2026-01-28,Western Kentucky Hilltoppers @ Kennesaw State Owls,Kennesaw State Owls,61.3%,+1.4,Kennesaw State Owls,69-72,3.0,✅,1.6162812625404313
+2026-03-12,Kennesaw State Owls @ Western Kentucky Hilltoppers,Kennesaw State Owls,61.3%,+1.4,Kennesaw State Owls,96-87,9.0,✅,7.616281262540431
 2026-01-28,Baylor Bears @ Cincinnati Bearcats,Baylor Bears,52.2%,+1.1,Cincinnati Bearcats,57-67,10.0,❌,-11.07674049420217
 2026-01-28,Lehigh Mountain Hawks @ Army Black Knights,Lehigh Mountain Hawks,58.9%,+1.7,Army Black Knights,64-67,3.0,❌,-4.710053188790014
-2026-01-30,UNLV Rebels @ Nevada Wolf Pack,Nevada Wolf Pack,86.7%,+7.5,Nevada Wolf Pack,76-89,13.0,✅,5.539647039002453
+2026-02-28,Nevada Wolf Pack @ UNLV Rebels,Nevada Wolf Pack,86.7%,+7.5,UNLV Rebels,83-85,2.0,❌,-9.460352960997547
 2026-01-30,Loyola Chicago Ramblers @ VCU Rams,VCU Rams,95.8%,+18.7,VCU Rams,75-89,14.0,✅,-4.724484574507123
 2026-01-30,Boise State Broncos @ Grand Canyon Lopes,Boise State Broncos,66.6%,+3.1,Grand Canyon Lopes,69-86,17.0,❌,-20.071557323533966
-2026-01-30,Michigan Wolverines @ Michigan State Spartans,Michigan Wolverines,59.9%,+2.3,Michigan Wolverines,83-71,12.0,✅,9.676423948453753
-2026-01-30,Dayton Flyers @ Saint Louis Billikens,Saint Louis Billikens,86.7%,+7.5,Saint Louis Billikens,71-102,31.0,✅,23.539647039002453
+2026-03-08,Michigan State Spartans @ Michigan Wolverines,Michigan Wolverines,59.9%,+2.3,Michigan Wolverines,80-90,10.0,✅,7.6764239484537535
+2026-03-14,Dayton Flyers @ Saint Louis Billikens,Saint Louis Billikens,86.7%,+7.5,Dayton Flyers,70-69,1.0,❌,-8.460352960997547
 2026-01-30,Wright State Raiders @ Milwaukee Panthers,Wright State Raiders,66.6%,+3.1,Wright State Raiders,76-69,7.0,✅,3.928442676466033
 2026-01-30,Mount St. Mary's Mountaineers @ Saint Peter's Peacocks,Saint Peter's Peacocks,77.6%,+4.9,Saint Peter's Peacocks,58-66,8.0,✅,3.064894615352207
 2026-01-30,Fairfield Stags @ Iona Gaels,Iona Gaels,77.6%,+4.9,Fairfield Stags,71-70,1.0,❌,-5.935105384647793
 2026-01-30,Providence Friars @ Villanova Wildcats,Villanova Wildcats,83.6%,+7.0,Villanova Wildcats,73-87,14.0,✅,7.0425205898693575
 2026-01-30,Sacred Heart Pioneers @ Quinnipiac Bobcats,Quinnipiac Bobcats,84.5%,+7.0,Sacred Heart Pioneers,98-91,7.0,❌,-13.957479410130642
-2026-01-30,Dartmouth Big Green @ Yale Bulldogs,Yale Bulldogs,94.7%,+12.6,Yale Bulldogs,68-83,15.0,✅,2.371874875226723
+2026-02-13,Yale Bulldogs @ Dartmouth Big Green,Yale Bulldogs,94.7%,+12.6,Yale Bulldogs,83-70,13.0,✅,0.37187487522672313
 2026-01-30,Cleveland State Vikings @ Green Bay Phoenix,Green Bay Phoenix,73.0%,+4.0,Cleveland State Vikings,89-82,7.0,❌,-11.010199987005672
 2026-01-30,Northern Kentucky Norse @ Detroit Mercy Titans,Northern Kentucky Norse,77.8%,+5.2,Detroit Mercy Titans,77-90,13.0,❌,-18.161623557061354
 2026-01-30,Marist Red Foxes @ Canisius Golden Griffins,Marist Red Foxes,90.8%,+10.4,Marist Red Foxes,88-86,2.0,✅,-8.385575726350751
 2026-01-30,Rider Broncs @ Manhattan Jaspers,Manhattan Jaspers,77.2%,+4.3,Manhattan Jaspers,90-95,5.0,✅,0.693387041547938
-2026-01-30,Harvard Crimson @ Brown Bears,Harvard Crimson,56.9%,+1.6,Harvard Crimson,69-59,10.0,✅,8.44718409088545
-2026-01-30,Pennsylvania Quakers @ Columbia Lions,Columbia Lions,71.7%,+3.0,Columbia Lions,67-72,5.0,✅,2.0024666397394904
+2026-02-13,Brown Bears @ Harvard Crimson,Harvard Crimson,56.9%,+1.6,Harvard Crimson,53-56,3.0,✅,1.4471840908854496
+2026-02-13,Columbia Lions @ Pennsylvania Quakers,Columbia Lions,71.7%,+3.0,Pennsylvania Quakers,67-76,9.0,❌,-11.99753336026051
 2026-01-30,IU Indianapolis Jaguars @ Youngstown State Penguins,Youngstown State Penguins,86.7%,+8.2,Youngstown State Penguins,76-85,9.0,✅,0.8439344243049813
 2026-01-30,Siena Saints @ Niagara Purple Eagles,Siena Saints,89.9%,+8.7,Siena Saints,82-79,3.0,✅,-5.716422364528272
-2026-01-30,Princeton Tigers @ Cornell Big Red,Cornell Big Red,74.4%,+4.0,Cornell Big Red,64-87,23.0,✅,18.98980001299433
-2026-01-30,Kent State Golden Flashes @ Akron Zips,Akron Zips,86.0%,+7.5,Akron Zips,52-69,17.0,✅,9.539647039002453
-2026-01-31,Saint Mary's Gaels @ Gonzaga Bulldogs,Gonzaga Bulldogs,88.3%,+8.2,Gonzaga Bulldogs,65-73,8.0,✅,-0.15606557569501867
-2026-01-31,New Mexico Lobos @ San José State Spartans,New Mexico Lobos,91.9%,+13.1,New Mexico Lobos,90-80,10.0,✅,-3.1020315431166434
-2026-01-31,Pacific Tigers @ San Francisco Dons,San Francisco Dons,80.6%,+6.0,San Francisco Dons,82-87,5.0,✅,-0.994359905108527
-2026-01-31,Montana Grizzlies @ Sacramento State Hornets,Montana Grizzlies,81.9%,+5.6,Sacramento State Hornets,79-86,7.0,❌,-12.619673743125425
-2026-01-31,Louisiana Tech Bulldogs @ Sam Houston Bearkats,Sam Houston Bearkats,82.7%,+6.1,Sam Houston Bearkats,67-83,16.0,✅,9.852278794958378
-2026-01-31,Colorado State Rams @ Wyoming Cowboys,Colorado State Rams,65.1%,+2.7,Wyoming Cowboys,57-68,11.0,❌,-13.654161682365691
+2026-02-13,Cornell Big Red @ Princeton Tigers,Cornell Big Red,74.4%,+4.0,Cornell Big Red,89-65,24.0,✅,19.98980001299433
+2026-03-13,Kent State Golden Flashes @ Akron Zips,Akron Zips,86.0%,+7.5,Akron Zips,68-75,7.0,✅,-0.46035296099754675
+2026-02-28,Gonzaga Bulldogs @ Saint Mary's Gaels,Gonzaga Bulldogs,88.3%,+8.2,Saint Mary's Gaels,59-70,11.0,❌,-19.156065575695017
+2026-03-12,San José State Spartans @ New Mexico Lobos,New Mexico Lobos,91.9%,+13.1,New Mexico Lobos,77-93,16.0,✅,2.8979684568833566
+2026-02-28,San Francisco Dons @ Pacific Tigers,San Francisco Dons,80.6%,+6.0,San Francisco Dons,72-61,11.0,✅,5.005640094891473
+2026-02-26,Sacramento State Hornets @ Montana Grizzlies,Montana Grizzlies,81.9%,+5.6,Montana Grizzlies,73-81,8.0,✅,2.380326256874576
+2026-02-07,Sam Houston Bearkats @ Louisiana Tech Bulldogs,Sam Houston Bearkats,82.7%,+6.1,Louisiana Tech Bulldogs,78-87,9.0,❌,-15.147721205041622
+2026-02-14,Wyoming Cowboys @ Colorado State Rams,Colorado State Rams,65.1%,+2.7,Colorado State Rams,68-79,11.0,✅,8.345838317634309
 2026-01-31,UC Davis Aggies @ Cal State Bakersfield Roadrunners,UC Davis Aggies,75.5%,+4.6,UC Davis Aggies,80-72,8.0,✅,3.443572218341026
 2026-01-31,Santa Clara Broncos @ Loyola Marymount Lions,Santa Clara Broncos,88.6%,+8.0,Santa Clara Broncos,104-73,31.0,✅,22.984865529052918
 2026-01-31,Cal State Fullerton Titans @ UC Santa Barbara Gauchos,UC Santa Barbara Gauchos,86.7%,+7.5,UC Santa Barbara Gauchos,69-83,14.0,✅,6.539647039002453
 2026-01-31,Delaware Blue Hens @ UTEP Miners,UTEP Miners,66.7%,+2.8,UTEP Miners,55-70,15.0,✅,12.239795407374936
-2026-01-31,Auburn Tigers @ Tennessee Volunteers,Tennessee Volunteers,66.7%,+2.8,Tennessee Volunteers,69-77,8.0,✅,5.239795407374936
+2026-03-12,Auburn Tigers @ Tennessee Volunteers,Tennessee Volunteers,66.7%,+2.8,Tennessee Volunteers,62-72,10.0,✅,7.239795407374936
 2026-01-31,SIU Edwardsville Cougars @ Southern Indiana Screaming Eagles,SIU Edwardsville Cougars,68.4%,+3.5,SIU Edwardsville Cougars,58-46,12.0,✅,8.538610861692916
-2026-01-31,UConn Huskies @ Creighton Bluejays,UConn Huskies,81.9%,+5.6,UConn Huskies,85-58,27.0,✅,21.380326256874575
-2026-01-31,Murray State Racers @ Belmont Bruins,Belmont Bruins,66.7%,+2.8,Belmont Bruins,86-103,17.0,✅,14.239795407374936
+2026-02-18,Creighton Bluejays @ UConn Huskies,UConn Huskies,81.9%,+5.6,Creighton Bluejays,91-84,7.0,❌,-12.619673743125425
+2026-02-15,Belmont Bruins @ Murray State Racers,Belmont Bruins,66.7%,+2.8,Belmont Bruins,87-70,17.0,✅,14.239795407374936
 2026-01-31,South Florida Bulls @ Temple Owls,South Florida Bulls,75.5%,+4.6,Temple Owls,78-79,1.0,❌,-5.556427781658974
-2026-01-31,UAB Blazers @ North Texas Mean Green,North Texas Mean Green,56.2%,+0.2,UAB Blazers,72-68,4.0,❌,-4.179753993213699
+2026-03-01,North Texas Mean Green @ UAB Blazers,North Texas Mean Green,56.2%,+0.2,North Texas Mean Green,62-58,4.0,✅,3.8202460067863013
 2026-01-31,Washington Huskies @ Northwestern Wildcats,Northwestern Wildcats,63.4%,+2.1,Washington Huskies,76-62,14.0,❌,-16.071283287434493
 2026-01-31,Cal Poly Mustangs @ UC Riverside Highlanders,UC Riverside Highlanders,59.8%,+0.7,Cal Poly Mustangs,94-87,7.0,❌,-7.698111095889491
-2026-01-31,UC San Diego Tritons @ Cal State Northridge Matadors,UC San Diego Tritons,75.5%,+5.2,Cal State Northridge Matadors,64-81,17.0,❌,-22.161623557061354
+2026-03-12,UC San Diego Tritons @ Cal State Northridge Matadors,UC San Diego Tritons,75.5%,+5.2,Cal State Northridge Matadors,70-80,10.0,❌,-15.161623557061354
 2026-01-31,Georgia State Panthers @ South Alabama Jaguars,South Alabama Jaguars,81.6%,+6.0,South Alabama Jaguars,67-69,2.0,✅,-3.994359905108527
-2026-01-31,Idaho Vandals @ Northern Arizona Lumberjacks,Idaho Vandals,69.9%,+4.1,Idaho Vandals,79-62,17.0,✅,12.929760151413792
+2026-02-26,Northern Arizona Lumberjacks @ Idaho Vandals,Idaho Vandals,69.9%,+4.1,Idaho Vandals,58-78,20.0,✅,15.929760151413792
 2026-01-31,UIC Flames @ Southern Illinois Salukis,Southern Illinois Salukis,63.4%,+2.1,UIC Flames,68-66,2.0,❌,-4.071283287434492
 2026-01-31,Rutgers Scarlet Knights @ USC Trojans,USC Trojans,87.1%,+8.2,USC Trojans,75-78,3.0,✅,-5.156065575695019
 2026-01-31,Bowling Green Falcons @ Central Michigan Chippewas,Bowling Green Falcons,81.9%,+5.6,Central Michigan Chippewas,59-62,3.0,❌,-8.619673743125425
-2026-01-31,Harvard Crimson @ Yale Bulldogs,Yale Bulldogs,93.7%,+12.0,Harvard Crimson,67-65,2.0,❌,-13.990784123253889
-2026-01-31,UMBC Retrievers @ UAlbany Great Danes,UMBC Retrievers,56.9%,+1.6,UMBC Retrievers,68-65,3.0,✅,1.4471840908854496
+2026-02-14,Yale Bulldogs @ Harvard Crimson,Yale Bulldogs,93.7%,+12.0,Yale Bulldogs,76-75,1.0,✅,-10.990784123253889
+2026-02-21,UAlbany Great Danes @ UMBC Retrievers,UMBC Retrievers,56.9%,+1.6,UMBC Retrievers,62-66,4.0,✅,2.4471840908854494
 2026-01-31,Stony Brook Seawolves @ Elon Phoenix,Elon Phoenix,81.6%,+6.0,Stony Brook Seawolves,72-68,4.0,❌,-9.994359905108528
 2026-01-31,McNeese Cowboys @ Lamar Cardinals,McNeese Cowboys,88.6%,+8.0,McNeese Cowboys,64-63,1.0,✅,-7.01513447094708
 2026-01-31,Kentucky Wildcats @ Arkansas Razorbacks,Arkansas Razorbacks,61.3%,+1.4,Kentucky Wildcats,85-77,8.0,❌,-9.383718737459569
-2026-01-31,George Mason Patriots @ St. Bonaventure Bonnies,George Mason Patriots,72.4%,+4.3,George Mason Patriots,77-73,4.0,✅,-0.2703113593327142
-2026-01-31,Ole Miss Rebels @ Vanderbilt Commodores,Vanderbilt Commodores,90.0%,+9.0,Vanderbilt Commodores,68-71,3.0,✅,-5.959092615392235
+2026-03-12,St. Bonaventure Bonnies @ George Mason Patriots,George Mason Patriots,72.4%,+4.3,St. Bonaventure Bonnies,63-57,6.0,❌,-10.270311359332714
+2026-03-03,Vanderbilt Commodores @ Ole Miss Rebels,Vanderbilt Commodores,90.0%,+9.0,Vanderbilt Commodores,89-86,3.0,✅,-5.959092615392235
 2026-01-31,Bradley Braves @ Drake Bulldogs,Drake Bulldogs,63.4%,+2.1,Bradley Braves,87-73,14.0,❌,-16.071283287434493
-2026-01-31,Portland Pilots @ Washington State Cougars,Washington State Cougars,83.6%,+7.0,Washington State Cougars,74-104,30.0,✅,23.04252058986936
-2026-01-31,Oregon State Beavers @ San Diego Toreros,Oregon State Beavers,61.9%,+2.7,Oregon State Beavers,78-76,2.0,✅,-0.6541616823656908
+2026-03-06,Portland Pilots @ Washington State Cougars,Washington State Cougars,83.6%,+7.0,Portland Pilots,74-68,6.0,❌,-12.957479410130642
+2026-02-25,San Diego Toreros @ Oregon State Beavers,Oregon State Beavers,61.9%,+2.7,Oregon State Beavers,82-92,10.0,✅,7.345838317634309
 2026-01-31,Oklahoma State Cowboys @ Utah Utes,Oklahoma State Cowboys,52.2%,+1.1,Oklahoma State Cowboys,81-69,12.0,✅,10.92325950579783
-2026-01-31,Arkansas-Pine Bluff Golden Lions @ Mississippi Valley State Delta Devils,Arkansas-Pine Bluff Golden Lions,90.3%,+10.0,Arkansas-Pine Bluff Golden Lions,78-70,8.0,✅,-1.9526667755499396
+2026-02-28,Mississippi Valley State Delta Devils @ Arkansas-Pine Bluff Golden Lions,Arkansas-Pine Bluff Golden Lions,90.3%,+10.0,Mississippi Valley State Delta Devils,70-69,1.0,❌,-10.95266677554994
 2026-01-31,Stanford Cardinal @ Florida State Seminoles,Stanford Cardinal,52.2%,+1.1,Florida State Seminoles,80-88,8.0,❌,-9.07674049420217
 2026-01-31,Notre Dame Fighting Irish @ Syracuse Orange,Syracuse Orange,61.3%,+1.4,Syracuse Orange,72-86,14.0,✅,12.616281262540431
-2026-01-31,Dartmouth Big Green @ Brown Bears,Brown Bears,52.5%,-0.2,Dartmouth Big Green,77-70,7.0,❌,-6.812649164580179
-2026-01-31,Princeton Tigers @ Columbia Lions,Columbia Lions,71.7%,+2.8,Princeton Tigers,80-68,12.0,❌,-14.760204592625064
+2026-02-14,Brown Bears @ Dartmouth Big Green,Brown Bears,52.5%,-0.2,Brown Bears,79-76,3.0,✅,3.1873508354198212
+2026-02-14,Columbia Lions @ Princeton Tigers,Columbia Lions,71.7%,+2.8,Columbia Lions,75-65,10.0,✅,7.239795407374936
 2026-01-31,North Dakota State Bison @ South Dakota Coyotes,North Dakota State Bison,81.9%,+5.6,North Dakota State Bison,89-84,5.0,✅,-0.619673743125424
 2026-01-31,Eastern Michigan Eagles @ Massachusetts Minutemen,Massachusetts Minutemen,78.3%,+4.9,Massachusetts Minutemen,67-70,3.0,✅,-1.9351053846477928
-2026-01-31,Pennsylvania Quakers @ Cornell Big Red,Cornell Big Red,74.4%,+4.0,Pennsylvania Quakers,91-81,10.0,❌,-14.010199987005672
+2026-02-14,Cornell Big Red @ Pennsylvania Quakers,Cornell Big Red,74.4%,+4.0,Pennsylvania Quakers,76-82,6.0,❌,-10.010199987005672
 2026-01-31,SE Louisiana Lions @ Stephen F. Austin Lumberjacks,Stephen F. Austin Lumberjacks,86.7%,+8.2,Stephen F. Austin Lumberjacks,58-85,27.0,✅,18.843934424304983
 2026-01-31,Northwestern State Demons @ New Orleans Privateers,New Orleans Privateers,73.0%,+3.4,New Orleans Privateers,64-75,11.0,✅,7.56572556713579
 2026-01-31,Nicholls Colonels @ East Texas A&M Lions,Nicholls Colonels,65.1%,+3.1,Nicholls Colonels,72-68,4.0,✅,0.928442676466033
-2026-01-31,Texas Southern Tigers @ Prairie View A&M Panthers,Texas Southern Tigers,52.2%,+1.1,Prairie View A&M Panthers,78-85,7.0,❌,-8.07674049420217
-2026-01-31,Florida A&M Rattlers @ Alabama A&M Bulldogs,Florida A&M Rattlers,52.2%,+1.1,Alabama A&M Bulldogs,65-72,7.0,❌,-8.07674049420217
+2026-03-05,Prairie View A&M Panthers @ Texas Southern Tigers,Texas Southern Tigers,52.2%,+1.1,Prairie View A&M Panthers,70-59,11.0,❌,-12.07674049420217
+2026-02-19,Alabama A&M Bulldogs @ Florida A&M Rattlers,Florida A&M Rattlers,52.2%,+1.1,Alabama A&M Bulldogs,63-61,2.0,❌,-3.0767404942021694
 2026-01-31,Indiana Hoosiers @ UCLA Bruins,UCLA Bruins,59.8%,+0.7,Indiana Hoosiers,98-97,1.0,❌,-1.6981110958894912
 2026-01-31,UT Rio Grande Valley Vaqueros @ Incarnate Word Cardinals,UT Rio Grande Valley Vaqueros,56.9%,+1.6,UT Rio Grande Valley Vaqueros,106-93,13.0,✅,11.44718409088545
-2026-01-31,Montana State Bobcats @ Portland State Vikings,Montana State Bobcats,56.2%,+1.6,Portland State Vikings,54-63,9.0,❌,-10.55281590911455
-2026-01-31,Utah Tech Trailblazers @ Tarleton State Texans,Tarleton State Texans,66.7%,+2.8,Utah Tech Trailblazers,65-59,6.0,❌,-8.760204592625064
-2026-01-31,New Mexico State Aggies @ Kennesaw State Owls,Kennesaw State Owls,59.8%,+0.7,Kennesaw State Owls,53-76,23.0,✅,22.30188890411051
+2026-02-26,Portland State Vikings @ Montana State Bobcats,Montana State Bobcats,56.2%,+1.6,Montana State Bobcats,69-84,15.0,✅,13.44718409088545
+2026-02-21,Utah Tech Trailblazers @ Tarleton State Texans,Tarleton State Texans,66.7%,+2.8,Utah Tech Trailblazers,80-72,8.0,❌,-10.760204592625064
+2026-03-07,Kennesaw State Owls @ New Mexico State Aggies,Kennesaw State Owls,59.8%,+0.7,New Mexico State Aggies,76-79,3.0,❌,-3.698111095889491
 2026-01-31,BYU Cougars @ Kansas Jayhawks,Kansas Jayhawks,61.3%,+1.4,Kansas Jayhawks,82-90,8.0,✅,6.616281262540431
-2026-01-30,North Carolina Central Eagles @ South Carolina State Bulldogs,North Carolina Central Eagles,59.9%,+2.7,NOT PLAYED,N/A,,,
-2026-01-31,Davidson Wildcats @ Richmond Spiders,Richmond Spiders,50.8%,-0.8,Davidson Wildcats,79-54,25.0,❌,-24.173980427046974
-2026-01-31,Maryland Eastern Shore Hawks @ Delaware State Hornets,Maryland Eastern Shore Hawks,58.9%,+1.7,Delaware State Hornets,57-65,8.0,❌,-9.710053188790015
-2026-01-31,Morgan State Bears @ Coppin State Eagles,Morgan State Bears,75.5%,+4.6,Morgan State Bears,89-80,9.0,✅,4.443572218341026
+2026-03-05,South Carolina State Bulldogs @ North Carolina Central Eagles,North Carolina Central Eagles,59.9%,+2.7,South Carolina State Bulldogs,80-64,16.0,❌,-18.65416168236569
+2026-02-18,Richmond Spiders @ Davidson Wildcats,Richmond Spiders,50.8%,-0.8,Davidson Wildcats,63-65,2.0,❌,-1.173980427046975
+2026-03-05,Delaware State Hornets @ Maryland Eastern Shore Hawks,Maryland Eastern Shore Hawks,58.9%,+1.7,Delaware State Hornets,57-56,1.0,❌,-2.710053188790014
+2026-03-05,Coppin State Eagles @ Morgan State Bears,Morgan State Bears,75.5%,+4.6,Morgan State Bears,66-70,4.0,✅,-0.5564277816589742
 2026-01-31,Houston Christian Huskies @ Texas A&M-Corpus Christi Islanders,Texas A&M-Corpus Christi Islanders,88.3%,+8.4,Texas A&M-Corpus Christi Islanders,71-73,2.0,✅,-6.409928109463815
-2026-01-31,NJIT Highlanders @ Vermont Catamounts,Vermont Catamounts,91.3%,+10.9,NJIT Highlanders,79-77,2.0,❌,-12.906429973835426
+2026-03-10,NJIT Highlanders @ Vermont Catamounts,Vermont Catamounts,91.3%,+10.9,Vermont Catamounts,54-63,9.0,✅,-1.9064299738354258
 2026-01-31,App State Mountaineers @ Troy Trojans,Troy Trojans,81.7%,+6.1,App State Mountaineers,66-44,22.0,❌,-28.14772120504162
 2026-01-31,Eastern Kentucky Colonels @ Central Arkansas Bears,Central Arkansas Bears,61.3%,+1.4,Central Arkansas Bears,81-90,9.0,✅,7.616281262540431
 2026-01-31,Austin Peay Governors @ West Georgia Wolves,Austin Peay Governors,82.6%,+6.3,Austin Peay Governors,81-78,3.0,✅,-3.32281551597936
 2026-01-31,UT Martin Skyhawks @ Western Illinois Leathernecks,UT Martin Skyhawks,88.6%,+8.7,UT Martin Skyhawks,84-44,40.0,✅,31.28357763547173
 2026-01-31,Southeast Missouri State Redhawks @ Eastern Illinois Panthers,Southeast Missouri State Redhawks,67.4%,+3.1,Southeast Missouri State Redhawks,77-59,18.0,✅,14.928442676466034
-2026-01-31,Evansville Purple Aces @ Northern Iowa Panthers,Northern Iowa Panthers,94.2%,+12.6,Northern Iowa Panthers,55-71,16.0,✅,3.371874875226723
-2026-01-31,Norfolk State Spartans @ Howard Bison,Howard Bison,61.3%,+1.4,Howard Bison,60-88,28.0,✅,26.616281262540433
+2026-03-05,Evansville Purple Aces @ Northern Iowa Panthers,Northern Iowa Panthers,94.2%,+12.6,Northern Iowa Panthers,59-68,9.0,✅,-3.628125124773277
+2026-03-05,Howard Bison @ Norfolk State Spartans,Howard Bison,61.3%,+1.4,Howard Bison,84-76,8.0,✅,6.616281262540431
 2026-01-31,Baylor Bears @ West Virginia Mountaineers,West Virginia Mountaineers,56.2%,+0.2,Baylor Bears,63-53,10.0,❌,-10.1797539932137
-2026-01-31,Bethune-Cookman Wildcats @ Alabama State Hornets,Bethune-Cookman Wildcats,65.1%,+2.7,Bethune-Cookman Wildcats,69-54,15.0,✅,12.345838317634309
-2026-01-31,Grambling Tigers @ Jackson State Tigers,Grambling Tigers,68.4%,+3.5,Grambling Tigers,69-66,3.0,✅,-0.4613891383070836
+2026-02-19,Alabama State Hornets @ Bethune-Cookman Wildcats,Bethune-Cookman Wildcats,65.1%,+2.7,Bethune-Cookman Wildcats,71-82,11.0,✅,8.345838317634309
+2026-03-10,Grambling Tigers @ Jackson State Tigers,Grambling Tigers,68.4%,+3.5,Jackson State Tigers,65-68,3.0,❌,-6.461389138307084
 2026-01-31,Southern Jaguars @ Alcorn State Braves,Southern Jaguars,81.9%,+5.6,Alcorn State Braves,73-78,5.0,❌,-10.619673743125425
 2026-01-31,California Golden Bears @ Miami Hurricanes,Miami Hurricanes,73.0%,+3.4,California Golden Bears,86-85,1.0,❌,-4.43427443286421
-2026-01-31,Loyola Maryland Greyhounds @ Navy Midshipmen,Navy Midshipmen,88.3%,+8.4,Navy Midshipmen,71-87,16.0,✅,7.590071890536185
-2026-01-31,Omaha Mavericks @ Denver Pioneers,Denver Pioneers,52.5%,-0.2,Omaha Mavericks,84-82,2.0,❌,-1.812649164580179
-2026-01-31,New Hampshire Wildcats @ Bryant Bulldogs,Bryant Bulldogs,63.4%,+2.1,Bryant Bulldogs,84-92,8.0,✅,5.928716712565508
-2026-01-31,Hawai'i Rainbow Warriors @ Long Beach State Beach,Hawai'i Rainbow Warriors,85.9%,+6.9,Hawai'i Rainbow Warriors,89-82,7.0,✅,0.09509054715123888
+2026-02-25,Navy Midshipmen @ Loyola Maryland Greyhounds,Navy Midshipmen,88.3%,+8.4,Navy Midshipmen,78-51,27.0,✅,18.590071890536187
+2026-02-15,Denver Pioneers @ Omaha Mavericks,Denver Pioneers,52.5%,-0.2,Omaha Mavericks,76-83,7.0,❌,-6.812649164580179
+2026-03-03,Bryant Bulldogs @ New Hampshire Wildcats,Bryant Bulldogs,63.4%,+2.1,New Hampshire Wildcats,83-88,5.0,❌,-7.071283287434492
+2026-03-07,Long Beach State Beach @ Hawai'i Rainbow Warriors,Hawai'i Rainbow Warriors,85.9%,+6.9,Long Beach State Beach,84-75,9.0,❌,-15.904909452848761
 2026-01-31,Georgia Southern Eagles @ Louisiana Ragin' Cajuns,Georgia Southern Eagles,72.4%,+4.3,Louisiana Ragin' Cajuns,60-69,9.0,❌,-13.270311359332714
-2026-01-31,Eastern Washington Eagles @ Northern Colorado Bears,Northern Colorado Bears,81.6%,+6.1,Northern Colorado Bears,71-74,3.0,✅,-3.1477212050416217
+2026-02-26,Northern Colorado Bears @ Eastern Washington Eagles,Northern Colorado Bears,81.6%,+6.1,Eastern Washington Eagles,72-82,10.0,❌,-16.14772120504162
 2026-01-31,Little Rock Trojans @ Tennessee Tech Golden Eagles,Little Rock Trojans,52.2%,+1.1,Tennessee Tech Golden Eagles,77-87,10.0,❌,-11.07674049420217
-2026-01-31,Southern Utah Thunderbirds @ Abilene Christian Wildcats,Abilene Christian Wildcats,76.7%,+4.3,Southern Utah Thunderbirds,79-76,3.0,❌,-7.306612958452062
-2026-01-31,Western Kentucky Hilltoppers @ Middle Tennessee Blue Raiders,Middle Tennessee Blue Raiders,73.0%,+3.4,Western Kentucky Hilltoppers,65-60,5.0,❌,-8.43427443286421
+2026-02-21,Southern Utah Thunderbirds @ Abilene Christian Wildcats,Abilene Christian Wildcats,76.7%,+4.3,Abilene Christian Wildcats,83-87,4.0,✅,-0.30661295845206205
+2026-02-14,Middle Tennessee Blue Raiders @ Western Kentucky Hilltoppers,Middle Tennessee Blue Raiders,73.0%,+3.4,Western Kentucky Hilltoppers,80-82,2.0,❌,-5.43427443286421
 2026-01-31,NC State Wolfpack @ Wake Forest Demon Deacons,NC State Wolfpack,67.4%,+3.1,NC State Wolfpack,96-78,18.0,✅,14.928442676466034
 2026-01-31,Northern Illinois Huskies @ Miami (OH) RedHawks,Miami (OH) RedHawks,95.8%,+16.5,Miami (OH) RedHawks,61-85,24.0,✅,7.521505789162173
-2026-01-31,Mississippi State Bulldogs @ Missouri Tigers,Missouri Tigers,71.7%,+2.8,Missouri Tigers,79-84,5.0,✅,2.2397954073749364
+2026-02-28,Missouri Tigers @ Mississippi State Bulldogs,Missouri Tigers,71.7%,+2.8,Missouri Tigers,88-64,24.0,✅,21.239795407374935
 2026-01-31,Lindenwood Lions @ Morehead State Eagles,Lindenwood Lions,58.9%,+1.7,Lindenwood Lions,79-78,1.0,✅,-0.7100531887900143
 2026-01-31,High Point Panthers @ Longwood Lancers,High Point Panthers,90.3%,+10.0,High Point Panthers,71-59,12.0,✅,2.0473332244500604
-2026-01-31,Fresno State Bulldogs @ Air Force Falcons,Fresno State Bulldogs,89.9%,+8.7,Fresno State Bulldogs,79-62,17.0,✅,8.283577635471728
-2026-01-31,Oral Roberts Golden Eagles @ South Dakota State Jackrabbits,South Dakota State Jackrabbits,90.8%,+10.1,South Dakota State Jackrabbits,72-95,23.0,✅,12.88366688651133
+2026-02-14,Air Force Falcons @ Fresno State Bulldogs,Fresno State Bulldogs,89.9%,+8.7,Fresno State Bulldogs,63-93,30.0,✅,21.28357763547173
+2026-02-14,South Dakota State Jackrabbits @ Oral Roberts Golden Eagles,South Dakota State Jackrabbits,90.8%,+10.1,South Dakota State Jackrabbits,87-69,18.0,✅,7.88366688651133
 2026-01-31,Marshall Thundering Herd @ Arkansas State Red Wolves,Arkansas State Red Wolves,61.3%,+1.4,Marshall Thundering Herd,70-61,9.0,❌,-10.383718737459569
-2026-01-31,James Madison Dukes @ Southern Miss Golden Eagles,James Madison Dukes,56.9%,+1.6,Southern Miss Golden Eagles,65-73,8.0,❌,-9.55281590911455
+2026-03-05,James Madison Dukes @ Southern Miss Golden Eagles,James Madison Dukes,56.9%,+1.6,Southern Miss Golden Eagles,80-86,6.0,❌,-7.552815909114551
 2026-02-01,Coastal Carolina Chanticleers @ UL Monroe Warhawks,Coastal Carolina Chanticleers,82.6%,+6.3,Coastal Carolina Chanticleers,83-79,4.0,✅,-2.32281551597936
-2026-01-31,Idaho State Bengals @ Weber State Wildcats,Weber State Wildcats,56.2%,+0.2,Weber State Wildcats,79-81,2.0,✅,1.820246006786301
-2026-01-31,Florida Gulf Coast Eagles @ Jacksonville Dolphins,Florida Gulf Coast Eagles,56.9%,+1.6,Florida Gulf Coast Eagles,68-49,19.0,✅,17.44718409088545
-2026-01-31,California Baptist Lancers @ UT Arlington Mavericks,UT Arlington Mavericks,52.5%,-0.2,California Baptist Lancers,87-77,10.0,❌,-9.81264916458018
+2026-02-28,Weber State Wildcats @ Idaho State Bengals,Weber State Wildcats,56.2%,+0.2,Weber State Wildcats,83-73,10.0,✅,9.8202460067863
+2026-02-18,Jacksonville Dolphins @ Florida Gulf Coast Eagles,Florida Gulf Coast Eagles,56.9%,+1.6,Florida Gulf Coast Eagles,84-86,2.0,✅,0.44718409088544964
+2026-02-26,UT Arlington Mavericks @ California Baptist Lancers,UT Arlington Mavericks,52.5%,-0.2,California Baptist Lancers,56-68,12.0,❌,-11.81264916458018
 2026-01-31,Jacksonville State Gamecocks @ Missouri State Bears,Missouri State Bears,56.2%,+0.2,Missouri State Bears,67-74,7.0,✅,6.820246006786301
-2026-01-31,Saint Joseph's Hawks @ La Salle Explorers,Saint Joseph's Hawks,67.4%,+3.1,Saint Joseph's Hawks,67-58,9.0,✅,5.928442676466033
+2026-03-07,La Salle Explorers @ Saint Joseph's Hawks,Saint Joseph's Hawks,67.4%,+3.1,Saint Joseph's Hawks,76-88,12.0,✅,8.928442676466034
 2026-01-31,Arizona Wildcats @ Arizona State Sun Devils,Arizona Wildcats,91.9%,+12.2,Arizona Wildcats,87-74,13.0,✅,0.8226096375612784
 2026-01-31,North Carolina Tar Heels @ Georgia Tech Yellow Jackets,North Carolina Tar Heels,89.0%,+8.7,North Carolina Tar Heels,91-75,16.0,✅,7.283577635471728
-2026-01-31,SMU Mustangs @ Louisville Cardinals,Louisville Cardinals,80.6%,+6.0,Louisville Cardinals,74-88,14.0,✅,8.005640094891472
-2026-01-31,Colgate Raiders @ Lehigh Mountain Hawks,Colgate Raiders,68.4%,+3.5,Lehigh Mountain Hawks,76-77,1.0,❌,-4.461389138307084
-2026-01-31,Lafayette Leopards @ American University Eagles,American University Eagles,82.7%,+6.1,Lafayette Leopards,67-65,2.0,❌,-8.147721205041622
-2026-01-31,Fordham Rams @ George Washington Revolutionaries,George Washington Revolutionaries,92.7%,+10.9,Fordham Rams,79-65,14.0,❌,-24.906429973835426
-2026-01-31,Ohio State Buckeyes @ Wisconsin Badgers,Wisconsin Badgers,61.3%,+1.4,Wisconsin Badgers,82-92,10.0,✅,8.616281262540431
-2026-01-31,Boston University Terriers @ Bucknell Bison,Bucknell Bison,52.5%,-0.2,Bucknell Bison,97-103,6.0,✅,6.187350835419821
+2026-03-11,SMU Mustangs @ Louisville Cardinals,Louisville Cardinals,80.6%,+6.0,Louisville Cardinals,58-62,4.0,✅,-1.994359905108527
+2026-03-08,Colgate Raiders @ Lehigh Mountain Hawks,Colgate Raiders,68.4%,+3.5,Lehigh Mountain Hawks,69-76,7.0,❌,-10.461389138307084
+2026-02-22,American University Eagles @ Lafayette Leopards,American University Eagles,82.7%,+6.1,American University Eagles,75-61,14.0,✅,7.852278794958378
+2026-03-12,George Washington Revolutionaries @ Fordham Rams,George Washington Revolutionaries,92.7%,+10.9,George Washington Revolutionaries,66-62,4.0,✅,-6.906429973835426
+2026-02-17,Wisconsin Badgers @ Ohio State Buckeyes,Wisconsin Badgers,61.3%,+1.4,Ohio State Buckeyes,69-86,17.0,❌,-18.383718737459567
+2026-02-14,Bucknell Bison @ Boston University Terriers,Bucknell Bison,52.5%,-0.2,Boston University Terriers,69-82,13.0,❌,-12.81264916458018
 2026-01-31,UNC Asheville Bulldogs @ Winthrop Eagles,Winthrop Eagles,81.7%,+6.1,Winthrop Eagles,71-84,13.0,✅,6.852278794958378
-2026-01-31,Radford Highlanders @ Presbyterian Blue Hose,Presbyterian Blue Hose,52.5%,-0.2,Radford Highlanders,93-84,9.0,❌,-8.81264916458018
-2025-12-31,Charleston Southern Buccaneers @ Gardner-Webb Runnin' Bulldogs,Charleston Southern Buccaneers,93.7%,+10.9,Charleston Southern Buccaneers,89-79,10.0,✅,-0.9064299738354258
+2026-03-06,Presbyterian Blue Hose @ Radford Highlanders,Presbyterian Blue Hose,52.5%,-0.2,Presbyterian Blue Hose,91-85,6.0,✅,6.187350835419821
+2026-02-17,Gardner-Webb Runnin' Bulldogs @ Charleston Southern Buccaneers,Charleston Southern Buccaneers,93.7%,+10.9,Charleston Southern Buccaneers,66-75,9.0,✅,-1.9064299738354258
 2026-01-31,Ohio Bobcats @ Buffalo Bulls,Buffalo Bulls,59.8%,+0.7,Ohio Bobcats,95-83,12.0,❌,-12.698111095889491
 2026-01-31,Long Island University Sharks @ Central Connecticut Blue Devils,Long Island University Sharks,52.2%,+1.1,Long Island University Sharks,80-59,21.0,✅,19.92325950579783
-2026-01-31,Maine Black Bears @ UMass Lowell River Hawks,UMass Lowell River Hawks,63.4%,+2.1,UMass Lowell River Hawks,77-91,14.0,✅,11.928716712565507
+2026-03-03,UMass Lowell River Hawks @ Maine Black Bears,UMass Lowell River Hawks,63.4%,+2.1,UMass Lowell River Hawks,67-56,11.0,✅,8.928716712565507
 2026-01-31,Charleston Cougars @ Northeastern Huskies,Charleston Cougars,67.4%,+3.1,Charleston Cougars,89-84,5.0,✅,1.928442676466033
 2026-01-31,North Carolina A&T Aggies @ Drexel Dragons,Drexel Dragons,84.5%,+7.0,Drexel Dragons,60-61,1.0,✅,-5.9574794101306425
-2026-01-31,Hampton Pirates @ Towson Tigers,Towson Tigers,79.8%,+5.5,Towson Tigers,50-82,32.0,✅,26.54526116830314
-2026-01-31,Hofstra Pride @ Monmouth Hawks,Hofstra Pride,64.3%,+2.7,Hofstra Pride,73-57,16.0,✅,13.345838317634309
-2026-02-01,East Tennessee State Buccaneers @ Wofford Terriers,East Tennessee State Buccaneers,67.4%,+3.1,East Tennessee State Buccaneers,86-72,14.0,✅,10.928442676466034
+2026-03-07,Hampton Pirates @ Towson Tigers,Towson Tigers,79.8%,+5.5,Towson Tigers,68-74,6.0,✅,0.5452611683031376
+2026-03-10,Monmouth Hawks @ Hofstra Pride,Hofstra Pride,64.3%,+2.7,Hofstra Pride,69-75,6.0,✅,3.345838317634309
+2026-02-25,Wofford Terriers @ East Tennessee State Buccaneers,East Tennessee State Buccaneers,67.4%,+3.1,Wofford Terriers,72-69,3.0,❌,-6.071557323533967
 2026-01-31,VMI Keydets @ Mercer Bears,Mercer Bears,95.8%,+16.5,Mercer Bears,81-95,14.0,✅,-2.4784942108378267
 2026-01-31,Old Dominion Monarchs @ Texas State Bobcats,Texas State Bobcats,52.5%,-0.2,Texas State Bobcats,64-81,17.0,✅,17.18735083541982
-2026-01-31,Texas Longhorns @ Oklahoma Sooners,Texas Longhorns,61.9%,+2.7,Texas Longhorns,79-69,10.0,✅,7.345838317634309
+2026-03-07,Oklahoma Sooners @ Texas Longhorns,Texas Longhorns,61.9%,+2.7,Oklahoma Sooners,88-85,3.0,❌,-5.654161682365691
 2026-01-31,Queens University Royals @ Bellarmine Knights,Queens University Royals,72.4%,+4.3,Bellarmine Knights,75-78,3.0,❌,-7.270311359332714
 2026-01-31,North Alabama Lions @ Stetson Hatters,North Alabama Lions,59.4%,+1.7,North Alabama Lions,68-66,2.0,✅,0.28994681120998567
 2026-01-31,Lipscomb Bisons @ North Florida Ospreys,Lipscomb Bisons,88.6%,+8.0,Lipscomb Bisons,100-94,6.0,✅,-2.01513447094708
 2026-01-31,Virginia Cavaliers @ Boston College Eagles,Virginia Cavaliers,91.6%,+11.2,Virginia Cavaliers,73-66,7.0,✅,-4.151583645434249
-2026-01-31,Valparaiso Beacons @ Indiana State Sycamores,Valparaiso Beacons,56.9%,+1.6,Valparaiso Beacons,76-72,4.0,✅,2.4471840908854494
+2026-03-05,Indiana State Sycamores @ Valparaiso Beacons,Valparaiso Beacons,56.9%,+1.6,Valparaiso Beacons,62-63,1.0,✅,-0.5528159091145504
 2026-01-31,Holy Cross Crusaders @ Army Black Knights,Army Black Knights,59.8%,+0.7,Army Black Knights,68-69,1.0,✅,0.30188890411050884
-2026-01-31,San Diego State Aztecs @ Utah State Aggies,Utah State Aggies,77.2%,+4.3,Utah State Aggies,66-71,5.0,✅,0.693387041547938
+2026-03-14,San Diego State Aztecs @ Utah State Aggies,Utah State Aggies,77.2%,+4.3,Utah State Aggies,62-73,11.0,✅,6.693387041547938
 2026-01-31,DePaul Blue Demons @ Xavier Musketeers,Xavier Musketeers,77.2%,+4.3,Xavier Musketeers,66-68,2.0,✅,-2.306612958452062
 2026-01-31,Robert Morris Colonials @ Purdue Fort Wayne Mastodons,Purdue Fort Wayne Mastodons,52.5%,-0.2,Purdue Fort Wayne Mastodons,71-83,12.0,✅,12.18735083541982
-2026-01-31,Stonehill Skyhawks @ Le Moyne Dolphins,Le Moyne Dolphins,77.6%,+4.3,Stonehill Skyhawks,65-54,11.0,❌,-15.306612958452062
+2026-03-04,Stonehill Skyhawks @ Le Moyne Dolphins,Le Moyne Dolphins,77.6%,+4.3,Stonehill Skyhawks,81-71,10.0,❌,-14.306612958452062
 2026-01-31,Fairleigh Dickinson Knights @ Wagner Seahawks,Wagner Seahawks,56.9%,+0.7,Wagner Seahawks,72-75,3.0,✅,2.301888904110509
 2026-02-01,Samford Bulldogs @ Western Carolina Catamounts,Samford Bulldogs,56.9%,+1.6,Samford Bulldogs,88-74,14.0,✅,12.44718409088545
 2026-01-31,UNC Greensboro Spartans @ The Citadel Bulldogs,UNC Greensboro Spartans,75.5%,+5.2,The Citadel Bulldogs,66-71,5.0,❌,-10.161623557061354
@@ -430,15 +430,15 @@ game_date,matchup,predicted_winner,win_probability,predicted_spread,actual_winne
 2026-01-31,Texas Tech Red Raiders @ UCF Knights,Texas Tech Red Raiders,79.7%,+5.2,UCF Knights,80-88,8.0,❌,-13.161623557061354
 2026-01-31,Pittsburgh Panthers @ Clemson Tigers,Clemson Tigers,90.0%,+9.0,Clemson Tigers,52-63,11.0,✅,2.040907384607765
 2026-01-31,Marquette Golden Eagles @ Seton Hall Pirates,Seton Hall Pirates,66.7%,+2.8,Seton Hall Pirates,64-69,5.0,✅,2.2397954073749364
-2026-01-31,Georgetown Hoyas @ Butler Bulldogs,Butler Bulldogs,81.6%,+6.0,Georgetown Hoyas,77-64,13.0,❌,-18.994359905108528
+2026-02-18,Butler Bulldogs @ Georgetown Hoyas,Butler Bulldogs,81.6%,+6.0,Butler Bulldogs,93-89,4.0,✅,-1.994359905108527
 2026-01-31,Ball State Cardinals @ Toledo Rockets,Toledo Rockets,90.0%,+9.0,Toledo Rockets,55-73,18.0,✅,9.040907384607765
-2026-01-31,Campbell Fighting Camels @ William & Mary Tribe,William & Mary Tribe,79.8%,+5.5,Campbell Fighting Camels,104-96,8.0,❌,-13.454738831696861
-2025-12-13,UIC Flames @ Belmont Bruins,Belmont Bruins,69.9%,+4.1,Belmont Bruins,84-87,3.0,✅,-1.0702398485862092
-2026-02-05,UConn Huskies @ St. John's Red Storm,St. John's Red Storm,50.8%,-0.2,NOT PLAYED,N/A,,,
-2026-02-05,Evansville Purple Aces @ Valparaiso Beacons,Valparaiso Beacons,86.7%,+8.2,NOT PLAYED,N/A,,,
-2025-12-29,Southern Illinois Salukis @ Murray State Racers,Murray State Racers,56.9%,+1.6,Murray State Racers,81-84,3.0,✅,1.4471840908854496
-2025-12-29,Illinois State Redbirds @ Drake Bulldogs,Illinois State Redbirds,78.9%,+4.9,Illinois State Redbirds,73-56,17.0,✅,12.064894615352207
-2026-01-10,Northern Iowa Panthers @ Bradley Braves,Northern Iowa Panthers,73.0%,+3.4,Bradley Braves,69-75,6.0,❌,-9.43427443286421
-2026-02-05,Dayton Flyers @ VCU Rams,VCU Rams,81.6%,+6.0,NOT PLAYED,N/A,,,
-2026-01-05,Yale Bulldogs @ Brown Bears,Yale Bulldogs,95.6%,+14.5,Yale Bulldogs,70-53,17.0,✅,2.511992642706746
-2026-01-07,Davidson Wildcats @ Loyola Chicago Ramblers,Davidson Wildcats,91.3%,+10.9,Davidson Wildcats,79-64,15.0,✅,4.093570026164574
+2026-02-19,William & Mary Tribe @ Campbell Fighting Camels,William & Mary Tribe,79.8%,+5.5,Campbell Fighting Camels,83-84,1.0,❌,-6.454738831696862
+2026-02-06,Belmont Bruins @ UIC Flames,Belmont Bruins,69.9%,+4.1,Belmont Bruins,68-62,6.0,✅,1.9297601514137908
+2026-03-14,UConn Huskies @ St. John's Red Storm,St. John's Red Storm,50.8%,-0.2,St. John's Red Storm,52-72,20.0,✅,20.18735083541982
+2026-02-28,Valparaiso Beacons @ Evansville Purple Aces,Valparaiso Beacons,86.7%,+8.2,Evansville Purple Aces,79-80,1.0,❌,-9.156065575695019
+2026-02-06,Murray State Racers @ Southern Illinois Salukis,Murray State Racers,56.9%,+1.6,Murray State Racers,91-81,10.0,✅,8.44718409088545
+2026-02-06,Drake Bulldogs @ Illinois State Redbirds,Illinois State Redbirds,78.9%,+4.9,Illinois State Redbirds,76-86,10.0,✅,5.064894615352207
+2026-03-07,Northern Iowa Panthers @ Bradley Braves,Northern Iowa Panthers,73.0%,+3.4,Northern Iowa Panthers,73-69,4.0,✅,0.5657255671357904
+2026-03-15,Dayton Flyers @ VCU Rams,VCU Rams,81.6%,+6.0,VCU Rams,62-70,8.0,✅,2.005640094891473
+2026-02-06,Brown Bears @ Yale Bulldogs,Yale Bulldogs,95.6%,+14.5,Yale Bulldogs,69-81,12.0,✅,-2.488007357293254
+2026-03-12,Loyola Chicago Ramblers @ Davidson Wildcats,Davidson Wildcats,91.3%,+10.9,Davidson Wildcats,59-64,5.0,✅,-5.906429973835426

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Net Ratings | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── table ─────────────────────────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; white-space: nowrap; }
+    thead th {
+      background: var(--card2); color: var(--muted);
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1;
+    }
+    thead th:hover { color: var(--ink); }
+    thead th.sort-asc::after  { content: " ↑"; color: var(--t1); }
+    thead th.sort-desc::after { content: " ↓"; color: var(--t1); }
+    tbody tr { border-bottom: 1px solid #1a2235; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    tbody td { padding: 8px 12px; vertical-align: middle; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.rk  { color: var(--muted); text-align: right; }
+    td.logo-cell img { width: 28px; height: 28px; object-fit: contain; display: block; }
+    td.team-name { font-weight: 700; }
+    .pos { color: #16A34A; font-weight: 700; }
+    .neg { color: #DC2626; font-weight: 700; }
+    .def-good { color: #16A34A; font-weight: 700; } /* low def is good */
+    .def-bad  { color: #DC2626; font-weight: 700; }
+
+    /* ── top-1 card ─────────────────────────────────────────────────── */
+    .top1-card {
+      display: flex; align-items: center; gap: 18px;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 18px; padding: 18px 24px; margin-bottom: 16px;
+    }
+    .top1-card img { width: 58px; height: 58px; object-fit: contain; }
+
+    /* ── filters ────────────────────────────────────────────────────── */
+    .filters {
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+      margin-bottom: 14px;
+    }
+    .filters .form-group { flex: 1; min-width: 140px; }
+    .filters .form-group.narrow { flex: 0 0 120px; }
+    .count-label { color: var(--muted); font-size: 0.8rem; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">Hog Charts</a>
+  <a href="index.html"        data-page="index.html">Home</a>
+  <a href="prediction.html"   data-page="prediction.html">Predictor</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
+  <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
+  <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+</nav>
+
+<div class="container">
+
+  <h2>Net Ratings</h2>
+  <p class="page-sub">
+    Opponent-adjusted efficiency for every Division&nbsp;I team.
+    Net rating is points scored minus points allowed per 100 possessions, adjusted for opponent strength.
+    Click any column header to sort.
+  </p>
+
+  <div id="top1-card" class="top1-card" style="display:none"></div>
+
+  <div class="filters">
+    <div class="form-group">
+      <label for="search">Search team</label>
+      <input type="text" id="search" placeholder="e.g. Arkansas">
+    </div>
+    <div class="form-group">
+      <label for="conf-sel">Conference</label>
+      <select id="conf-sel"><option value="">All conferences</option></select>
+    </div>
+    <div class="form-group narrow">
+      <label for="min-games">Min games</label>
+      <input type="number" id="min-games" value="15" min="1" max="40" step="1">
+    </div>
+  </div>
+
+  <div class="count-label" id="count-label"></div>
+
+  <div class="tbl-wrap">
+    <table id="ratings-table">
+      <thead>
+        <tr>
+          <th class="sort-desc" data-col="rank"       data-dir="asc">Rk</th>
+          <th>                                                        </th><!-- logo -->
+          <th data-col="team"      data-dir="asc">Team</th>
+          <th data-col="conf"      data-dir="asc">Conf</th>
+          <th>Record</th>
+          <th data-col="net_eff"   data-dir="desc">Net</th>
+          <th data-col="off_eff"   data-dir="desc">Off</th>
+          <th data-col="def_eff"   data-dir="asc" >Def</th>
+          <th data-col="sos"       data-dir="desc">SOS</th>
+          <th data-col="pace"      data-dir="desc">Pace</th>
+          <th data-col="home_court" data-dir="desc">Home</th>
+          <th data-col="form"      data-dir="desc">Form</th>
+        </tr>
+      </thead>
+      <tbody id="ratings-body"></tbody>
+    </table>
+  </div>
+
+  <p class="caption" id="footer-cap" style="margin-top:10px"></p>
+  <hr>
+  <p class="caption">Built by Brady Brown &amp; Wyatt Thompson. Follow @hogcharts on Instagram.</p>
+
+</div>
+
+<script src="js/common.js"></script>
+<script>
+const TOOLTIPS = {
+  net_eff:    "Net rating: points scored minus points allowed per 100 possessions, adjusted for opponent strength. Higher is better.",
+  off_eff:    "Offensive rating: points scored per 100 possessions, adjusted for the defenses faced. Higher is better.",
+  def_eff:    "Defensive rating: points allowed per 100 possessions, adjusted for the offenses faced. Lower is better.",
+  sos:        "Strength of schedule: average net rating of opponents faced. Higher = tougher slate.",
+  pace:       "Average possessions per game.",
+  home_court: "Points this team's home court is worth in a prediction.",
+  form:       "Opponent-adjusted margin over the last 5 games. Positive = playing above their rating.",
+};
+
+let allRows  = [];
+let NR_META  = null;
+let sortCol  = "rank";
+let sortDir  = "asc"; // asc = rank 1 first
+
+async function init() {
+  const data = await loadJSON("data/net-ratings.json");
+  if (!data?.net_ratings) {
+    document.getElementById("count-label").textContent = "Data not found — run build_site.py first.";
+    return;
+  }
+
+  allRows  = data.net_ratings;
+  NR_META  = data.meta;
+
+  // Populate conference dropdown
+  const confs = [...new Set(allRows.map(r => r.conf).filter(Boolean))].sort();
+  const sel = document.getElementById("conf-sel");
+  confs.forEach(c => {
+    const o = document.createElement("option");
+    o.value = o.textContent = c;
+    sel.appendChild(o);
+  });
+
+  // Add tooltips to header
+  const ths = document.querySelectorAll("thead th[data-col]");
+  ths.forEach(th => {
+    const col = th.dataset.col;
+    if (TOOLTIPS[col]) th.title = TOOLTIPS[col];
+  });
+
+  // Sort/filter handlers
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir = sortDir === "asc" ? "desc" : "asc";
+      } else {
+        sortCol = col;
+        sortDir = th.dataset.dir || "desc";
+      }
+      updateSortHeaders();
+      render();
+    });
+  });
+
+  ["search", "conf-sel", "min-games"].forEach(id =>
+    document.getElementById(id).addEventListener("input", render)
+  );
+
+  render();
+  buildFooter();
+}
+
+function filtered() {
+  const search  = document.getElementById("search").value.toLowerCase().trim();
+  const conf    = document.getElementById("conf-sel").value;
+  const minG    = parseInt(document.getElementById("min-games").value) || 0;
+
+  return allRows.filter(r =>
+    (!search || r.team?.toLowerCase().includes(search)) &&
+    (!conf   || r.conf === conf) &&
+    (r.games == null || r.games >= minG)
+  );
+}
+
+function sorted(rows) {
+  return [...rows].sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const cmp = typeof av === "string" ? av.localeCompare(bv) : av - bv;
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+}
+
+function pct(v, decimals = 1, signed = false) {
+  if (v == null) return "—";
+  const s = Math.abs(v).toFixed(decimals);
+  if (!signed) return s;
+  return v >= 0 ? `+${s}` : `-${s}`;
+}
+
+function render() {
+  const rows = sorted(filtered());
+  document.getElementById("count-label").textContent =
+    `${rows.length} of ${allRows.length} teams`;
+
+  // Top-1 card
+  const top1Card = document.getElementById("top1-card");
+  if (rows.length > 0) {
+    const top = rows[0];
+    const nr = allRows.find(r => r.rank === 1) || allRows[0]; // overall #1
+    top1Card.style.display = "flex";
+    top1Card.innerHTML = `
+      <img src="${logoUrl(nr.team_id)}" alt="${nr.team}" onerror="this.style.opacity=0">
+      <div style="flex:1">
+        <div style="color:var(--muted);font-size:.74rem;letter-spacing:.08em;font-weight:700">#1 NET RATING</div>
+        <div style="font-size:1.3rem;font-weight:900">${nr.team}</div>
+        <div style="color:var(--muted);font-size:.85rem">${nr.record ?? ""} · ${nr.conf ?? ""}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:2rem;font-weight:900;color:${nr.net_eff >= 0 ? '#16A34A' : '#DC2626'}">${pct(nr.net_eff, 1, true)}</div>
+        <div style="color:var(--muted);font-size:.74rem;letter-spacing:.06em;font-weight:700">NET / 100</div>
+      </div>`;
+  } else {
+    top1Card.style.display = "none";
+  }
+
+  const tbody = document.getElementById("ratings-body");
+  tbody.innerHTML = rows.map(r => {
+    const netC = r.net_eff > 0 ? "pos" : r.net_eff < 0 ? "neg" : "";
+    const sosC = r.sos > 0 ? "pos" : r.sos < 0 ? "neg" : "";
+    const defC = r.def_eff != null && r.def_eff < 100 ? "def-good" : r.def_eff > 105 ? "def-bad" : "";
+    return `<tr>
+      <td class="rk num">${r.rank ?? "—"}</td>
+      <td class="logo-cell"><img src="${logoUrl(r.team_id)}" alt="${r.team}" onerror="this.style.opacity=0"></td>
+      <td class="team-name">${r.team}</td>
+      <td style="color:var(--muted)">${r.conf ?? "—"}</td>
+      <td style="color:var(--muted)">${r.record ?? "—"}</td>
+      <td class="num ${netC}">${pct(r.net_eff, 1, true)}</td>
+      <td class="num">${pct(r.off_eff, 1)}</td>
+      <td class="num ${defC}">${pct(r.def_eff, 1)}</td>
+      <td class="num ${sosC}">${pct(r.sos, 1, true)}</td>
+      <td class="num">${pct(r.pace, 1)}</td>
+      <td class="num">${pct(r.home_court, 1, true)}</td>
+      <td class="num">${pct(r.form, 1, true)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll("thead th").forEach(th => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.col === sortCol) {
+      th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
+    }
+  });
+}
+
+function buildFooter() {
+  const meta = NR_META;
+  if (!meta) return;
+  const cap = document.getElementById("footer-cap");
+  cap.textContent =
+    `Built ${meta.built_at?.slice(0,10)} · ${meta.season} season · ${allRows.length} teams. `
+    + `Lower Defense = better. Form is opponent-adjusted margin over the last ${meta.form_games} games.`;
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
