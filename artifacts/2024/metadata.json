@@ -1,0 +1,22 @@
+{
+  "built_at": "2026-06-18T17:10:21.394188",
+  "season": 2026,
+  "calibration_years": [
+    2021,
+    2022,
+    2023
+  ],
+  "n_teams": 373,
+  "form_mode": "residual",
+  "form_games": 5,
+  "league_avg_pace": 69.08,
+  "league_home_adv": 12.84,
+  "backtest_year": 2023,
+  "backtest": {
+    "accuracy": 0.7309109176155392,
+    "logloss": 0.5146777666429642,
+    "auc": 0.8175513834599419,
+    "spread_mae": 9.204940017971037,
+    "spread_rmse": 11.728466178881074
+  }
+}
