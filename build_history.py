@@ -16,7 +16,7 @@ import sys
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-FIRST_SEASON = 2022  # 2022 is the first season with enough prior data to calibrate
+FIRST_SEASON = 2016  # sportsdataverse PBP/boxscores available from ~2002; 2016 is reliable
 
 
 def current_season():
@@ -46,6 +46,7 @@ def run_script(script, season, env):
 def build_season(season):
     env = os.environ.copy()
     env["OVERRIDE_SEASON"] = str(season)
+    env["RATINGS_ONLY"] = "1"  # skip model training; net ratings still built
 
     print(f"\n{'='*60}")
     print(f"  Building season {season-1}-{str(season)[2:]}  (SEASON={season})")

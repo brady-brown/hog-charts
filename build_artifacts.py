@@ -30,6 +30,8 @@ else:
     _today = _date.today()
     _season = _today.year + 1 if _today.month >= 11 else _today.year
 
+RATINGS_ONLY = bool(_os.environ.get("RATINGS_ONLY"))  # skip model training for historical builds
+
 ART = Path(__file__).parent / "artifacts" / str(_season)
 ART.mkdir(parents=True, exist_ok=True)
 CALIBRATION_YEARS = list(range(2021, _season))  # all complete seasons before current
@@ -59,7 +61,8 @@ def build_net_ratings(pred):
     eff['pace'] = eff['team_id'].map(lambda t: pred.current_pace.get(t, np.nan))
     # Scale raw home-court estimate by the spread coefficient so the displayed
     # value is the actual points it contributes to a prediction (raw is ~3x larger).
-    hc_coef = float(pred.reg.coef_[1])
+    # In ratings-only mode the model isn't trained so fall back to a neutral scale.
+    hc_coef = float(pred.reg.coef_[1]) if pred.reg is not None else 1.0
     eff['home_court'] = eff['team_id'].map(lambda t: pred.home_adv.get(t, np.nan)) * hc_coef
     eff['form'] = eff['team_id'].map(lambda t: pred.current_form.get(t, 0.0))
 
@@ -113,32 +116,34 @@ def build_model_json(pred, metrics):
 
 def main():
     ART.mkdir(exist_ok=True)
+    mode = "ratings-only" if RATINGS_ONLY else "full"
     print("=" * 60)
-    print("Building predictor artifacts")
+    print(f"Building predictor artifacts  [{mode}]")
     print("=" * 60)
 
     pred = TempoPredictor()
-    pred.train(calibration_year=CALIBRATION_YEARS)
+
+    if not RATINGS_ONLY:
+        pred.train(calibration_year=CALIBRATION_YEARS)
+
     pred._build_ratings(_season)
 
     metrics = {}
-    if BACKTEST_YEAR is not None:
+    if not RATINGS_ONLY and BACKTEST_YEAR is not None:
         print(f"\nBacktesting on {BACKTEST_YEAR} (held out)...")
         m, _, _ = pred.validate_walk_forward(BACKTEST_YEAR)
         metrics = {k: float(v) for k, v in m.items()}
         print(f"   accuracy={m['accuracy']:.4f}  logloss={m['logloss']:.4f}  "
               f"auc={m['auc']:.4f}  spread_mae={m['spread_mae']:.2f}")
 
-    # Data-only model artifacts (no pickle): the deployed app reads these with
-    # pure numpy/pandas, so it needs neither sklearn nor sportsdataverse and is
-    # immune to version skew between this machine and the server.
     teams = build_teams_table(pred)
     teams.to_parquet(ART / "teams.parquet", index=False)
     print(f"\nWrote {ART / 'teams.parquet'}  ({len(teams)} teams)")
 
-    with open(ART / "model.json", "w") as f:
-        json.dump(build_model_json(pred, metrics), f, indent=2)
-    print(f"Wrote {ART / 'model.json'}")
+    if not RATINGS_ONLY:
+        with open(ART / "model.json", "w") as f:
+            json.dump(build_model_json(pred, metrics), f, indent=2)
+        print(f"Wrote {ART / 'model.json'}")
 
     ratings = build_net_ratings(pred)
     ratings.to_parquet(ART / "net_ratings.parquet", index=False)

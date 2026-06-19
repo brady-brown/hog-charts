@@ -106,8 +106,9 @@ def zone_records(group):
 print("\nLoading artifacts…")
 with open(os.path.join(ART, "metadata.json")) as f:
     meta = json.load(f)
-with open(os.path.join(ART, "model.json")) as f:
-    model = json.load(f)
+
+model_path = os.path.join(ART, "model.json")
+model = json.load(open(model_path)) if os.path.exists(model_path) else None
 
 teams_df = pd.read_parquet(os.path.join(ART, "teams.parquet"))
 nr_raw   = pd.read_parquet(os.path.join(ART, "net_ratings.parquet"))
@@ -127,23 +128,26 @@ else:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 1. predictor.json
+# 1. predictor.json  (only for full builds that include a trained model)
 # ══════════════════════════════════════════════════════════════════════════════
-print("\nBuilding predictor.json…")
-teams_df["conf"] = teams_df["team"].map(conf_map).fillna("")
-rank_cols = [c for c in ["team", "rank", "off_rank", "def_rank"] if c in nr_raw.columns]
-teams_df  = teams_df.merge(nr_raw[rank_cols], on="team", how="left")
-for col in ["net_eff", "off_eff", "def_eff", "form"]:
-    if col in teams_df.columns: teams_df[col] = teams_df[col].round(2)
-for col in ["pace", "home_adv"]:
-    if col in teams_df.columns: teams_df[col] = teams_df[col].round(1)
-want = ["team", "team_id", "conf", "net_eff", "off_eff", "def_eff",
-        "pace", "home_adv", "form", "rank", "off_rank", "def_rank"]
-teams_records = (teams_df[[c for c in want if c in teams_df.columns]]
-                 .sort_values("team")
-                 .where(lambda df: ~df.isin([float("nan")]), other=None)
-                 .to_dict("records"))
-write_json({"model": model, "teams": teams_records, "meta": meta}, "predictor.json")
+if model is not None:
+    print("\nBuilding predictor.json…")
+    teams_df["conf"] = teams_df["team"].map(conf_map).fillna("")
+    rank_cols = [c for c in ["team", "rank", "off_rank", "def_rank"] if c in nr_raw.columns]
+    teams_df  = teams_df.merge(nr_raw[rank_cols], on="team", how="left")
+    for col in ["net_eff", "off_eff", "def_eff", "form"]:
+        if col in teams_df.columns: teams_df[col] = teams_df[col].round(2)
+    for col in ["pace", "home_adv"]:
+        if col in teams_df.columns: teams_df[col] = teams_df[col].round(1)
+    want = ["team", "team_id", "conf", "net_eff", "off_eff", "def_eff",
+            "pace", "home_adv", "form", "rank", "off_rank", "def_rank"]
+    teams_records = (teams_df[[c for c in want if c in teams_df.columns]]
+                     .sort_values("team")
+                     .where(lambda df: ~df.isin([float("nan")]), other=None)
+                     .to_dict("records"))
+    write_json({"model": model, "teams": teams_records, "meta": meta}, "predictor.json")
+else:
+    print("\nSkipping predictor.json (ratings-only build)")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -278,11 +282,11 @@ def build_player_json(csv_path, onoff_csv, bios=None, min_gp=8, min_mpg=8, onoff
         ps["on_off"] = None
     # Filter
     ps = ps[(ps["games_played"] >= min_gp) & (ps["mpg"].fillna(0) >= min_mpg)].copy()
-    # Round
+    # Round (coerce to float first so None values become NaN safely)
     for c in ["ts_pct","3par","ftr","efg_pct","fg_pct","3pt_pct","ft_pct"]:
-        if c in ps.columns: ps[c] = ps[c].round(3)
+        if c in ps.columns: ps[c] = pd.to_numeric(ps[c], errors="coerce").round(3)
     for c in ["mpg","points_avg","reb_avg","ast_avg","steal_avg","blocks_avg","to_avg","on_off","usg"]:
-        if c in ps.columns: ps[c] = ps[c].round(1)
+        if c in ps.columns: ps[c] = pd.to_numeric(ps[c], errors="coerce").round(1)
     keep   = [c for c in COL_MAP if c in ps.columns]
     ps_out = ps[keep].rename(columns=COL_MAP)
     records = ps_out.where(ps_out.notna(), other=None).to_dict("records")
