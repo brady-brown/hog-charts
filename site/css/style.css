@@ -66,6 +66,10 @@ nav a {
 }
 nav a:hover          { color: var(--ink); background: var(--card2); }
 nav a.active         { color: var(--ink); }
+/* Responsive nav: on desktop the links sit in a flat row and the hamburger is
+   hidden; the mobile breakpoint below turns the panel into a dropdown. */
+.nav-links  { display: flex; align-items: center; gap: 2px; }
+.nav-toggle { display: none; }
 
 /* ── Layout ───────────────────────────────────────────────────────────────── */
 .container {
@@ -347,6 +351,61 @@ details[open] summary { border-bottom: 1px solid var(--line); }
 hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
+
+/* Phones / small tablets: collapse the nav into a hamburger dropdown. */
+@media (max-width: 700px) {
+  nav { padding: 0 14px; gap: 0; }
+  .nav-brand { font-size: 1rem; margin-right: auto; }
+  .nav-brand img { width: 34px; height: 34px; }
+
+  .nav-toggle {
+    display: flex; flex-direction: column; justify-content: center; gap: 5px;
+    width: 44px; height: 44px; padding: 0; margin-right: -10px;
+    background: none; border: none; cursor: pointer;
+  }
+  .nav-toggle span {
+    display: block; width: 22px; height: 2px; border-radius: 2px;
+    background: var(--ink); transition: transform .2s ease, opacity .2s ease;
+  }
+  nav.open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  nav.open .nav-toggle span:nth-child(2) { opacity: 0; }
+  nav.open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-links {
+    position: absolute; top: 52px; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    max-height: 0; overflow: hidden;
+    transition: max-height .25s ease;
+    box-shadow: 0 12px 24px rgba(0,0,0,.4);
+  }
+  nav.open .nav-links { max-height: 85vh; }
+  .nav-links a {
+    padding: 15px 18px; border-radius: 0; font-size: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .nav-links a.active { background: var(--card2); }
+
+  /* Tighter page gutters and headings on small screens. */
+  .container { padding: 20px 14px 64px; }
+  h2 { font-size: 1.35rem; }
+  .page-sub { font-size: 0.9rem; margin-bottom: 16px; }
+
+  /* Prevent iOS Safari from auto-zooming when a control gains focus. */
+  select, input[type="text"], input[type="number"] { font-size: 16px; }
+
+  /* Data tables: keep them readable and smooth-scrolling within their wrapper. */
+  .tbl-wrap { -webkit-overflow-scrolling: touch; }
+  .tbl-wrap table { font-size: 0.8rem; }
+  .tbl-wrap thead th { padding: 8px 9px; }
+  .tbl-wrap tbody td { padding: 7px 9px; }
+
+  /* Cards and home page. */
+  .hc-card, .feature-card { padding: 18px 16px; }
+  .home-hero { padding: 32px 16px 28px; }
+  .home-logo { width: 132px; height: 132px; }
+}
+
 @media (max-width: 600px) {
   .hc-teams { gap: 6px; }
   .hc-team img { width: 64px; height: 64px; }

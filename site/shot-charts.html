@@ -6,6 +6,8 @@
   <title>Shot Charts | Hog Charts</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <style>
     /* ── tabs ───────────────────────────────────────────────────────────── */
@@ -219,12 +221,14 @@ function courtTraces(lineColor = "#3C4456") {
 const BASE_LAYOUT = {
   paper_bgcolor:"#0B0E14", plot_bgcolor:"#0B0E14",
   height:480, margin:{l:10,r:10,t:68,b:10},
-  showlegend:false, dragmode:"pan",
+  showlegend:false, dragmode:false,
   xaxis:{range:X_RANGE, visible:false, scaleanchor:"y", scaleratio:1, constrain:"domain"},
   yaxis:{range:Y_RANGE, visible:false, constrain:"domain"},
 };
-const CFG = {displaylogo:false, scrollZoom:true,
-             modeBarButtonsToRemove:["select2d","lasso2d","autoScale2d"]};
+// Pan/scroll-zoom disabled: the court has a fixed range, and on touch they'd
+// hijack vertical page scrolling. Hover tooltips still work. responsive:true
+// keeps the square aspect correct on rotate/resize.
+const CFG = {displaylogo:false, scrollZoom:false, responsive:true, displayModeBar:false};
 
 function titleLayout(title, sub) {
   return {

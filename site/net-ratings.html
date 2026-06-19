@@ -6,9 +6,24 @@
   <title>Net Ratings | Hog Charts</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
   <style>
     /* ── table ─────────────────────────────────────────────────────── */
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    /* Mobile: pin rank + logo + team to the left so identity stays visible
+       while the stats columns scroll horizontally. */
+    @media (max-width: 700px) {
+      #ratings-table thead th { z-index: 3; }
+      #ratings-table thead th:nth-child(-n+3),
+      #ratings-table tbody td:nth-child(-n+3) { position: sticky; z-index: 2; }
+      #ratings-table thead th:nth-child(-n+3) { z-index: 4; background: var(--card2); }
+      #ratings-table tbody td:nth-child(-n+3) { background: var(--bg); }
+      #ratings-table th:nth-child(1), #ratings-table td:nth-child(1) { left: 0;    min-width: 28px; width: 28px; }
+      #ratings-table th:nth-child(2), #ratings-table td:nth-child(2) { left: 28px;  min-width: 30px; }
+      #ratings-table th:nth-child(3), #ratings-table td:nth-child(3) { left: 58px;  box-shadow: 1px 0 0 var(--line); }
+      #ratings-table td.team-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.875rem; white-space: nowrap; }
     thead th {
       background: var(--card2); color: var(--muted);

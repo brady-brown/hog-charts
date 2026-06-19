@@ -6,8 +6,20 @@
   <title>Lineup Stats | Hog Charts</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
   <style>
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    /* Mobile: pin the lineup (player names) column while stats scroll. */
+    @media (max-width: 700px) {
+      #lu-table thead th { z-index: 3; }
+      #lu-table thead th:first-child,
+      #lu-table tbody td:first-child { position: sticky; left: 0; z-index: 2;
+        box-shadow: 1px 0 0 var(--line); }
+      #lu-table thead th:first-child { z-index: 4; background: var(--card2); }
+      #lu-table tbody td:first-child { background: var(--bg);
+        min-width: 140px !important; max-width: 150px; white-space: normal; }
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     thead th {
       background: var(--card2); color: var(--muted);

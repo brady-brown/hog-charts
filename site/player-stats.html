@@ -6,9 +6,24 @@
   <title>Player Stats | Hog Charts</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <style>
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    /* Mobile: pin rank + player to the left while stats scroll horizontally. */
+    @media (max-width: 700px) {
+      #ps-table thead th { z-index: 3; }
+      #ps-table thead th:nth-child(-n+2),
+      #ps-table tbody td:nth-child(-n+2) { position: sticky; z-index: 2; }
+      #ps-table thead th:nth-child(-n+2) { z-index: 4; background: var(--card2); }
+      #ps-table tbody td:nth-child(-n+2) { background: var(--bg); }
+      #ps-table th:nth-child(1), #ps-table td:nth-child(1) { left: 0; min-width: 26px; width: 26px; }
+      #ps-table th:nth-child(2), #ps-table td:nth-child(2) { left: 26px; box-shadow: 1px 0 0 var(--line); }
+      #ps-table th:nth-child(2) { min-width: 0 !important; }
+      .player-cell img { width: 28px; height: 28px; }
+      .player-cell .pname { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     thead th {
       background: var(--card2); color: var(--muted);

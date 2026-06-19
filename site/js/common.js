@@ -58,4 +58,43 @@ function markActiveNav() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", markActiveNav);
+// Build a responsive nav: wrap the page links in a collapsible panel and add a
+// hamburger toggle for phones. Done in JS so every page's <nav> markup is the
+// single existing flat list — no per-page edits needed.
+function buildResponsiveNav() {
+  const nav = document.querySelector("nav");
+  if (!nav || nav.querySelector(".nav-toggle")) return;
+
+  const links = [...nav.querySelectorAll("a:not(.nav-brand)")];
+  if (!links.length) return;
+
+  const panel = document.createElement("div");
+  panel.className = "nav-links";
+  links.forEach(a => panel.appendChild(a));
+
+  const toggle = document.createElement("button");
+  toggle.className = "nav-toggle";
+  toggle.type = "button";
+  toggle.setAttribute("aria-label", "Toggle menu");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML = "<span></span><span></span><span></span>";
+
+  nav.appendChild(toggle);
+  nav.appendChild(panel);
+
+  const setOpen = (open) => {
+    nav.classList.toggle("open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+  toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+  panel.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
+  // Close the menu if the viewport grows back to desktop width.
+  window.matchMedia("(min-width: 701px)").addEventListener("change", e => {
+    if (e.matches) setOpen(false);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  buildResponsiveNav();
+  markActiveNav();
+});
