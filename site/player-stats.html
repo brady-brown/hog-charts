@@ -254,7 +254,7 @@
       </div>
     </div>
 
-    <div style="border-top:1px solid var(--line); padding:20px 28px 24px">
+    <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
       <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
       <div id="pc-charts" style="display:none">
         <div class="pc-col-hdr" style="margin-bottom:6px">Zone Efficiency</div>
@@ -289,6 +289,7 @@ const COL_GROUPS = {
     { key:"par3",  label:"3PAr",  dir:"desc", tip:"Three-point attempt rate: 3PA / FGA", pct:true },
     { key:"ftr",   label:"FTr",   dir:"desc", tip:"Free throw rate: FTA / FGA", pct:true },
     { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
+    { key:"bpm",   label:"BPM",   dir:"desc", tip:"Box Plus/Minus (estimate): box-score production per 100 possessions vs. an average player. Box-only proxy, not a regressed BPM." },
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
   ],
 };
@@ -301,9 +302,18 @@ let sortDir    = "desc";
 let colGroup   = "box";
 let curScope   = "all";
 let SEASON     = null;
+let CUR_SEASON = null;   // newest/live season — only it has shot data
+let HAS_ONOFF  = true;   // false for historical seasons with no on/off computed
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeScope() { return curScope === "conf" ? PS_CONF : PS_ALL; }
+
+// Advanced columns, minus On/Off when this season has none computed.
+function activeCols() {
+  let cols = COL_GROUPS[colGroup];
+  if (colGroup === "advanced" && !HAS_ONOFF) cols = cols.filter(c => c.key !== "on_off");
+  return cols;
+}
 
 async function init() {
   const seasons = await loadJSON("data/seasons.json").catch(() => null);
@@ -315,8 +325,10 @@ async function init() {
       sSel.appendChild(o);
     });
     SEASON = seasons[0];
+    CUR_SEASON = seasons[0];
   } else {
     SEASON = new Date().getFullYear();
+    CUR_SEASON = SEASON;
   }
   sSel.value = SEASON;
   sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
@@ -338,6 +350,9 @@ async function reload() {
 
   PS_ALL     = data.players;
   allPlayers = PS_ALL;
+
+  // On/Off is only computed for some seasons — drop the column when absent.
+  HAS_ONOFF = PS_ALL.some(p => p.on_off != null);
 
   // Conference dropdown
   const confs = [...new Set(allPlayers.map(p => p.conf).filter(Boolean))].sort();
@@ -387,6 +402,7 @@ async function setScope(scope) {
   }
 
   allPlayers = activeScope();
+  HAS_ONOFF  = allPlayers.some(p => p.on_off != null);
   // reset sort to first col of current group so we don't sort on a null column
   sortCol = COL_GROUPS[colGroup][0].key;
   sortDir = COL_GROUPS[colGroup][0].dir;
@@ -395,7 +411,7 @@ async function setScope(scope) {
 }
 
 function buildHead() {
-  const cols = COL_GROUPS[colGroup];
+  const cols = activeCols();
   const thead = document.getElementById("ps-head");
   const makeTh = (key, label, dir, tip, extra="") => {
     const cls = sortCol===key ? (sortDir==="asc"?"sort-asc":"sort-desc") : "";
@@ -475,7 +491,7 @@ function render() {
   document.getElementById("count-label").textContent =
     `${rows.length} of ${allPlayers.length} players`;
 
-  const cols = COL_GROUPS[colGroup];
+  const cols = activeCols();
   const tbody = document.getElementById("ps-body");
   const pg = posGroup;
 
@@ -483,8 +499,9 @@ function render() {
     const posG  = pg(p.pos);
     const posLbl = p.pos ?? "—";
     const cells = cols.map(c => {
-      const cls = c.key === "on_off" ? onOffClass(p[c.key]) : "";
-      const sign = c.key === "on_off" && p[c.key] != null && p[c.key] > 0 ? "+" : "";
+      const signed = c.key === "on_off" || c.key === "bpm";
+      const cls  = signed ? onOffClass(p[c.key]) : "";
+      const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
       return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct)}</td>`;
     }).join("");
     return `<tr onclick="openModal(_currentRows[${i}])" title="View player card">
@@ -679,11 +696,17 @@ function openModal(p) {
     { lbl:"3P%",   val: p.fg3  != null ? (p.fg3*100).toFixed(1)+"%" : "—" },
     { lbl:"FT%",   val: p.ft   != null ? (p.ft*100).toFixed(1)+"%"  : "—" },
     { lbl:"USG%",  val: p.usg?.toFixed(1) ?? "—" },
-    { lbl:"On/Off",val: p.on_off != null
+    { lbl:"BPM",   val: p.bpm != null
+        ? (p.bpm > 0 ? "+" : "") + p.bpm.toFixed(1)
+        : "—",
+      cls: p.bpm == null ? "" : p.bpm > 0 ? "good" : "bad" },
+  ];
+  if (HAS_ONOFF) {
+    advStats.push({ lbl:"On/Off", val: p.on_off != null
         ? (p.on_off > 0 ? "+" : "") + p.on_off.toFixed(1)
         : "—",
-      cls: p.on_off == null ? "" : p.on_off > 0 ? "good" : "bad" },
-  ];
+      cls: p.on_off == null ? "" : p.on_off > 0 ? "good" : "bad" });
+  }
 
   const statRow = (s) =>
     `<div class="pc-stat-row">
@@ -697,9 +720,16 @@ function openModal(p) {
   document.getElementById("pc-overlay").classList.add("open");
   document.body.style.overflow = "hidden";
 
-  // Shot charts — load async
-  const chartStatus = document.getElementById("pc-chart-status");
-  const chartsWrap  = document.getElementById("pc-charts");
+  // Shot charts — only the live season has shot-coordinate data. For historical
+  // seasons hide the whole section rather than show an empty "not available".
+  const chartSection = document.getElementById("pc-chart-section");
+  const chartStatus  = document.getElementById("pc-chart-status");
+  const chartsWrap   = document.getElementById("pc-charts");
+  if (SEASON !== CUR_SEASON) {
+    chartSection.style.display = "none";
+    return;
+  }
+  chartSection.style.display = "block";
   chartStatus.textContent  = "Loading shot data…";
   chartsWrap.style.display = "none";
 

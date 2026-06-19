@@ -242,6 +242,7 @@ COL_MAP = {
     "3par":                  "par3",
     "ftr":                   "ftr",
     "usg":                   "usg",
+    "bpm":                   "bpm",
     "on_off":                "on_off",
 }
 
@@ -273,6 +274,25 @@ def build_player_json(csv_path, onoff_csv, bios=None, min_gp=8, min_mpg=8, onoff
     player_poss = fga + 0.44*fta + tov
     ps["usg"] = np.where((mins > 0) & (team_poss > 0),
                          100 * player_poss * (ps["tm_min"]/5) / (mins * team_poss), None)
+    # Simplified box BPM (estimate) — a Hollinger Game Score-style linear weight,
+    # expressed per 100 of the player's on-court team possessions and centered on
+    # the minutes-weighted league average so 0 ≈ an average rotation player.
+    # This is a transparent box-only proxy, NOT a regressed Basketball-Reference BPM.
+    fgm  = ps["field_goals_made"]
+    ftm  = ps["free_throws_made"]
+    oreb = ps["offensive_rebounds"]
+    dreb = ps["defensive_rebounds"]
+    ast  = ps["assists"]
+    stl  = ps["steals"]
+    blk  = ps["blocks"]
+    pf   = ps["fouls"]
+    gscore = (pts + 0.4*fgm - 0.7*fga - 0.4*(fta - ftm)
+              + 0.7*oreb + 0.3*dreb + stl + 0.7*ast + 0.7*blk - 0.4*pf - tov)
+    poss_on = np.where(ps["tm_min"] > 0, team_poss * mins / (ps["tm_min"]/5), np.nan)
+    gs100   = np.where((poss_on > 0), 100 * gscore / poss_on, np.nan)
+    valid   = np.isfinite(gs100) & (mins.values > 0)
+    lg_avg  = float(np.average(gs100[valid], weights=mins.values[valid])) if valid.any() else 0.0
+    ps["bpm"] = np.where(np.isfinite(gs100), gs100 - lg_avg, None)
     # On/off
     if onoff_csv and os.path.exists(onoff_csv):
         oo = pd.read_csv(onoff_csv, usecols=["athlete_id","on_off","poss_off_on"])
@@ -285,7 +305,7 @@ def build_player_json(csv_path, onoff_csv, bios=None, min_gp=8, min_mpg=8, onoff
     # Round (coerce to float first so None values become NaN safely)
     for c in ["ts_pct","3par","ftr","efg_pct","fg_pct","3pt_pct","ft_pct"]:
         if c in ps.columns: ps[c] = pd.to_numeric(ps[c], errors="coerce").round(3)
-    for c in ["mpg","points_avg","reb_avg","ast_avg","steal_avg","blocks_avg","to_avg","on_off","usg"]:
+    for c in ["mpg","points_avg","reb_avg","ast_avg","steal_avg","blocks_avg","to_avg","on_off","usg","bpm"]:
         if c in ps.columns: ps[c] = pd.to_numeric(ps[c], errors="coerce").round(1)
     keep   = [c for c in COL_MAP if c in ps.columns]
     ps_out = ps[keep].rename(columns=COL_MAP)

@@ -109,7 +109,8 @@
           <th data-col="sos"       data-dir="desc">SOS</th>
           <th data-col="pace"      data-dir="desc">Pace</th>
           <th data-col="home_court" data-dir="desc">Home</th>
-          <th data-col="form"      data-dir="desc">Form</th>
+          <!-- Form column hidden until the new season starts (offseason ratings have no recent form). -->
+          <!-- <th data-col="form"      data-dir="desc">Form</th> -->
         </tr>
       </thead>
       <tbody id="ratings-body"></tbody>
@@ -284,7 +285,6 @@ function render() {
       <td class="num ${sosC}">${pct(r.sos, 1, true)}</td>
       <td class="num">${pct(r.pace, 1)}</td>
       <td class="num">${pct(r.home_court, 1, true)}</td>
-      <td class="num">${pct(r.form, 1, true)}</td>
     </tr>`;
   }).join("");
 }
@@ -304,7 +304,7 @@ function buildFooter() {
   const cap = document.getElementById("footer-cap");
   cap.textContent =
     `Built ${meta.built_at?.slice(0,10)} · ${meta.season} season · ${allRows.length} teams. `
-    + `Lower Defense = better. Form is opponent-adjusted margin over the last ${meta.form_games} games.`;
+    + `Lower Defense = better.`;
 }
 
 document.addEventListener("DOMContentLoaded", init);
