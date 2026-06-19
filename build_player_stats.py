@@ -58,10 +58,11 @@ except Exception:
 
 # ── Load per-game player box scores ──────────────────────────────────────────
 print("Loading per-game player box scores…")
-if os.path.exists("offline_player.csv"):
-    box = pd.read_csv("offline_player.csv", low_memory=False)
+_offline = f"offline_player_{SEASON}.csv"
+if os.path.exists(_offline):
+    box = pd.read_csv(_offline, low_memory=False)
 else:
-    print("  offline_player.csv not found — fetching from sportsdataverse…")
+    print(f"  {_offline} not found — fetching from sportsdataverse…")
     box = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
 
 # Filter to regular season (season_type == 2) only
