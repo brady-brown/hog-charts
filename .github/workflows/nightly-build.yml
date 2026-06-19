@@ -54,22 +54,34 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Bail early if the build produced no changes.
           git add site/data/
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "chore: nightly site rebuild [skip ci]"
-          # The remote may have advanced since checkout (a manual push or an
-          # overlapping run). Rebase onto it and push, retrying a few times so a
-          # lost race doesn't fail the whole build.
-          for i in 1 2 3; do
-            if git pull --rebase --autostash origin main && git push; then
+
+          # site/data is fully regenerated each run, so our freshly-built copy is
+          # always the desired final state. Rather than rebase/merge (which would
+          # conflict on every regenerated JSON file vs. an overlapping run), we
+          # re-point onto the latest remote and lay our files down as one new
+          # commit on top. No replay, so nothing can conflict.
+          for i in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --soft origin/main      # newest remote tree; keep our files staged
+            git add site/data/
+            if git diff --cached --quiet; then
+              echo "Remote already up to date — nothing to push."
+              exit 0
+            fi
+            git commit -m "chore: nightly site rebuild [skip ci]"
+            if git push origin HEAD:main; then
               echo "Pushed on attempt $i."
               exit 0
             fi
-            echo "Push attempt $i failed; retrying in 5s…"
-            sleep 5
+            echo "Push attempt $i failed (remote moved); resyncing…"
+            sleep 3
           done
-          echo "Failed to push after 3 attempts." >&2
+          echo "Failed to push after 5 attempts." >&2
           exit 1
