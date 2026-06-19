@@ -308,7 +308,7 @@ overall_records = build_player_json(
 if overall_records is not None:
     write_json({"players": overall_records, "meta": meta}, "player-stats.json")
 
-ps_conf_path = os.path.join(BASE, "player_stats_conf.csv")
+ps_conf_path = os.path.join(BASE, f"player_stats_conf_{SEASON}.csv")
 conf_records = build_player_json(
     ps_conf_path,
     os.path.join(BASE, f"mbb_onoff_{SEASON}_conf_v2.csv") if os.path.exists(os.path.join(BASE, f"mbb_onoff_{SEASON}_conf_v2.csv")) else None,
@@ -347,24 +347,41 @@ def load_lineup_file(size, variant, min_poss):
     return by_team, teams
 
 all_teams = set()
-lineups      = {}
-lineups_conf = {}
+overall_by_size = {}
+conf_by_size    = {}
 for size in ["1", "2", "3", "5"]:
     by_team, teams = load_lineup_file(size, "all",  LINEUP_MIN[size])
-    lineups[size]  = by_team
+    overall_by_size[size] = by_team
     all_teams |= teams
     total = sum(len(v) for v in by_team.values())
     print(f"  {size}-man overall:     {total:5d} combos, {len(by_team)} teams")
 
     by_team_c, _ = load_lineup_file(size, "conf", LINEUP_MIN_CONF[size])
-    lineups_conf[size] = by_team_c
+    conf_by_size[size] = by_team_c
     total_c = sum(len(v) for v in by_team_c.values())
     print(f"  {size}-man conference:  {total_c:5d} combos, {len(by_team_c)} teams")
 
-write_json({"lineups": lineups,      "teams": sorted(all_teams), "meta": meta},
-           "lineup-stats.json")
-write_json({"lineups": lineups_conf, "teams": sorted(all_teams), "meta": meta},
-           "lineup-conf-stats.json")
+# Write per-team files so the browser only downloads one team at a time (~20KB vs 10MB)
+LINEUPS_DIR = os.path.join(OUT, "lineups")
+os.makedirs(LINEUPS_DIR, exist_ok=True)
+team_slugs = {}
+for team in sorted(all_teams):
+    slug = slugify(team)
+    team_slugs[team] = slug
+    team_data = {
+        "team": team,
+        "overall": {s: overall_by_size[s].get(team, []) for s in ["1","2","3","5"]},
+        "conf":    {s: conf_by_size[s].get(team, [])    for s in ["1","2","3","5"]},
+    }
+    path = os.path.join(LINEUPS_DIR, f"{slug}.json")
+    with open(path, "w") as f:
+        f.write(json.dumps(_clean(team_data), separators=(",", ":")))
+
+print(f"  lineup files:          {len(team_slugs):5d} teams → lineups/{{slug}}.json")
+
+# Small index file: just team names + slug map so the page can build the dropdown
+write_json({"teams": sorted(all_teams), "slugs": team_slugs, "meta": meta},
+           "lineup-index.json")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -129,22 +129,22 @@
 
 <script src="js/common.js"></script>
 <script>
-let LU_ALL  = null;   // overall data
-let LU_CONF = null;   // conference data (lazy loaded)
+let INDEX    = null;   // lineup-index.json: {teams, slugs, meta}
+let TEAM_DATA = {};    // cache: "{season}/{slug}" → parsed team JSON
 let curSize  = "1";
-let curScope = "all"; // "all" | "conf"
+let curScope = "all";
 let sortCol  = "Avg_Poss";
 let sortDir  = "desc";
 let SEASON   = null;
+let curSlug  = null;
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
-function activeData() {
-  return curScope === "conf" ? LU_CONF : LU_ALL;
-}
 
 async function init() {
   const seasons = await loadJSON("data/seasons.json").catch(() => null);
   const sSel = document.getElementById("season-sel");
+  const tSel = document.getElementById("team-sel");
+
   if (seasons?.length) {
     seasons.forEach(s => {
       const o = document.createElement("option");
@@ -157,31 +157,8 @@ async function init() {
   }
   sSel.value = SEASON;
   sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
-
-  tSel.addEventListener("change", render);
+  tSel.addEventListener("change", () => loadTeam(tSel.value));
   document.getElementById("min-poss").addEventListener("input", render);
-  await reload();
-}
-
-async function reload() {
-  LU_ALL = null; LU_CONF = null;
-  curScope = "all";
-  document.getElementById("btn-all").classList.add("active");
-  document.getElementById("btn-conf").classList.remove("active");
-
-  LU_ALL = await loadJSON(`data/${SEASON}/lineup-stats.json`);
-  if (!LU_ALL?.lineups) {
-    document.getElementById("count-label").textContent =
-      "Data not found for this season.";
-    return;
-  }
-
-  const teams = LU_ALL.teams ?? [];
-  const tSel  = document.getElementById("team-sel");
-  tSel.innerHTML = teams.map(t => `<option value="${t}">${t}</option>`).join("");
-  const defTeam = teams.find(t => t.includes("Arkansas")) || teams[0];
-  if (defTeam) tSel.value = defTeam;
-  tSel.disabled = false;
 
   document.querySelectorAll("thead th[data-col]").forEach(th => {
     th.addEventListener("click", () => {
@@ -195,6 +172,48 @@ async function reload() {
     });
   });
 
+  await reload();
+}
+
+async function reload() {
+  INDEX   = null;
+  curSlug = null;
+  curScope = "all";
+  document.getElementById("btn-all").classList.add("active");
+  document.getElementById("btn-conf").classList.remove("active");
+
+  INDEX = await loadJSON(`data/${SEASON}/lineup-index.json`);
+  if (!INDEX?.teams?.length) {
+    document.getElementById("count-label").textContent = "Data not found for this season.";
+    return;
+  }
+
+  const teams = INDEX.teams;
+  const tSel  = document.getElementById("team-sel");
+  tSel.innerHTML = teams.map(t => `<option value="${t}">${t}</option>`).join("");
+  const defTeam = teams.find(t => t.includes("Arkansas")) || teams[0];
+  if (defTeam) tSel.value = defTeam;
+  tSel.disabled = false;
+
+  await loadTeam(tSel.value);
+}
+
+async function loadTeam(team) {
+  if (!INDEX?.slugs) return;
+  const slug = INDEX.slugs[team];
+  if (!slug) return;
+  curSlug = slug;
+
+  const cacheKey = `${SEASON}/${slug}`;
+  if (!TEAM_DATA[cacheKey]) {
+    document.getElementById("count-label").textContent = "Loading…";
+    const data = await loadJSON(`data/${SEASON}/lineups/${slug}.json`);
+    if (!data) {
+      document.getElementById("count-label").textContent = "Team data not found.";
+      return;
+    }
+    TEAM_DATA[cacheKey] = data;
+  }
   render();
 }
 
@@ -202,39 +221,28 @@ function setSize(s) {
   curSize = s;
   sortCol = "Avg_Poss";
   sortDir = "desc";
-  // highlight correct size button (first row of size-tabs)
   document.querySelectorAll(".size-tabs")[0].querySelectorAll("button")
     .forEach((b,i) => b.classList.toggle("active", ["1","2","3","5"][i] === s));
   updateSortHeaders();
   render();
 }
 
-async function setScope(scope) {
+function setScope(scope) {
   curScope = scope;
   document.getElementById("btn-all").classList.toggle("active",  scope === "all");
   document.getElementById("btn-conf").classList.toggle("active", scope === "conf");
-
-  if (scope === "conf" && !LU_CONF) {
-    document.getElementById("count-label").textContent = "Loading conference data…";
-    LU_CONF = await loadJSON(`data/${SEASON}/lineup-conf-stats.json`);
-    if (!LU_CONF) {
-      document.getElementById("count-label").textContent = "Conference data not found.";
-      curScope = "all";
-      document.getElementById("btn-all").classList.add("active");
-      document.getElementById("btn-conf").classList.remove("active");
-      return;
-    }
-  }
   render();
 }
 
 function getRows() {
-  const team    = document.getElementById("team-sel").value;
-  const minPoss = parseFloat(document.getElementById("min-poss").value) || 0;
-  const data    = activeData();
-  const byTeam  = data?.lineups?.[curSize] ?? {};
-  const rows    = (byTeam[team] ?? []).filter(r => (r.Avg_Poss ?? 0) >= minPoss);
-  return [...rows].sort((a, b) => {
+  if (!curSlug) return [];
+  const cacheKey = `${SEASON}/${curSlug}`;
+  const data  = TEAM_DATA[cacheKey];
+  if (!data) return [];
+  const sizeData = curScope === "conf" ? data.conf : data.overall;
+  const rows     = (sizeData?.[curSize] ?? []);
+  const minPoss  = parseFloat(document.getElementById("min-poss").value) || 0;
+  return [...rows].filter(r => (r.Avg_Poss ?? 0) >= minPoss).sort((a, b) => {
     const av = a[sortCol], bv = b[sortCol];
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
@@ -256,9 +264,7 @@ function netClass(val) {
 function render() {
   const rows = getRows();
   document.getElementById("count-label").textContent = `${rows.length} lineups`;
-
-  const tbody = document.getElementById("lu-body");
-  tbody.innerHTML = rows.map(r => `<tr>
+  document.getElementById("lu-body").innerHTML = rows.map(r => `<tr>
     <td class="combo" title="${r.Combo}">${r.Combo}</td>
     <td class="num">${v(r.Avg_Poss, 0)}</td>
     <td class="num">${v(r.Mins, 0)}</td>
