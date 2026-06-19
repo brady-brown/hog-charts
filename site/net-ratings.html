@@ -155,6 +155,7 @@ let NR_META  = null;
 let sortCol  = "rank";
 let sortDir  = "asc"; // asc = rank 1 first
 let SEASON   = null;
+let handlersBound = false; // guard so sort/filter listeners bind only once
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
@@ -204,24 +205,29 @@ async function reload() {
     if (TOOLTIPS[col]) th.title = TOOLTIPS[col];
   });
 
-  // Sort/filter handlers
-  document.querySelectorAll("thead th[data-col]").forEach(th => {
-    th.addEventListener("click", () => {
-      const col = th.dataset.col;
-      if (sortCol === col) {
-        sortDir = sortDir === "asc" ? "desc" : "asc";
-      } else {
-        sortCol = col;
-        sortDir = th.dataset.dir || "desc";
-      }
-      updateSortHeaders();
-      render();
+  // Sort/filter handlers — bind exactly once. reload() runs on every season
+  // switch, so re-binding here would stack duplicate listeners and make each
+  // click toggle the sort direction multiple times (it would appear stuck).
+  if (!handlersBound) {
+    document.querySelectorAll("thead th[data-col]").forEach(th => {
+      th.addEventListener("click", () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortDir = sortDir === "asc" ? "desc" : "asc";
+        } else {
+          sortCol = col;
+          sortDir = th.dataset.dir || "desc";
+        }
+        updateSortHeaders();
+        render();
+      });
     });
-  });
 
-  ["search", "conf-sel", "min-games"].forEach(id =>
-    document.getElementById(id).addEventListener("input", render)
-  );
+    ["search", "conf-sel", "min-games"].forEach(id =>
+      document.getElementById(id).addEventListener("input", render)
+    );
+    handlersBound = true;
+  }
 
   render();
   buildFooter();

@@ -8,6 +8,39 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
   <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    /* ── Searchable team picker ─────────────────────────────────────────── */
+    .combo { position: relative; }
+    .combo-input-wrap { position: relative; display: flex; align-items: center; }
+    .combo-input-wrap img {
+      position: absolute; left: 11px; width: 22px; height: 22px;
+      object-fit: contain; pointer-events: none;
+    }
+    .combo-input.has-logo { padding-left: 42px; }
+    .combo-clear {
+      position: absolute; right: 10px; width: 22px; height: 22px; border: none;
+      background: none; color: var(--muted); cursor: pointer; font-size: 1rem;
+      display: none; line-height: 1;
+    }
+    .combo-input-wrap.filled .combo-clear { display: block; }
+    .combo-clear:hover { color: var(--ink); }
+    .combo-list {
+      position: absolute; z-index: 50; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--card2); border: 1px solid var(--line); border-radius: 10px;
+      max-height: 300px; overflow-y: auto; display: none;
+      box-shadow: 0 14px 30px rgba(0,0,0,.5);
+      -webkit-overflow-scrolling: touch;
+    }
+    .combo-list.open { display: block; }
+    .combo-opt {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      cursor: pointer; font-size: 0.95rem;
+    }
+    .combo-opt img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+    .combo-opt:hover, .combo-opt.active { background: var(--card); }
+    .combo-opt .nm { font-weight: 600; }
+    .combo-empty { padding: 11px 12px; color: var(--muted); font-size: 0.9rem; }
+  </style>
 </head>
 <body>
 
@@ -31,13 +64,27 @@
     <div class="form-row">
 
       <div class="form-group">
-        <label for="team1">Team 1</label>
-        <select id="team1" disabled><option>Loading…</option></select>
+        <label for="team1-input">Team 1</label>
+        <div class="combo" id="combo1">
+          <div class="combo-input-wrap">
+            <img id="team1-logo" alt="" style="display:none" onerror="this.style.opacity=0">
+            <input type="text" id="team1-input" class="combo-input" placeholder="Search team…" autocomplete="off" disabled>
+            <button type="button" class="combo-clear" id="team1-clear" aria-label="Clear">✕</button>
+          </div>
+          <div class="combo-list" id="team1-list"></div>
+        </div>
       </div>
 
       <div class="form-group">
-        <label for="team2">Team 2</label>
-        <select id="team2" disabled><option>Loading…</option></select>
+        <label for="team2-input">Team 2</label>
+        <div class="combo" id="combo2">
+          <div class="combo-input-wrap">
+            <img id="team2-logo" alt="" style="display:none" onerror="this.style.opacity=0">
+            <input type="text" id="team2-input" class="combo-input" placeholder="Search team…" autocomplete="off" disabled>
+            <button type="button" class="combo-clear" id="team2-clear" aria-label="Clear">✕</button>
+          </div>
+          <div class="combo-list" id="team2-list"></div>
+        </div>
       </div>
 
       <div class="form-group" style="flex:0 0 auto;min-width:190px">
@@ -88,6 +135,8 @@ let TEAMS  = null;
 let BYNAME = null;
 let LG_DEF = null;
 let SEASON = null;
+let TEAM_NAMES = [];
+const SELECTED = { team1: null, team2: null };
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
@@ -111,21 +160,11 @@ async function initFromData() {
   BYNAME = new Map(teams.map(t => [t.team, t]));
   LG_DEF = teams.reduce((s, t) => s + t.def_eff, 0) / teams.length;
 
-  const names = teams.map(t => t.team).sort();
-  const t1El  = document.getElementById("team1");
-  const t2El  = document.getElementById("team2");
-  [t1El, t2El].forEach(el => {
-    el.innerHTML = "";
-    names.forEach(n => {
-      const o = document.createElement("option");
-      o.value = o.textContent = n;
-      el.appendChild(o);
-    });
-    el.disabled = false;
-  });
-
-  setDefault(t1El, "Duke Blue Devils");
-  setDefault(t2El, "Arkansas Razorbacks");
+  TEAM_NAMES = teams.map(t => t.team).sort();
+  const c1 = makeCombo("team1", syncVenueLabels);
+  const c2 = makeCombo("team2", syncVenueLabels);
+  c1.setSelected(defaultTeam("Duke Blue Devils"));
+  c2.setSelected(defaultTeam("Arkansas Razorbacks"));
   syncVenueLabels();
   document.getElementById("predict-btn").disabled = false;
 
@@ -138,20 +177,67 @@ async function initFromData() {
 
 document.addEventListener("DOMContentLoaded", initFromData);
 
-function setDefault(el, name) {
-  const opt = [...el.options].find(o => o.value === name);
-  if (opt) el.value = name;
+function defaultTeam(name) { return BYNAME.has(name) ? name : TEAM_NAMES[0]; }
+
+// ── Searchable team picker ────────────────────────────────────────────────────
+function makeCombo(key, onChange) {
+  const input = document.getElementById(`${key}-input`);
+  const list  = document.getElementById(`${key}-list`);
+  const logo  = document.getElementById(`${key}-logo`);
+  const clear = document.getElementById(`${key}-clear`);
+  const wrap  = input.parentNode;
+  let matches = [], activeIdx = -1, filter = "";
+
+  function draw() {
+    const q = filter.toLowerCase().trim();
+    matches = TEAM_NAMES.filter(n => !q || n.toLowerCase().includes(q));
+    if (!matches.length) { list.innerHTML = `<div class="combo-empty">No teams match.</div>`; return; }
+    list.innerHTML = matches.map((n, i) => {
+      const t = BYNAME.get(n);
+      return `<div class="combo-opt${i === activeIdx ? " active" : ""}" data-name="${n.replace(/"/g, "&quot;")}">
+        <img loading="lazy" src="${logoUrl(t.team_id)}" alt="" onerror="this.style.opacity=0">
+        <span class="nm">${n}</span></div>`;
+    }).join("");
+  }
+  function open(showAll) { filter = showAll ? "" : input.value; activeIdx = -1; draw(); list.classList.add("open"); }
+  function close() { list.classList.remove("open"); activeIdx = -1; }
+  function scrollActive() { const el = list.querySelector(".combo-opt.active"); if (el) el.scrollIntoView({ block: "nearest" }); }
+
+  function setSelected(name) {
+    SELECTED[key] = name;
+    input.value = name || "";
+    const t = name && BYNAME.get(name);
+    if (t) { logo.src = logoUrl(t.team_id); logo.style.display = ""; input.classList.add("has-logo"); wrap.classList.add("filled"); }
+    else   { logo.style.display = "none"; input.classList.remove("has-logo"); wrap.classList.remove("filled"); }
+    input.disabled = false;
+    onChange && onChange();
+  }
+
+  input.addEventListener("focus", () => { open(true); input.select(); });
+  input.addEventListener("input", () => { filter = input.value; activeIdx = -1; draw(); list.classList.add("open"); });
+  input.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown")      { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, matches.length - 1); draw(); scrollActive(); }
+    else if (e.key === "ArrowUp")   { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); draw(); scrollActive(); }
+    else if (e.key === "Enter")     { e.preventDefault(); const pick = matches[activeIdx] || matches[0]; if (pick) { setSelected(pick); close(); } }
+    else if (e.key === "Escape")    { input.value = SELECTED[key] || ""; close(); input.blur(); }
+  });
+  list.addEventListener("mousedown", e => {
+    const opt = e.target.closest(".combo-opt"); if (!opt) return;
+    e.preventDefault(); setSelected(opt.dataset.name); close();
+  });
+  // mousedown (not click) so we clear before the input's blur-revert fires
+  clear.addEventListener("mousedown", e => { e.preventDefault(); input.value = ""; filter = ""; input.focus(); open(true); });
+  input.addEventListener("blur", () => setTimeout(() => { input.value = SELECTED[key] || ""; close(); }, 130));
+
+  return { setSelected };
 }
 
 // ── Venue label sync ──────────────────────────────────────────────────────────
 function syncVenueLabels() {
-  const n1 = document.getElementById("team1").value;
-  const n2 = document.getElementById("team2").value;
+  const n1 = SELECTED.team1, n2 = SELECTED.team2;
   document.getElementById("lbl-home1").textContent = n1 ? `${n1} home` : "Team 1 home";
   document.getElementById("lbl-home2").textContent = n2 ? `${n2} home` : "Team 2 home";
 }
-document.getElementById("team1").addEventListener("change", syncVenueLabels);
-document.getElementById("team2").addEventListener("change", syncVenueLabels);
 
 // ── Prediction logic (mirrors model_runtime.py predict_game) ─────────────────
 function predictGame(t1, t2, venue) {
@@ -311,8 +397,8 @@ function breakdownHTML(t1, t2, r) {
 
 // ── Main predict handler ──────────────────────────────────────────────────────
 document.getElementById("predict-btn").addEventListener("click", () => {
-  const name1  = document.getElementById("team1").value;
-  const name2  = document.getElementById("team2").value;
+  const name1  = SELECTED.team1;
+  const name2  = SELECTED.team2;
   const venue  = document.querySelector('input[name="venue"]:checked').value;
 
   if (name1 === name2) {

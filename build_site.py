@@ -66,6 +66,22 @@ def write_json(data, filename, out_dir=None):
 def slugify(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
+def data_date(season):
+    """Date of the most recent game in this season's data, used as the build
+    'freshness' stamp. Stamping the data date (not wall-clock time) keeps the
+    committed JSON byte-identical when no new games have arrived, so a nightly
+    run with nothing new produces no diff and triggers no deploy."""
+    for path, col in [(os.path.join(BASE, f"shots_{season}.parquet"), "game_date"),
+                      (os.path.join(BASE, "game_schedule.parquet"),    "date")]:
+        if os.path.exists(path):
+            try:
+                s = pd.to_datetime(pd.read_parquet(path, columns=[col])[col], errors="coerce")
+                if s.notna().any():
+                    return s.max().date().isoformat()
+            except Exception:
+                pass
+    return f"{season}-04-30"  # historical seasons have no shot parquet: stable fallback
+
 def classify_zones(df):
     valid = df["coordinate_x"].notna() & df["coordinate_y"].notna()
     zone  = pd.Series("Unknown", index=df.index, dtype="object")
@@ -107,6 +123,12 @@ print("\nLoading artifacts…")
 with open(os.path.join(ART, "metadata.json")) as f:
     meta = json.load(f)
 
+# Replace the wall-clock build time with the data's freshness date so unchanged
+# data yields identical files (no no-op nightly deploy). `meta` is embedded into
+# every committed JSON, so overriding it here covers all of them.
+DATA_DATE = data_date(SEASON)
+meta["built_at"] = DATA_DATE
+
 model_path = os.path.join(ART, "model.json")
 model = json.load(open(model_path)) if os.path.exists(model_path) else None
 
@@ -132,6 +154,7 @@ else:
 # ══════════════════════════════════════════════════════════════════════════════
 if model is not None:
     print("\nBuilding predictor.json…")
+    model["built_at"] = DATA_DATE  # model.json carries its own wall-clock stamp; normalize it too
     teams_df["conf"] = teams_df["team"].map(conf_map).fillna("")
     rank_cols = [c for c in ["team", "rank", "off_rank", "def_rank"] if c in nr_raw.columns]
     teams_df  = teams_df.merge(nr_raw[rank_cols], on="team", how="left")

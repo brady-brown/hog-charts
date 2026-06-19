@@ -319,6 +319,7 @@ let curScope   = "all";
 let SEASON     = null;
 let CUR_SEASON = null;   // newest/live season — only it has shot data
 let HAS_ONOFF  = true;   // false for historical seasons with no on/off computed
+let handlersBound = false; // guard so filter listeners bind only once
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeScope() { return curScope === "conf" ? PS_CONF : PS_ALL; }
@@ -369,9 +370,11 @@ async function reload() {
   // On/Off is only computed for some seasons — drop the column when absent.
   HAS_ONOFF = PS_ALL.some(p => p.on_off != null);
 
-  // Conference dropdown
+  // Conference dropdown — reset first so switching seasons doesn't append
+  // duplicate conference options each time.
   const confs = [...new Set(allPlayers.map(p => p.conf).filter(Boolean))].sort();
   const cSel  = document.getElementById("conf-sel");
+  cSel.innerHTML = '<option value="">All conferences</option>';
   confs.forEach(c => {
     const o = document.createElement("option");
     o.value = o.textContent = c;
@@ -380,9 +383,14 @@ async function reload() {
 
   buildHead();
 
-  ["search","conf-sel","pos-sel","min-gp","min-mpg"].forEach(id =>
-    document.getElementById(id).addEventListener("input", render)
-  );
+  // Bind filter listeners once; reload() runs on every season switch and would
+  // otherwise stack duplicate listeners.
+  if (!handlersBound) {
+    ["search","conf-sel","pos-sel","min-gp","min-mpg"].forEach(id =>
+      document.getElementById(id).addEventListener("input", render)
+    );
+    handlersBound = true;
+  }
 
   render();
 }
@@ -500,50 +508,94 @@ function onOffClass(val) {
 
 let _currentRows = [];
 
+// Windowed rendering: a full table is ~3,600 rows × 2 images. Building that on
+// every keystroke froze the page, so we render a chunk at a time and stream more
+// in as the user scrolls (plus native lazy-loading so off-screen images don't
+// all fetch at once).
+const RENDER_CHUNK = 60;
+let _rendered = 0;
+let _io = null;
+
+function rowHTML(p, idx) {
+  const cols = activeCols();
+  const posG = posGroup(p.pos);
+  const posLbl = p.pos ?? "—";
+  const cells = cols.map(c => {
+    const signed = c.key === "on_off" || c.key === "bpm";
+    const cls  = signed ? onOffClass(p[c.key]) : "";
+    const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
+    return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct)}</td>`;
+  }).join("");
+  return `<tr onclick="openModal(_currentRows[${idx}])" title="View player card">
+    <td class="rk num">${idx + 1}</td>
+    <td>
+      <div class="player-cell">
+        <img loading="lazy" decoding="async" src="${playerUrl(p.id)}" alt="${p.n}"
+             onerror="this.style.opacity=0;this.style.minWidth='34px'">
+        <div>
+          <div class="pname">${p.n ?? "—"}</div>
+          <div class="psub"><span class="pos-chip pos-${posG}">${posLbl}</span></div>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div style="display:flex;align-items:center;gap:7px">
+        <img loading="lazy" decoding="async" src="${logoUrl(p.tid)}" alt="${p.t}" width="20" height="20"
+             style="object-fit:contain" onerror="this.style.opacity=0">
+        <span style="font-size:.82rem">${p.t ?? "—"}</span>
+      </div>
+    </td>
+    <td style="color:var(--muted);font-size:.8rem">${p.conf ?? "—"}</td>
+    ${cells}
+  </tr>`;
+}
+
+function appendChunk() {
+  const tbody = document.getElementById("ps-body");
+  const end = Math.min(_rendered + RENDER_CHUNK, _currentRows.length);
+  let html = "";
+  for (let i = _rendered; i < end; i++) html += rowHTML(_currentRows[i], i);
+  tbody.insertAdjacentHTML("beforeend", html);
+  _rendered = end;
+  const sentinel = document.getElementById("ps-sentinel");
+  if (sentinel) sentinel.style.display = _rendered < _currentRows.length ? "" : "none";
+  // If the rendered rows don't yet fill the viewport, keep topping up — the
+  // observer only re-fires on an intersection *change*, which may not happen
+  // while the (short) content keeps the sentinel continuously in view.
+  if (_rendered < _currentRows.length) {
+    requestAnimationFrame(() => {
+      const s = document.getElementById("ps-sentinel");
+      if (s && s.getBoundingClientRect().top < window.innerHeight + 800) appendChunk();
+    });
+  }
+}
+
+function ensureObserver() {
+  let sentinel = document.getElementById("ps-sentinel");
+  if (!sentinel) {
+    sentinel = document.createElement("div");
+    sentinel.id = "ps-sentinel";
+    sentinel.style.height = "1px";
+    const wrap = document.querySelector(".tbl-wrap");
+    wrap.parentNode.insertBefore(sentinel, wrap.nextSibling);
+  }
+  if (!_io) {
+    _io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting) && _rendered < _currentRows.length) appendChunk();
+    }, { rootMargin: "800px 0px" });
+    _io.observe(sentinel);
+  }
+}
+
 function render() {
   _currentRows = sorted(filtered().map((p, i) => ({ ...p, _rank: i + 1 })));
-  const rows = _currentRows;
   document.getElementById("count-label").textContent =
-    `${rows.length} of ${allPlayers.length} players`;
+    `${_currentRows.length} of ${allPlayers.length} players`;
 
-  const cols = activeCols();
-  const tbody = document.getElementById("ps-body");
-  const pg = posGroup;
-
-  tbody.innerHTML = rows.map((p, i) => {
-    const posG  = pg(p.pos);
-    const posLbl = p.pos ?? "—";
-    const cells = cols.map(c => {
-      const signed = c.key === "on_off" || c.key === "bpm";
-      const cls  = signed ? onOffClass(p[c.key]) : "";
-      const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
-      return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct)}</td>`;
-    }).join("");
-    return `<tr onclick="openModal(_currentRows[${i}])" title="View player card">
-      <td class="rk num">${i + 1}</td>
-      <td>
-        <div class="player-cell">
-          <img src="${playerUrl(p.id)}" alt="${p.n}"
-               onerror="this.style.opacity=0;this.style.minWidth='34px'">
-          <div>
-            <div class="pname">${p.n ?? "—"}</div>
-            <div class="psub">
-              <span class="pos-chip pos-${posG}">${posLbl}</span>
-            </div>
-          </div>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:7px">
-          <img src="${logoUrl(p.tid)}" alt="${p.t}" width="20" height="20"
-               style="object-fit:contain" onerror="this.style.opacity=0">
-          <span style="font-size:.82rem">${p.t ?? "—"}</span>
-        </div>
-      </td>
-      <td style="color:var(--muted);font-size:.8rem">${p.conf ?? "—"}</td>
-      ${cells}
-    </tr>`;
-  }).join("");
+  document.getElementById("ps-body").innerHTML = "";
+  _rendered = 0;
+  appendChunk();          // first paint: only RENDER_CHUNK rows
+  ensureObserver();       // stream the rest on scroll
 }
 
 // ── Shot chart helpers (ported from shot-charts.html) ─────────────────────
