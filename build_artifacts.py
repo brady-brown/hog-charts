@@ -119,7 +119,7 @@ def main():
 
     pred = TempoPredictor()
     pred.train(calibration_year=CALIBRATION_YEARS)
-    pred.load_current_ratings()
+    pred._build_ratings(_season)
 
     metrics = {}
     if BACKTEST_YEAR is not None:

@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-06-18T17:40:24.567588",
-  "season": 2026,
+  "built_at": "2026-06-18T22:15:16.929454",
+  "season": 2025,
   "calibration_years": [
     2021,
     2022,
@@ -9,8 +9,8 @@
   ],
   "form_mode": "residual",
   "form_games": 5,
-  "league_avg_pace": 69.0771078587337,
-  "league_home_adv": 12.836587741944474,
+  "league_avg_pace": 69.57033854166667,
+  "league_home_adv": 12.394577782994883,
   "coef": [
     0.6993627355025263,
     0.3610904723875343,
