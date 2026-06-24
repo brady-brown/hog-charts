@@ -414,3 +414,30 @@ hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
   .hc-factor .v1, .hc-factor .v2 { font-size: 0.9rem; }
   .home-hero .wordmark { font-size: 2.4rem; }
 }
+
+/* ── 2K-style hot-zone shot chart (shared: shot-charts + player modals) ──── */
+.zone-card { background:#0B0E14; border:1px solid var(--line); border-radius:14px; padding:14px 14px 16px; }
+.zone-card.zone-compact { border:none; background:transparent; padding:0; }
+.zone-head { text-align:center; margin-bottom:6px; }
+.zone-title { font-size:1.05rem; font-weight:800; color:var(--ink); }
+.zone-sub   { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+.zone-area  { position:relative; width:100%; max-width:520px; margin:0 auto; }
+.zone-area svg { display:block; width:100%; height:auto; }
+.zone-poly  { cursor:pointer; transition:opacity .12s; }
+.zone-poly:hover { opacity:.82; }
+.zone-tip {
+  position:absolute; pointer-events:none; background:rgba(8,8,16,.96); color:#fff;
+  border-radius:8px; padding:9px 13px; font-size:12px; display:none; z-index:10;
+  border:.5px solid rgba(255,255,255,.15); min-width:120px;
+}
+.zone-tip .t { font-weight:700; font-size:13px; margin-bottom:3px; }
+.zone-tip .s { color:#aaa; font-size:11px; margin-bottom:5px; }
+.zone-tip .p { font-size:15px; font-weight:700; }
+.zone-tip .r { font-size:11px; margin-top:3px; }
+.zone-legend { max-width:520px; margin:12px auto 0; }
+.zone-legend .bar {
+  height:11px; border-radius:4px;
+  background:linear-gradient(to right,#7a0000 0%,#c0392b 25%,#e8d8b8 50%,#27ae60 75%,#0a4a25 100%);
+}
+.zone-legend .lab { display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:3px; }
+.zone-legend .cap { text-align:center; font-size:10.5px; color:var(--muted); margin-bottom:4px; }

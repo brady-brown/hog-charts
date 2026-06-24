@@ -166,9 +166,11 @@
   <a href="index.html"        data-page="index.html">Home</a>
   <a href="prediction.html"   data-page="prediction.html">Predictor</a>
   <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="impact.html"       data-page="impact.html">Impact</a>
   <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+  <a href="postseason.html"  data-page="postseason.html">Postseason</a>
 </nav>
 
 <div class="container">
@@ -283,6 +285,7 @@
 </div>
 
 <script src="js/common.js"></script>
+<script src="js/zone-chart.js"></script>
 <script>
 const COL_GROUPS = {
   box: [
@@ -320,6 +323,7 @@ let SEASON     = null;
 let CUR_SEASON = null;   // newest/live season — only it has shot data
 let HAS_ONOFF  = true;   // false for historical seasons with no on/off computed
 let handlersBound = false; // guard so filter listeners bind only once
+let IMPACT_MODAL_CACHE = {}; // cross-loaded impact data, keyed by "${SEASON}-${scope}"
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeScope() { return curScope === "conf" ? PS_CONF : PS_ALL; }
@@ -598,6 +602,30 @@ function render() {
   ensureObserver();       // stream the rest on scroll
 }
 
+// ── RAPM cross-load helpers ────────────────────────────────────────────────
+const RAPM_DIVIDER = `<div style="border-top:1px solid var(--line);margin:10px 0 6px;padding-top:10px;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--t1)">
+  RAPM / 100
+</div>`;
+
+function _sgnFmt(v, d = 2) {
+  return v == null ? "—" : (v >= 0 ? "+" : "") + Math.abs(v).toFixed(d);
+}
+function _sgnCls(v) { return v == null ? "" : v > 0 ? "good" : v < 0 ? "bad" : ""; }
+function _rapmRows(r, statRowFn) {
+  return [
+    { lbl:"Off RAPM",    val: _sgnFmt(r.orapm),    cls: _sgnCls(r.orapm) },
+    { lbl:"Def RAPM",    val: _sgnFmt(r.drapm),    cls: _sgnCls(r.drapm) },
+    { lbl:"Total RAPM",  val: _sgnFmt(r.rapm),     cls: _sgnCls(r.rapm),    bold: true },
+    { lbl:"Off RAPM+",   val: _sgnFmt(r.orapm_bp), cls: _sgnCls(r.orapm_bp) },
+    { lbl:"Def RAPM+",   val: _sgnFmt(r.drapm_bp), cls: _sgnCls(r.drapm_bp) },
+    { lbl:"Total RAPM+", val: _sgnFmt(r.rapm_bp),  cls: _sgnCls(r.rapm_bp),  bold: true },
+    { lbl:"Net On",      val: _sgnFmt(r.non, 1),   cls: _sgnCls(r.non) },
+    { lbl:"Net Off",     val: _sgnFmt(r.noff, 1),  cls: _sgnCls(r.noff) },
+    { lbl:"On-Off",      val: _sgnFmt(r.onoff, 1), cls: _sgnCls(r.onoff),    bold: true },
+  ].map(statRowFn).join("");
+}
+
 // ── Shot chart helpers (ported from shot-charts.html) ─────────────────────
 const HOOP_Y   = 5.25;
 const THREE_R  = 22.146;
@@ -605,23 +633,7 @@ const CORNER_X = 21.65;
 const X_RANGE  = [-26, 26];
 const Y_RANGE  = [-2.5, 31];
 
-const SC_ZONES = [
-  "At Rim","Paint (Non-Rim)",
-  "Left Baseline Mid","Right Baseline Mid",
-  "Left Mid-Range","Center Mid-Range","Right Mid-Range",
-  "Left Corner 3PT","Left Wing 3PT","Center 3PT",
-  "Right Wing 3PT","Right Corner 3PT",
-];
-const SC_ZONE_XY = {
-  "At Rim":            [  0,  3.0], "Paint (Non-Rim)":   [  0, 12.0],
-  "Center Mid-Range":  [  0, 20.5], "Left Mid-Range":    [-12, 16.0],
-  "Right Mid-Range":   [ 12, 16.0], "Left Baseline Mid": [-17.5, 7.0],
-  "Right Baseline Mid":[ 17.5,7.0], "Center 3PT":        [  0, 28.0],
-  "Left Wing 3PT":     [-20, 21.0], "Right Wing 3PT":    [ 20, 21.0],
-  "Left Corner 3PT":   [-23.5,4.0], "Right Corner 3PT":  [ 23.5,4.0],
-};
-const SC_THREE_SET = new Set(["Left Corner 3PT","Left Wing 3PT","Center 3PT","Right Wing 3PT","Right Corner 3PT"]);
-
+// Zone classification + zone chart rendering now live in js/zone-chart.js.
 function scArcPts(cx,cy,r,t0,t1,n=80){
   const xs=[],ys=[];
   for(let i=0;i<n;i++){const t=(t0+(t1-t0)*i/(n-1))*Math.PI/180;xs.push(cx+r*Math.cos(t));ys.push(cy+r*Math.sin(t));}
@@ -649,38 +661,16 @@ const SC_LAYOUT={
 };
 const SC_CFG={displaylogo:false,staticPlot:true};
 
-function scClassifyZone(px,py){
-  const xs=py-HOOP_Y,y=-px,x=47-py;
-  if(x<0)return -1;
-  const dist=Math.sqrt(xs*xs+y*y),angle=Math.atan2(y,xs)*180/Math.PI;
-  if(dist>=40)return -1;
-  if(dist<5)return 0;
-  if(x>=28&&Math.abs(y)<=6)return 1;
-  const is3=dist>=22.15;
-  if(is3){if(angle>55)return 7;if(angle>25)return 8;if(angle>-25)return 9;if(angle>-55)return 10;return 11;}
-  if(angle>60)return 2;if(angle>25)return 4;if(angle>-25)return 5;if(angle>-60)return 6;return 3;
+let PZB = null;   // {zones, baselines} from data/zone-baselines.json (lazy-loaded)
+async function ensureZoneBaselines(){
+  if(!PZB) PZB = await loadJSON("data/zone-baselines.json");
+  return PZB;
 }
 function scComputeZones(shots,piIdx){
-  const makes=new Array(12).fill(0),atts=new Array(12).fill(0);
-  for(let i=0;i<shots.length;i+=5){
-    if(shots[i+4]!==piIdx)continue;
-    const zi=scClassifyZone(shots[i+1]/10,shots[i+2]/10);
-    if(zi<0)continue;
-    atts[zi]++;if(shots[i+3])makes[zi]++;
-  }
-  return SC_ZONES.map((_,zi)=>atts[zi]>0?[zi,makes[zi],atts[zi]]:null).filter(Boolean);
+  return ZoneChart.computeZones(shots,(g,p)=>p===piIdx);
 }
 function scRenderZone(divEl,zoneData){
-  const anns=zoneData.map(([zi,m,a])=>{
-    const name=SC_ZONES[zi],xy=SC_ZONE_XY[name];
-    if(!xy)return null;
-    const pct=a>0?m/a*100:null;
-    const bg=pct===null?"#E7ECF2":pct>=45?"#C8E6C9":pct<=35?"#FFCDD2":"#E7ECF2";
-    return{x:xy[0],y:xy[1],text:pct!==null?`<b>${name}</b><br>${m}/${a} · ${pct.toFixed(0)}%`:`<b>${name}</b><br>${m}/${a}`,
-      showarrow:false,align:"center",font:{size:10,color:"#111827",family:"Arial"},
-      bgcolor:bg,bordercolor:"#0B0E14",borderwidth:1,borderpad:3,opacity:0.95};
-  }).filter(Boolean);
-  Plotly.react(divEl,scCourtTraces(),{...SC_LAYOUT,annotations:anns},SC_CFG);
+  ZoneChart.render(divEl, zoneData, {zones:PZB?.zones, baselines:PZB?.baselines, minAtt:5});
 }
 
 function scGetXY(shots,piIdx){
@@ -716,7 +706,7 @@ async function loadTeamShots(teamName){
 }
 
 // ── Player card modal ──────────────────────────────────────────────────────
-function openModal(p) {
+async function openModal(p) {
   const pg = posGroup(p.pos);
 
   document.getElementById("pc-img").src  = playerUrl(p.id);
@@ -778,46 +768,62 @@ function openModal(p) {
   const statRow = (s) =>
     `<div class="pc-stat-row">
        <span class="pc-stat-lbl">${s.lbl}</span>
-       <span class="pc-stat-val ${s.cls ?? ""}">${s.val}</span>
+       <span class="pc-stat-val ${s.cls ?? ""}" ${s.bold ? 'style="font-weight:900"' : ""}>${s.val}</span>
      </div>`;
 
   document.getElementById("pc-box").innerHTML = boxStats.map(statRow).join("");
+  // Show advanced stats now; RAPM sub-section appended once cross-load finishes
   document.getElementById("pc-adv").innerHTML = advStats.map(statRow).join("");
 
   document.getElementById("pc-overlay").classList.add("open");
   document.body.style.overflow = "hidden";
 
-  // Shot charts — only the live season has shot-coordinate data. For historical
-  // seasons hide the whole section rather than show an empty "not available".
+  // Shot charts — only the live season has shot-coordinate data
   const chartSection = document.getElementById("pc-chart-section");
   const chartStatus  = document.getElementById("pc-chart-status");
   const chartsWrap   = document.getElementById("pc-charts");
   if (SEASON !== CUR_SEASON) {
     chartSection.style.display = "none";
-    return;
+  } else {
+    chartSection.style.display = "block";
+    chartStatus.textContent  = "Loading shot data…";
+    chartsWrap.style.display = "none";
+    loadTeamShots(p.t).then(async td => {
+      if (!td) { chartStatus.textContent = "Shot data not available."; return; }
+      const piIdx = td.players.indexOf(p.n);
+      if (piIdx === -1) { chartStatus.textContent = "No shot data for this player."; return; }
+      const zoneData = scComputeZones(td.shots, piIdx);
+      if (!zoneData.length) { chartStatus.textContent = "No shot attempts found."; return; }
+      const {mx, my, hx, hy} = scGetXY(td.shots, piIdx);
+      await ensureZoneBaselines();
+      chartStatus.textContent  = "";
+      chartsWrap.style.display = "block";
+      scRenderZone(document.getElementById("pc-chart-zone"), zoneData);
+      scRenderDensity(document.getElementById("pc-chart-density"), mx, my, hx, hy);
+    });
   }
-  chartSection.style.display = "block";
-  chartStatus.textContent  = "Loading shot data…";
-  chartsWrap.style.display = "none";
 
-  loadTeamShots(p.t).then(td => {
-    if (!td) { chartStatus.textContent = "Shot data not available."; return; }
-    const piIdx = td.players.indexOf(p.n);
-    if (piIdx === -1) { chartStatus.textContent = "No shot data for this player."; return; }
-    const zoneData = scComputeZones(td.shots, piIdx);
-    if (!zoneData.length) { chartStatus.textContent = "No shot attempts found."; return; }
-    const {mx, my, hx, hy} = scGetXY(td.shots, piIdx);
-
-    chartStatus.textContent  = "";
-    chartsWrap.style.display = "block";
-    scRenderZone(document.getElementById("pc-chart-zone"), zoneData);
-    scRenderDensity(document.getElementById("pc-chart-density"), mx, my, hx, hy);
-  });
+  // Cross-load impact data and append RAPM sub-section to right column
+  const impactScope = curScope === "conf" ? "player-impact-conf.json" : "player-impact.json";
+  const impactKey   = `${SEASON}-${curScope}`;
+  if (!IMPACT_MODAL_CACHE[impactKey]) {
+    const impData = await loadJSON(`data/${SEASON}/${impactScope}`);
+    if (impData?.players) IMPACT_MODAL_CACHE[impactKey] = impData.players;
+  }
+  const impactRow = IMPACT_MODAL_CACHE[impactKey]?.find(ip => ip.id === p.id);
+  if (impactRow) {
+    document.getElementById("pc-adv").innerHTML =
+      advStats.map(statRow).join("") + RAPM_DIVIDER + _rapmRows(impactRow, statRow);
+  }
 }
 
 function closeModal() {
   document.getElementById("pc-overlay").classList.remove("open");
   document.body.style.overflow = "";
+  const z = document.getElementById("pc-chart-zone");
+  const d = document.getElementById("pc-chart-density");
+  if (window.Plotly) { Plotly.purge(d); }   // density is Plotly; zone chart is SVG
+  z.innerHTML = "";
 }
 
 function closePc(e) {

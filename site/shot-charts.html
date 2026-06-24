@@ -56,6 +56,7 @@
     /* ── section visibility ──────────────────────────────────────────────── */
     .section { display: none; }
     .section.active { display: block; }
+    /* zone-chart styles now live in css/style.css (shared with modals) */
   </style>
 </head>
 <body>
@@ -65,9 +66,11 @@
   <a href="index.html"        data-page="index.html">Home</a>
   <a href="prediction.html"   data-page="prediction.html">Predictor</a>
   <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="impact.html"       data-page="impact.html">Impact</a>
   <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+  <a href="postseason.html"  data-page="postseason.html">Postseason</a>
 </nav>
 
 <div class="container">
@@ -157,9 +160,10 @@
 </div><!-- /container -->
 
 <script src="js/common.js"></script>
+<script src="js/zone-chart.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
-// Court geometry  (mirrors shot_charts_plotly.py)
+// Court geometry  (scatter / density — college 3PT)
 // ═══════════════════════════════════════════════════════════════════════════
 const HOOP_Y   = 5.25;
 const THREE_R  = 22.146;
@@ -169,23 +173,8 @@ const Y_RANGE  = [-2.5, 31];
 const MAKE_C   = "#22C55E";
 const MISS_C   = "#EF4444";
 
-const ZONE_XY = {
-  "At Rim":            [  0,    3.0],
-  "Paint (Non-Rim)":   [  0,   12.0],
-  "Center Mid-Range":  [  0,   20.5],
-  "Left Mid-Range":    [-12,   16.0],
-  "Right Mid-Range":   [ 12,   16.0],
-  "Left Baseline Mid": [-17.5,  7.0],
-  "Right Baseline Mid":[ 17.5,  7.0],
-  "Center 3PT":        [  0,   28.0],
-  "Left Wing 3PT":     [-20,   21.0],
-  "Right Wing 3PT":    [ 20,   21.0],
-  "Left Corner 3PT":   [-23.5,  4.0],
-  "Right Corner 3PT":  [ 23.5,  4.0],
-};
-
 const THREE_ZONE_SET = new Set([
-  "Left Corner 3PT","Left Wing 3PT","Center 3PT","Right Wing 3PT","Right Corner 3PT"
+  "3PT - Right","3PT - Right Center","3PT - Center","3PT - Left Center","3PT - Left"
 ]);
 
 function arcPts(cx, cy, r, t0, t1, n = 80) {
@@ -225,9 +214,6 @@ const BASE_LAYOUT = {
   xaxis:{range:X_RANGE, visible:false, scaleanchor:"y", scaleratio:1, constrain:"domain"},
   yaxis:{range:Y_RANGE, visible:false, constrain:"domain"},
 };
-// Pan/scroll-zoom disabled: the court has a fixed range, and on touch they'd
-// hijack vertical page scrolling. Hover tooltips still work. responsive:true
-// keeps the square aspect correct on rotate/resize.
 const CFG = {displaylogo:false, scrollZoom:false, responsive:true, displayModeBar:false};
 
 function titleLayout(title, sub) {
@@ -239,41 +225,13 @@ function titleLayout(title, sub) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Zone classification from plot coords (mirrors mbb_viz._classify_zone)
-// px = -coordinate_y,  py = 47 - |coordinate_x|
-// ═══════════════════════════════════════════════════════════════════════════
-function classifyZone(px, py) {
-  const xs   = py - HOOP_Y;          // 41.75 - |coordinate_x|
-  const y    = -px;                   // coordinate_y
-  const x    = 47 - py;              // |coordinate_x|
-  if (x < 0) return -1;
-  const dist  = Math.sqrt(xs*xs + y*y);
-  const angle = Math.atan2(y, xs) * 180 / Math.PI;
-  if (dist >= 40) return -1;
-  if (dist <  5)  return 0;           // At Rim
-  if (x >= 28 && Math.abs(y) <= 6)  return 1;  // Paint (Non-Rim)
-  const is3 = dist >= 22.15;
-  if (is3) {
-    if (angle >  55) return 7;        // Left Corner 3PT
-    if (angle >  25) return 8;        // Left Wing 3PT
-    if (angle > -25) return 9;        // Center 3PT
-    if (angle > -55) return 10;       // Right Wing 3PT
-    return 11;                         // Right Corner 3PT
-  }
-  if (angle >  60) return 2;          // Left Baseline Mid
-  if (angle >  25) return 4;          // Left Mid-Range
-  if (angle > -25) return 5;          // Center Mid-Range
-  if (angle > -60) return 6;          // Right Mid-Range
-  return 3;                            // Right Baseline Mid
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // Data layer
 // ═══════════════════════════════════════════════════════════════════════════
-let SD         = null;   // shots-meta (zones, team_zones, player_zones, territory)
-let SHOT_CACHE = {};     // teamName → {games, players, shots} fetched on demand
-let ZONES      = [];
-let SEASON     = "2026";
+let SD             = null;   // shots-meta (zones, zone_baselines, team_zones, …)
+let SHOT_CACHE     = {};
+let ZONES          = [];
+let ZONE_BASELINES = null;
+let SEASON         = "2026";
 
 async function fetchTeamShots(teamName) {
   if (SHOT_CACHE[teamName]) return SHOT_CACHE[teamName];
@@ -284,20 +242,8 @@ async function fetchTeamShots(teamName) {
   return data;
 }
 
-// Filter fn signature: (gi, pi) → bool
 function computeZoneStats(shots, filterFn) {
-  const makes = new Array(12).fill(0);
-  const atts  = new Array(12).fill(0);
-  for (let i = 0; i < shots.length; i += 5) {
-    if (!filterFn(shots[i], shots[i+4])) continue;
-    const px = shots[i+1] / 10;
-    const py = shots[i+2] / 10;
-    const zi = classifyZone(px, py);
-    if (zi < 0) continue;
-    atts[zi]++;
-    if (shots[i+3]) makes[zi]++;
-  }
-  return ZONES.map((_, zi) => atts[zi] > 0 ? [zi, makes[zi], atts[zi]] : null).filter(Boolean);
+  return ZoneChart.computeZones(shots, filterFn);
 }
 
 function getXY(shots, filterFn) {
@@ -325,23 +271,9 @@ function splitSubtitle(base, zoneData) {
 // ═══════════════════════════════════════════════════════════════════════════
 // Renderers
 // ═══════════════════════════════════════════════════════════════════════════
-function renderZone(divId, zoneData, title, subtitle) {
-  const annotations = zoneData.map(([zi, m, a]) => {
-    const name = ZONES[zi], xy = ZONE_XY[name];
-    if (!xy) return null;
-    const pct = a > 0 ? m/a*100 : null;
-    const bg  = pct===null?"#E7ECF2": pct>=45?"#C8E6C9": pct<=35?"#FFCDD2":"#E7ECF2";
-    return {
-      x:xy[0], y:xy[1],
-      text: pct!==null ? `<b>${name}</b><br>${m}/${a} · ${pct.toFixed(0)}%`
-                       : `<b>${name}</b><br>${m}/${a}`,
-      showarrow:false, align:"center",
-      font:{size:11, color:"#111827", family:"Arial"},
-      bgcolor:bg, bordercolor:"#0B0E14", borderwidth:1, borderpad:4, opacity:0.95,
-    };
-  }).filter(Boolean);
-  Plotly.react(divId, courtTraces(),
-    {...BASE_LAYOUT, title:titleLayout(title, subtitle), annotations}, CFG);
+function renderZone(container, zoneData, title, subtitle) {
+  ZoneChart.render(container, zoneData,
+    {zones: ZONES, baselines: ZONE_BASELINES, title, subtitle, minAtt: 5});
 }
 
 function renderDensity(divId, mx, my, hx, hy, title, subtitle) {
@@ -396,8 +328,16 @@ function renderScatter(divId, mx, my, hx, hy, title, subtitle) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Chart ID helpers — each chart gets its own Plotly div
+// Chart container helpers
+//   • zone chart renders inline SVG → ZoneChart writes into the raw wrap element
+//   • density / scatter render Plotly → they need a dedicated child div id
 // ═══════════════════════════════════════════════════════════════════════════
+function ensureZoneEl(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  wrap.style.display = "";
+  return wrap;
+}
+
 function ensureDiv(wrapId, divId) {
   const wrap = document.getElementById(wrapId);
   let div = document.getElementById(divId);
@@ -425,7 +365,7 @@ async function tGenerate() {
     const precomp  = SD.team_zones[teamName];
     const zoneData = precomp ? precomp.z : computeZoneStats(td.shots, () => true);
     const sub      = splitSubtitle(`${teamName} · ${SEASON} season`, zoneData);
-    renderZone(ensureDiv("t-zone-wrap","t-zone"), zoneData, teamName, sub);
+    renderZone(ensureZoneEl("t-zone-wrap"), zoneData, teamName, sub);
     const {mx,my,hx,hy} = getXY(td.shots, () => true);
     renderDensity(ensureDiv("t-density-wrap","t-density"), mx,my,hx,hy,
       teamName, `${SEASON} season · shot density`);
@@ -437,7 +377,7 @@ async function tGenerate() {
     const filterFn = (g, _p) => g === gi;
     const zoneData = computeZoneStats(td.shots, filterFn);
     const gameSub  = `${game.date} · vs ${game.opp}`;
-    renderZone(ensureDiv("t-zone-wrap","t-zone"), zoneData, teamName,
+    renderZone(ensureZoneEl("t-zone-wrap"), zoneData, teamName,
       splitSubtitle(`${teamName} · ${gameSub}`, zoneData));
     const {mx,my,hx,hy} = getXY(td.shots, filterFn);
     renderScatter(ensureDiv("t-scatter-wrap","t-scatter"), mx,my,hx,hy, teamName, gameSub);
@@ -472,7 +412,7 @@ async function pGenerate() {
     const precomp  = SD.player_zones[key];
     const filterFn = (_g, p) => p === pi;
     const zoneData = precomp ? precomp.z : computeZoneStats(td.shots, filterFn);
-    renderZone(ensureDiv("p-zone-wrap","p-zone"), zoneData, playerName,
+    renderZone(ensureZoneEl("p-zone-wrap"), zoneData, playerName,
       splitSubtitle(`${teamName} · ${SEASON} season`, zoneData));
     const {mx,my,hx,hy} = getXY(td.shots, filterFn);
     renderDensity(ensureDiv("p-density-wrap","p-density"), mx,my,hx,hy,
@@ -485,7 +425,7 @@ async function pGenerate() {
     const filterFn = (g, p) => g === gi && p === pi;
     const zoneData = computeZoneStats(td.shots, filterFn);
     const gameSub  = `${game.date} · vs ${game.opp}`;
-    renderZone(ensureDiv("p-zone-wrap","p-zone"), zoneData, playerName,
+    renderZone(ensureZoneEl("p-zone-wrap"), zoneData, playerName,
       splitSubtitle(`${playerName} · ${gameSub}`, zoneData));
     const {mx,my,hx,hy} = getXY(td.shots, filterFn);
     renderScatter(ensureDiv("p-scatter-wrap","p-scatter"), mx,my,hx,hy, playerName, gameSub);
@@ -559,8 +499,9 @@ async function init() {
     return;
   }
 
-  ZONES  = SD.zones;
-  SEASON = SD.meta?.season ?? "2026";
+  ZONES          = SD.zones;
+  ZONE_BASELINES = SD.zone_baselines || null;
+  SEASON         = SD.meta?.season ?? "2026";
 
   function populateTeamSelectors() {
     const minG = parseInt(document.getElementById("min-gp").value) || 0;
@@ -572,7 +513,6 @@ async function init() {
       const el  = document.getElementById(id);
       const cur = el.value;
       el.innerHTML = opts;
-      // Keep current selection if still valid, else default to Arkansas or first
       if (filtered.includes(cur)) {
         el.value = cur;
       } else {
@@ -597,7 +537,6 @@ async function init() {
   document.getElementById("t-gen-btn").addEventListener("click", () => tGenerate());
   document.getElementById("p-gen-btn").addEventListener("click", () => pGenerate());
 
-  // Pre-fetch default team so game/player selectors populate immediately
   tOnTeamChange();
   pOnTeamChange();
 }

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Postseason | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    /* ── champion banner ─────────────────────────────────────────────── */
+    .champ-card {
+      display: flex; align-items: center; gap: 18px;
+      background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%);
+      border: 1px solid var(--t1); border-radius: 18px;
+      padding: 18px 24px; margin-bottom: 18px;
+    }
+    .champ-card img { width: 64px; height: 64px; object-fit: contain; }
+    .champ-card .label {
+      color: var(--t1); font-size: .74rem; letter-spacing: .1em; font-weight: 800;
+    }
+    .champ-card .name { font-size: 1.5rem; font-weight: 900; }
+    .champ-card .sub  { color: var(--muted); font-size: .85rem; }
+
+    /* ── view toggle ─────────────────────────────────────────────────── */
+    .view-tabs { display: flex; gap: 8px; margin: 0 0 16px; flex-wrap: wrap; }
+    .view-tab {
+      padding: 8px 16px; border-radius: 999px; cursor: pointer;
+      background: var(--card2); border: 1px solid var(--line);
+      color: var(--muted); font-weight: 700; font-size: .85rem; user-select: none;
+    }
+    .view-tab.active { background: var(--t1); color: #fff; border-color: var(--t1); }
+
+    /* ── bracket ─────────────────────────────────────────────────────── */
+    .region-block { margin-bottom: 22px; }
+    .region-title {
+      font-size: .82rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--ink); margin: 0 0 8px;
+      padding-left: 4px; border-left: 3px solid var(--t1);
+    }
+    .region-rounds {
+      display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px;
+      align-items: stretch;
+    }
+    .round-col {
+      display: flex; flex-direction: column; justify-content: space-around;
+      gap: 10px; min-width: 210px; flex: 1;
+    }
+    .round-label {
+      color: var(--muted); font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em; text-align: center;
+      margin-bottom: 2px;
+    }
+    .matchup {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; overflow: hidden;
+    }
+    .mu-team {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; font-size: .82rem;
+    }
+    .mu-team + .mu-team { border-top: 1px solid var(--line); }
+    .mu-team img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+    .mu-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mu-score { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 700; }
+    .mu-team.win .mu-name  { font-weight: 800; color: var(--ink); }
+    .mu-team.win .mu-score { color: var(--t1); }
+    .mu-team.lose { opacity: .55; }
+
+    .final-block {
+      background: var(--card2); border: 1px solid var(--t1);
+      border-radius: 14px; padding: 16px; margin-bottom: 22px;
+    }
+    .final-block .region-title { border-left-color: var(--t2); }
+
+    /* ── leaders tables ──────────────────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; white-space: nowrap; }
+    thead th {
+      background: var(--card2); color: var(--muted);
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1;
+    }
+    thead th:hover { color: var(--ink); }
+    thead th.sort-asc::after  { content: " ↑"; color: var(--t1); }
+    thead th.sort-desc::after { content: " ↓"; color: var(--t1); }
+    tbody tr { border-bottom: 1px solid #1a2235; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    tbody td { padding: 8px 12px; vertical-align: middle; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.rk  { color: var(--muted); text-align: right; }
+    td.logo-cell img { width: 26px; height: 26px; object-fit: contain; display: block; }
+    td.name-cell { font-weight: 700; }
+    td.sub-cell  { color: var(--muted); }
+    .seg { display: flex; gap: 6px; margin-bottom: 12px; }
+    .seg button {
+      padding: 7px 14px; border-radius: 8px; cursor: pointer;
+      background: var(--card2); border: 1px solid var(--line);
+      color: var(--muted); font-weight: 700; font-size: .82rem;
+    }
+    .seg button.active { background: var(--t1); color: #fff; border-color: var(--t1); }
+    .hidden { display: none; }
+
+    @media (max-width: 700px) {
+      .round-col { min-width: 180px; }
+      .champ-card .name { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+  <a href="index.html"        data-page="index.html">Home</a>
+  <a href="prediction.html"   data-page="prediction.html">Predictor</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="impact.html"       data-page="impact.html">Impact</a>
+  <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
+  <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
+  <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+  <a href="postseason.html"   data-page="postseason.html">Postseason</a>
+</nav>
+
+<div class="container">
+
+  <h2>Postseason</h2>
+  <p class="page-sub">
+    The NCAA tournament bracket, plus player and team leaders computed from
+    tournament games only. Click any column header in the leaders tables to sort.
+  </p>
+
+  <div class="filters" style="margin-bottom:14px">
+    <div class="form-group narrow">
+      <label for="season-sel">Season</label>
+      <select id="season-sel"></select>
+    </div>
+  </div>
+
+  <div id="champ-card" class="champ-card" style="display:none"></div>
+
+  <div class="view-tabs">
+    <div class="view-tab active" data-view="bracket">Bracket</div>
+    <div class="view-tab" data-view="leaders">Tournament Leaders</div>
+  </div>
+
+  <div id="msg" class="count-label"></div>
+
+  <!-- Bracket view -->
+  <div id="bracket-view"></div>
+
+  <!-- Leaders view -->
+  <div id="leaders-view" class="hidden">
+    <div class="seg" id="leader-seg">
+      <button data-tab="players" class="active">Players</button>
+      <button data-tab="teams">Teams</button>
+    </div>
+
+    <div id="players-tab">
+      <div class="count-label">Minimum 1 tournament game. Sorted by total points.</div>
+      <div class="tbl-wrap">
+        <table id="players-table">
+          <thead>
+            <tr>
+              <th></th><!-- headshot -->
+              <th data-col="n"   data-dir="asc">Player</th>
+              <th data-col="t"   data-dir="asc">Team</th>
+              <th data-col="gp"  data-dir="desc">G</th>
+              <th data-col="pts" data-dir="desc">PTS</th>
+              <th data-col="ppg" data-dir="desc">PPG</th>
+              <th data-col="rpg" data-dir="desc">RPG</th>
+              <th data-col="apg" data-dir="desc">APG</th>
+              <th data-col="efg" data-dir="desc">eFG%</th>
+              <th data-col="ts"  data-dir="desc">TS%</th>
+            </tr>
+          </thead>
+          <tbody id="players-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="teams-tab" class="hidden">
+      <div class="count-label">Every team that played a tournament game, by how far they advanced.</div>
+      <div class="tbl-wrap">
+        <table id="teams-table">
+          <thead>
+            <tr>
+              <th></th><!-- logo -->
+              <th data-col="team"    data-dir="asc">Team</th>
+              <th data-col="result"  data-dir="asc">Result</th>
+              <th data-col="region"  data-dir="asc">Region</th>
+              <th data-col="wins"    data-dir="desc">W</th>
+              <th data-col="losses"  data-dir="desc">L</th>
+              <th data-col="pt_diff" data-dir="desc">+/−</th>
+            </tr>
+          </thead>
+          <tbody id="teams-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="caption" id="footer-cap" style="margin-top:14px"></p>
+  <hr>
+  <p class="caption">Built by Brady Brown &amp; Wyatt Thompson. Follow @hogcharts on Instagram.</p>
+
+</div>
+
+<script src="js/common.js"></script>
+<script>
+const ROUND_LABELS = {
+  "First Four": "First Four", "1st Round": "Round of 64", "2nd Round": "Round of 32",
+  "Sweet 16": "Sweet 16", "Elite 8": "Elite 8",
+  "Final Four": "Final Four", "National Championship": "Championship",
+};
+const REGION_ORDER = ["East", "West", "South", "Midwest"];
+
+let PS_DATA = null;
+let SEASON  = null;
+let teamIdByName = {};        // team name → team_id for logos
+let playerSort = { col: "pts", dir: "desc" };
+let teamSort   = { col: "best_round_rank", dir: "desc" };
+
+function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
+
+async function init() {
+  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  const sSel = document.getElementById("season-sel");
+  (seasons?.length ? seasons : [new Date().getFullYear()]).forEach(s => {
+    const o = document.createElement("option");
+    o.value = s; o.textContent = seasonLabel(s);
+    sSel.appendChild(o);
+  });
+  SEASON = parseInt(sSel.value);
+  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
+
+  // View toggle (Bracket / Leaders)
+  document.querySelectorAll(".view-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      const view = tab.dataset.view;
+      document.getElementById("bracket-view").classList.toggle("hidden", view !== "bracket");
+      document.getElementById("leaders-view").classList.toggle("hidden", view !== "leaders");
+    });
+  });
+
+  // Players / Teams sub-tabs
+  document.querySelectorAll("#leader-seg button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#leader-seg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const t = btn.dataset.tab;
+      document.getElementById("players-tab").classList.toggle("hidden", t !== "players");
+      document.getElementById("teams-tab").classList.toggle("hidden", t !== "teams");
+    });
+  });
+
+  bindSort("players-table", playerSort, renderPlayers);
+  bindSort("teams-table",   teamSort,   renderTeams);
+
+  await reload();
+}
+
+function bindSort(tableId, sortState, renderFn) {
+  document.querySelectorAll(`#${tableId} thead th[data-col]`).forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortState.col === col) {
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.col = col;
+        sortState.dir = th.dataset.dir || "desc";
+      }
+      renderFn();
+    });
+  });
+}
+
+async function reload() {
+  PS_DATA = await loadJSON(`data/${SEASON}/postseason.json`);
+  const msg = document.getElementById("msg");
+  const champCard = document.getElementById("champ-card");
+
+  if (!PS_DATA || !PS_DATA.meta || !PS_DATA.meta.n_games) {
+    champCard.style.display = "none";
+    document.getElementById("bracket-view").innerHTML = "";
+    document.getElementById("players-body").innerHTML = "";
+    document.getElementById("teams-body").innerHTML = "";
+    msg.textContent = (SEASON === 2020)
+      ? "The 2020 NCAA tournament was cancelled due to COVID-19 — no games were played."
+      : "No tournament data for this season yet.";
+    document.getElementById("footer-cap").textContent = "";
+    return;
+  }
+  msg.textContent = "";
+
+  // Build name → team_id map from bracket games (for logos in leader tables).
+  teamIdByName = {};
+  collectAllGames().forEach(g => {
+    if (g.home && g.home_id) teamIdByName[g.home] = g.home_id;
+    if (g.away && g.away_id) teamIdByName[g.away] = g.away_id;
+  });
+
+  renderChampion();
+  renderBracket();
+  renderPlayers();
+  renderTeams();
+
+  document.getElementById("footer-cap").textContent =
+    `Built ${PS_DATA.meta.built_at} · ${PS_DATA.meta.season} NCAA tournament · ${PS_DATA.meta.n_games} games.`;
+}
+
+function collectAllGames() {
+  const b = PS_DATA.bracket;
+  const out = [];
+  REGION_ORDER.forEach(r => {
+    const rounds = b.regions[r];
+    if (rounds) Object.values(rounds).forEach(list => out.push(...list));
+  });
+  out.push(...(b.first_four || []), ...(b.final_four || []), ...(b.championship || []));
+  return out;
+}
+
+function renderChampion() {
+  const champCard = document.getElementById("champ-card");
+  const champ = PS_DATA.champion;
+  if (!champ) { champCard.style.display = "none"; return; }
+  const id = teamIdByName[champ];
+  champCard.style.display = "flex";
+  champCard.innerHTML = `
+    <img src="${logoUrl(id)}" alt="${champ}" onerror="this.style.opacity=0">
+    <div style="flex:1">
+      <div class="label">🏆 NATIONAL CHAMPION</div>
+      <div class="name">${champ}</div>
+      <div class="sub">def. ${PS_DATA.runner_up ?? ""} in the title game</div>
+    </div>`;
+}
+
+function matchupHTML(game) {
+  if (!game) return "";
+  const side = (name, id, score, isWin) => `
+    <div class="mu-team ${isWin ? "win" : "lose"}">
+      <img src="${logoUrl(id)}" alt="" onerror="this.style.opacity=0">
+      <span class="mu-name">${name ?? "TBD"}</span>
+      <span class="mu-score">${score ?? ""}</span>
+    </div>`;
+  const homeWin = game.winner != null && game.winner === game.home;
+  const awayWin = game.winner != null && game.winner === game.away;
+  return `<div class="matchup">
+    ${side(game.home, game.home_id, game.home_score, homeWin)}
+    ${side(game.away, game.away_id, game.away_score, awayWin)}
+  </div>`;
+}
+
+function renderBracket() {
+  const b = PS_DATA.bracket;
+  let html = "";
+
+  REGION_ORDER.forEach(region => {
+    const rounds = b.regions[region];
+    if (!rounds) return;
+    html += `<div class="region-block"><div class="region-title">${region} Region</div>
+      <div class="region-rounds">`;
+    Object.keys(rounds).forEach(roundName => {
+      html += `<div class="round-col"><div class="round-label">${ROUND_LABELS[roundName] || roundName}</div>`;
+      rounds[roundName].forEach(g => { html += matchupHTML(g); });
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  // Final Four + Championship
+  if ((b.final_four && b.final_four.length) || (b.championship && b.championship.length)) {
+    html += `<div class="final-block"><div class="region-title">Final Four &amp; Championship</div>
+      <div class="region-rounds">`;
+    if (b.final_four?.length) {
+      html += `<div class="round-col"><div class="round-label">Final Four</div>`;
+      b.final_four.forEach(g => { html += matchupHTML(g); });
+      html += `</div>`;
+    }
+    if (b.championship?.length) {
+      html += `<div class="round-col"><div class="round-label">Championship</div>`;
+      b.championship.forEach(g => { html += matchupHTML(g); });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+  }
+
+  document.getElementById("bracket-view").innerHTML = html;
+}
+
+function sortRows(rows, sortState) {
+  return [...rows].sort((a, b) => {
+    const av = a[sortState.col], bv = b[sortState.col];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const cmp = typeof av === "string" ? av.localeCompare(bv) : av - bv;
+    return sortState.dir === "asc" ? cmp : -cmp;
+  });
+}
+
+function markSortHeaders(tableId, sortState) {
+  document.querySelectorAll(`#${tableId} thead th`).forEach(th => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.col === sortState.col) {
+      th.classList.add(sortState.dir === "asc" ? "sort-asc" : "sort-desc");
+    }
+  });
+}
+
+function fmtN(v, d = 1) { return v == null ? "—" : Number(v).toFixed(d); }
+function fmtP(v)       { return v == null ? "—" : (Number(v) * 100).toFixed(1); }
+
+function renderPlayers() {
+  const rows = sortRows(PS_DATA.player_leaders || [], playerSort);
+  markSortHeaders("players-table", playerSort);
+  document.getElementById("players-body").innerHTML = rows.map(p => `
+    <tr>
+      <td class="logo-cell"><img src="${playerUrl(p.id)}" alt="" onerror="this.src='${logoUrl(p.tid)}';this.onerror=null"></td>
+      <td class="name-cell">${p.n}</td>
+      <td class="sub-cell">${p.t ?? "—"}</td>
+      <td class="num">${p.gp ?? "—"}</td>
+      <td class="num">${p.pts ?? "—"}</td>
+      <td class="num">${fmtN(p.ppg)}</td>
+      <td class="num">${fmtN(p.rpg)}</td>
+      <td class="num">${fmtN(p.apg)}</td>
+      <td class="num">${fmtP(p.efg)}</td>
+      <td class="num">${fmtP(p.ts)}</td>
+    </tr>`).join("");
+}
+
+function renderTeams() {
+  const rows = sortRows(PS_DATA.team_summary || [], teamSort);
+  markSortHeaders("teams-table", teamSort);
+  document.getElementById("teams-body").innerHTML = rows.map(t => {
+    const diffC = t.pt_diff > 0 ? "style='color:#16A34A;font-weight:700'"
+                : t.pt_diff < 0 ? "style='color:#DC2626;font-weight:700'" : "";
+    const diff  = (t.pt_diff > 0 ? "+" : "") + t.pt_diff;
+    return `<tr>
+      <td class="logo-cell"><img src="${logoUrl(teamIdByName[t.team])}" alt="" onerror="this.style.opacity=0"></td>
+      <td class="name-cell">${t.team}</td>
+      <td>${t.result ?? "—"}</td>
+      <td class="sub-cell">${t.region ?? "—"}</td>
+      <td class="num">${t.wins}</td>
+      <td class="num">${t.losses}</td>
+      <td class="num" ${diffC}>${diff}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
