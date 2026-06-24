@@ -104,6 +104,42 @@
     .seg button.active { background: var(--t1); color: #fff; border-color: var(--t1); }
     .hidden { display: none; }
 
+    /* ── All-Tournament team + highlights ────────────────────────────── */
+    .section-title {
+      font-size: .8rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--ink); margin: 4px 0 10px;
+    }
+    .at-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    }
+    .at-card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px 10px; text-align: center;
+    }
+    .at-card img { width: 56px; height: 56px; border-radius: 50%;
+      object-fit: cover; object-position: top; background: var(--card2); }
+    .at-name { font-weight: 800; font-size: .9rem; margin-top: 8px; line-height: 1.2; }
+    .at-team { color: var(--muted); font-size: .74rem; margin-top: 2px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .at-line { color: var(--ink); font-size: .8rem; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .at-score { color: var(--t1); font-weight: 800; font-size: .72rem; margin-top: 4px; }
+    .hl-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px;
+    }
+    .hl-card {
+      background: var(--card2); border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .hl-label { color: var(--muted); font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em; }
+    .hl-player { font-weight: 800; font-size: .92rem; margin-top: 6px; }
+    .hl-val { color: var(--t1); font-weight: 800; font-size: 1.1rem; margin-top: 2px; }
+    .hl-sub { color: var(--muted); font-size: .74rem; margin-top: 2px; }
+    @media (max-width: 700px) {
+      .at-grid { grid-template-columns: repeat(2, 1fr); }
+      .hl-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
     @media (max-width: 700px) {
       .round-col { min-width: 180px; }
       .champ-card .name { font-size: 1.25rem; }
@@ -152,7 +188,11 @@
 
   <!-- Leaders view -->
   <div id="leaders-view" class="hidden">
-    <div class="seg" id="leader-seg">
+
+    <!-- All-Tournament team + highlight standouts -->
+    <div id="all-tournament"></div>
+
+    <div class="seg" id="leader-seg" style="margin-top:18px">
       <button data-tab="players" class="active">Players</button>
       <button data-tab="teams">Teams</button>
     </div>
@@ -305,6 +345,7 @@ async function reload() {
 
   renderChampion();
   renderBracket();
+  renderAllTournament();
   renderPlayers();
   renderTeams();
 
@@ -413,6 +454,46 @@ function markSortHeaders(tableId, sortState) {
 
 function fmtN(v, d = 1) { return v == null ? "—" : Number(v).toFixed(d); }
 function fmtP(v)       { return v == null ? "—" : (Number(v) * 100).toFixed(1); }
+
+function renderAllTournament() {
+  const wrap = document.getElementById("all-tournament");
+  const team = PS_DATA.all_tournament || [];
+  const h = PS_DATA.highlights || {};
+  if (!team.length) { wrap.innerHTML = ""; return; }
+
+  const headshot = (p) =>
+    `<img src="${playerUrl(p.id)}" alt="" loading="lazy" onerror="this.src='${logoUrl(p.tid)}';this.onerror=null">`;
+
+  const cards = team.map(p => `
+    <div class="at-card">
+      ${headshot(p)}
+      <div class="at-name">${p.n}</div>
+      <div class="at-team">${p.t ?? ""}</div>
+      <div class="at-line">${fmtN(p.ppg)} / ${fmtN(p.rpg)} / ${fmtN(p.apg)}</div>
+      <div class="at-score">${p.gp} GP</div>
+    </div>`).join("");
+
+  const hlCard = (label, p, val, sub) => p ? `
+    <div class="hl-card">
+      <div class="hl-label">${label}</div>
+      <div class="hl-player">${p.n}</div>
+      <div class="hl-val">${val}</div>
+      <div class="hl-sub">${sub}</div>
+    </div>` : "";
+
+  const ts = h.top_scorer, tr = h.top_rebounder, tp = h.top_playmaker, bg = h.best_game;
+  const highlights = [
+    hlCard("Most Points",   ts, ts ? `${ts.pts} pts` : "", ts ? `${ts.t} · ${fmtN(ts.ppg)} ppg` : ""),
+    hlCard("Best Game",     bg, bg ? `${bg.pts} pts` : "", bg ? `${bg.t} vs ${bg.opp ?? "—"}` : ""),
+    hlCard("Most Rebounds", tr, tr ? `${tr.reb} reb` : "", tr ? `${tr.t} · ${fmtN(tr.rpg)} rpg` : ""),
+    hlCard("Most Assists",  tp, tp ? `${tp.ast} ast` : "", tp ? `${tp.t} · ${fmtN(tp.apg)} apg` : ""),
+  ].join("");
+
+  wrap.innerHTML =
+    `<div class="section-title">All-Tournament Team</div>
+     <div class="at-grid">${cards}</div>
+     <div class="hl-grid">${highlights}</div>`;
+}
 
 function renderPlayers() {
   const rows = sortRows(PS_DATA.player_leaders || [], playerSort);

@@ -327,6 +327,8 @@ team_summary.sort(key=lambda r: (-r["best_round_rank"], -r["pt_diff"]))
 # 4. Player leaders — aggregate boxscores filtered to tournament games only
 # ---------------------------------------------------------------------------
 player_leaders = []
+all_tournament = []   # top-5 standout players ("All-Tournament team")
+highlights = {}       # featured single-stat standouts
 if tournament_game_ids:
     print("Loading player boxscores…")
     offline_boxscore_csv = os.path.join(PROJECT_ROOT, f"offline_player_{SEASON}.csv")
@@ -402,6 +404,56 @@ if tournament_game_ids:
     player_leaders = leaders_out.where(leaders_out.notna(), other=None).to_dict("records")
     print(f"  {len(player_leaders)} players with tournament stats")
 
+    # --- All-Tournament team + highlight standouts ---
+    # Blended tournament score from season-long totals, so it rewards both
+    # production and advancing deep (more games = more chances to accumulate).
+    blended_score = (
+        leaders_df["points"] + 1.2 * leaders_df["rebounds"] + 1.5 * leaders_df["assists"]
+        + 2 * leaders_df["steals"] + 2 * leaders_df["blocks"] - leaders_df["turnovers"]
+    )
+    score_by_athlete_id = dict(zip(leaders_df["athlete_id"], blended_score))
+    for player_record in player_leaders:
+        athlete_id = player_record.get("id")
+        player_record["tscore"] = (
+            round(float(score_by_athlete_id.get(athlete_id, 0)), 1)
+            if athlete_id is not None else None
+        )
+
+    # Top 5 by blended score (require 2+ games so a single hot night can't crash it).
+    all_tournament = sorted(
+        [r for r in player_leaders if (r.get("gp") or 0) >= 2],
+        key=lambda r: r.get("tscore") or 0, reverse=True,
+    )[:5]
+
+    # Best single-game scoring performance, with the opponent from the bracket.
+    opponent_by_game_team = {}
+    for game in game_records:
+        if game["home"] and game["away"]:
+            opponent_by_game_team[(game["game_id"], game["home"])] = game["away"]
+            opponent_by_game_team[(game["game_id"], game["away"])] = game["home"]
+    best_single_game = None
+    if not tournament_box_df.empty:
+        best_row = tournament_box_df.loc[tournament_box_df["points"].idxmax()]
+        best_single_game = {
+            "n":   best_row["athlete_display_name"],
+            "t":   best_row["team_display_name"],
+            "tid": int(best_row["team_id"]) if pd.notna(best_row["team_id"]) else None,
+            "id":  int(best_row["athlete_id"]) if pd.notna(best_row["athlete_id"]) else None,
+            "pts": int(best_row["points"]),
+            "opp": opponent_by_game_team.get((int(best_row["game_id"]), best_row["team_display_name"])),
+        }
+
+    def _top_by(metric):
+        ranked = sorted(player_leaders, key=lambda r: r.get(metric) or 0, reverse=True)
+        return ranked[0] if ranked else None
+
+    highlights = {
+        "top_scorer":    _top_by("pts"),
+        "top_rebounder": _top_by("reb"),
+        "top_playmaker": _top_by("ast"),
+        "best_game":     best_single_game,
+    }
+
 
 # ---------------------------------------------------------------------------
 # 5. Write postseason.json
@@ -423,6 +475,8 @@ output = {
     },
     "champion":       champion,
     "runner_up":      runner_up,
+    "all_tournament": all_tournament,
+    "highlights":     highlights,
     "player_leaders": player_leaders,
     "team_summary":   team_summary,
     "meta": {"built_at": data_stamp, "season": SEASON, "n_games": len(tournament_game_ids)},

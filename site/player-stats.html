@@ -388,25 +388,40 @@ function activeCols() {
   return cols;
 }
 
-// RAPM fields merged from player-impact.json so the RAPM tab + filters work on
-// the same unified player rows as Box Score / Advanced.
+// RAPM fields merged from player-impact.json on demand. Loading impact eagerly
+// doubled the initial payload, so we fetch+merge it lazily — only when the RAPM
+// tab, a possessions filter, a RAPM stat-minimum, or a player card needs it.
 const IMPACT_FIELDS = ["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp","poss"];
+const IMPACT_MERGED = {};   // { "all"|"conf": true } once impact is merged for that scope
 
+// Initial scope load: player-stats only (fast). Impact is merged later.
 async function loadScopeData(scope) {
-  const statsFile  = scope === "conf" ? "player-stats-conf.json" : "player-stats.json";
+  const statsFile = scope === "conf" ? "player-stats-conf.json" : "player-stats.json";
+  const stats = await loadJSON(`data/${SEASON}/${statsFile}`);
+  return stats?.players || null;
+}
+
+// Lazily fetch player-impact for the scope and merge the RAPM fields into its
+// rows. Cached per (season,scope) so it runs at most once each.
+async function ensureImpact(scope) {
+  const rows = scope === "conf" ? PS_CONF : PS_ALL;
+  if (!rows || IMPACT_MERGED[scope]) return;
   const impactFile = scope === "conf" ? "player-impact-conf.json" : "player-impact.json";
-  const [stats, impact] = await Promise.all([
-    loadJSON(`data/${SEASON}/${statsFile}`),
-    loadJSON(`data/${SEASON}/${impactFile}`),
-  ]);
-  if (!stats?.players) return null;
-  const players = stats.players;
+  const impact = await loadJSON(`data/${SEASON}/${impactFile}`);
   const byId = new Map((impact?.players || []).map(ip => [ip.id, ip]));
-  players.forEach(p => {
+  rows.forEach(p => {
     const ip = byId.get(p.id);
     IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
   });
-  return players;
+  IMPACT_MERGED[scope] = true;
+}
+
+// Whether the current view/filters need RAPM data merged in.
+function needsImpact() {
+  if (colGroup === "rapm") return true;
+  if ((parseFloat(document.getElementById("min-poss").value) || 0) > 0) return true;
+  const sk = document.getElementById("stat-sel").value;
+  return sk === "rapm" || sk === "rapm_bp";
 }
 
 // (Re)build the conference / team / class dropdowns from the current rows.
@@ -446,6 +461,7 @@ async function init() {
 
 async function reload() {
   PS_ALL = null; PS_CONF = null; allPlayers = [];
+  IMPACT_MERGED.all = false; IMPACT_MERGED.conf = false;  // re-merge for the new season
   curScope = "all";
   document.getElementById("ps-btn-all").classList.add("active");
   document.getElementById("ps-btn-conf").classList.remove("active");
@@ -692,6 +708,14 @@ function ensureObserver() {
 }
 
 function render() {
+  // Lazy-load RAPM data the first time the view/filters actually need it,
+  // then re-render once it's merged in.
+  if (needsImpact() && !IMPACT_MERGED[curScope]) {
+    document.getElementById("count-label").textContent = "Loading RAPM…";
+    ensureImpact(curScope).then(render);
+    return;
+  }
+
   _currentRows = sorted(filtered().map((p, i) => ({ ...p, _rank: i + 1 })));
   document.getElementById("count-label").textContent =
     `${_currentRows.length} of ${allPlayers.length} players`;
@@ -899,9 +923,13 @@ async function openModal(p) {
     });
   }
 
-  // RAPM block — balanced two columns (RAPM | Box-Prior) from the merged row.
+  // RAPM block — balanced two columns (RAPM | Box-Prior). Lazy-load impact if
+  // it hasn't been merged yet, then read the (now-merged) source row by id —
+  // the row handed to the modal is a shallow copy made before any merge.
   const rapmSection = document.getElementById("pc-rapm-section");
-  if (p.rapm != null || p.rapm_bp != null) {
+  await ensureImpact(curScope);
+  const r = (activeScope() || []).find(row => row.id === p.id) || p;
+  if (r.rapm != null || r.rapm_bp != null) {
     const sg = (val) => val == null ? "—" : (val >= 0 ? "+" : "−") + Math.abs(val).toFixed(2);
     const sc = (val) => val == null ? "" : val > 0 ? "good" : val < 0 ? "bad" : "";
     const rRow = (lbl, val, bold) =>
@@ -909,10 +937,10 @@ async function openModal(p) {
        <span class="pc-stat-val ${sc(val)}" ${bold ? 'style="font-weight:900"' : ""}>${sg(val)}</span></div>`;
     document.getElementById("pc-rapm-left").innerHTML =
       `<div class="pc-col-hdr">RAPM</div>` +
-      rRow("Offense", p.orapm) + rRow("Defense", p.drapm) + rRow("Total", p.rapm, true);
+      rRow("Offense", r.orapm) + rRow("Defense", r.drapm) + rRow("Total", r.rapm, true);
     document.getElementById("pc-rapm-right").innerHTML =
       `<div class="pc-col-hdr">Box-Prior</div>` +
-      rRow("Offense", p.orapm_bp) + rRow("Defense", p.drapm_bp) + rRow("Total", p.rapm_bp, true);
+      rRow("Offense", r.orapm_bp) + rRow("Defense", r.drapm_bp) + rRow("Total", r.rapm_bp, true);
     rapmSection.style.display = "block";
   } else {
     rapmSection.style.display = "none";
