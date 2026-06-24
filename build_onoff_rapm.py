@@ -10,6 +10,21 @@ Outputs (season auto-detected from current date):
     mbb_rapm_{SEASON-1}{SEASON%100:02d}.csv
     presence_full.parquet
     player_lookup.csv
+
+HIGH-LEVEL APPROACH
+-------------------
+1.  Load play-by-play (PBP), player box scores, team box scores, and schedule
+    from ESPN via sportsdataverse.
+2.  Split every game into "stints" — continuous segments of play where neither
+    team makes a substitution.  Each stint has a fixed 5-man lineup for both
+    home and away.
+3.  Assign points scored and possessions to each stint for each team side.
+4.  Build a "presence table": one row per (player, stint), marking whether the
+    player was on or off the court.  Aggregating on/off gives each player's
+    on-court and off-court net rating.
+5.  Fit RAPM (Regularized Adjusted Plus-Minus) via Ridge regression over the
+    design matrix.  Two flavors are fit: vanilla (shrinks toward 0) and
+    box-score prior (shrinks toward a Hollinger Game Score expectation).
 """
 
 import pandas as pd
@@ -23,319 +38,652 @@ warnings.filterwarnings("ignore")
 
 import os as _os
 from datetime import date as _date
-_override   = _os.environ.get("OVERRIDE_SEASON")
-if _override:
-    SEASON = int(_override)
+
+# ---------------------------------------------------------------------------
+# Season detection
+# ---------------------------------------------------------------------------
+_season_override = _os.environ.get("OVERRIDE_SEASON")
+if _season_override:
+    SEASON = int(_season_override)
 else:
     _today = _date.today()
+    # NCAA seasons are labeled by the calendar year they END (spring).
+    # A date in Nov or later belongs to the NEXT year's season.
     SEASON = _today.year + 1 if _today.month >= 11 else _today.year
-SEASON_TYPE = 2
 
-# ── Load data (once) ──────────────────────────────────────────────────────────
-print("Loading PBP...")
-pbp_raw = mbb.load_mbb_pbp(seasons=SEASON, return_as_pandas=True)
-pbp_raw = pbp_raw[pbp_raw["season_type"] == SEASON_TYPE].reset_index(drop=True)
+REGULAR_SEASON_TYPE = 2   # sportsdataverse code for regular season (1=pre, 3=post)
 
-print("Loading player boxscores...")
-player_df = mbb.load_mbb_player_boxscore(seasons=SEASON, return_as_pandas=True)
-player_df = player_df[player_df["season_type"] == SEASON_TYPE].reset_index(drop=True)
+# ---------------------------------------------------------------------------
+# Load raw data from ESPN (once, then filter inside run_pipeline)
+# ---------------------------------------------------------------------------
+print("Loading play-by-play...")
+raw_play_by_play = mbb.load_mbb_pbp(seasons=SEASON, return_as_pandas=True)
+raw_play_by_play = raw_play_by_play[raw_play_by_play["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
-print("Loading team boxscores...")
-team_df = mbb.load_mbb_team_boxscore(seasons=SEASON, return_as_pandas=True)
-team_df = team_df[team_df["season_type"] == SEASON_TYPE].reset_index(drop=True)
+print("Loading player box scores...")
+raw_player_boxscores = mbb.load_mbb_player_boxscore(seasons=SEASON, return_as_pandas=True)
+raw_player_boxscores = raw_player_boxscores[raw_player_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
+
+print("Loading team box scores...")
+raw_team_boxscores = mbb.load_mbb_team_boxscore(seasons=SEASON, return_as_pandas=True)
+raw_team_boxscores = raw_team_boxscores[raw_team_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
 print("Loading schedule...")
-sched = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
-sched = sched[sched["season_type"] == SEASON_TYPE]
-conf_game_ids = set(sched.loc[sched["conference_competition"] == True, "game_id"])
+schedule_df = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
+schedule_df = schedule_df[schedule_df["season_type"] == REGULAR_SEASON_TYPE]
+conference_game_id_set = set(schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"])
 
-print(f"  PBP: {len(pbp_raw):,} plays | Players: {len(player_df):,} rows | Teams: {len(team_df):,} rows")
+print(f"  PBP: {len(raw_play_by_play):,} plays | Players: {len(raw_player_boxscores):,} rows | Teams: {len(raw_team_boxscores):,} rows")
 
 
+# ---------------------------------------------------------------------------
+# Box-score prior RAPM helper
+# ---------------------------------------------------------------------------
+def _compute_boxscore_prior_rapm(player_boxscores_filtered, player_on_off_stats,
+                                  all_players, num_players,
+                                  stint_design_matrix, weighted_design_matrix,
+                                  centered_net_ratings, sqrt_possession_weights,
+                                  ridge_alpha, vanilla_off_rapm, vanilla_def_rapm,
+                                  min_possessions_for_calibration=200):
+    """Fit RAPM that shrinks toward a Hollinger Game Score prior instead of zero.
+
+    Empirical Bayes approach:
+      1. Compute a box-score-based expected RAPM (the "prior") for each player
+         using Hollinger's Game Score formula, split into offense and defense.
+      2. Calibrate the prior to RAPM units via possession-weighted regression
+         on the vanilla (zero-shrinkage) RAPM estimates.
+      3. Fit a standard Ridge on the residual target  t = y_centered - X @ prior,
+         then add the prior back: final_coef = gamma + prior.
+
+    Returns (prior_off_rapm_array, prior_def_rapm_array) aligned to all_players.
+    """
+    # --- Step 1: Aggregate season box-score totals per player ---
+    player_season_box = (player_boxscores_filtered.groupby("athlete_id").agg(
+        pts=("points", "sum"),
+        fgm=("field_goals_made", "sum"),
+        fga=("field_goals_attempted", "sum"),
+        ftm=("free_throws_made", "sum"),
+        fta=("free_throws_attempted", "sum"),
+        orb=("offensive_rebounds", "sum"),
+        drb=("defensive_rebounds", "sum"),
+        ast=("assists", "sum"),
+        stl=("steals", "sum"),
+        blk=("blocks", "sum"),
+        pf=("fouls", "sum"),
+        tov=("turnovers", "sum")
+    ).reset_index())
+
+    # Hollinger Game Score split into offensive and defensive halves.
+    # Offensive half: points, shooting, assists, turnovers, offensive boards.
+    # Defensive half: defensive boards, steals, blocks, fouls.
+    player_season_box["offensive_gamescore"] = (
+        player_season_box.pts
+        + 0.4 * player_season_box.fgm
+        - 0.7 * player_season_box.fga
+        - 0.4 * (player_season_box.fta - player_season_box.ftm)
+        + 0.7 * player_season_box.orb
+        + 0.7 * player_season_box.ast
+        - player_season_box.tov
+    )
+    player_season_box["defensive_gamescore"] = (
+        0.3 * player_season_box.drb
+        + player_season_box.stl
+        + 0.7 * player_season_box.blk
+        - 0.4 * player_season_box.pf
+    )
+
+    # Normalize game score to a per-100-possessions rate using each player's
+    # actual on-court possessions from the stint data.
+    player_possession_totals = (
+        player_on_off_stats.groupby("athlete_id")[["poss_off_on", "poss_def_on"]]
+        .sum().reset_index()
+    )
+    player_season_box = player_season_box.merge(player_possession_totals, on="athlete_id", how="left")
+    player_season_box["off_gamescore_per100"] = np.where(
+        player_season_box.poss_off_on > 0,
+        player_season_box.offensive_gamescore / player_season_box.poss_off_on * 100,
+        np.nan
+    )
+    player_season_box["def_gamescore_per100"] = np.where(
+        player_season_box.poss_def_on > 0,
+        player_season_box.defensive_gamescore / player_season_box.poss_def_on * 100,
+        np.nan
+    )
+    gamescore_by_player = player_season_box.set_index("athlete_id")
+
+    def _get_player_column(col_name):
+        series = gamescore_by_player[col_name]
+        return np.array([series.get(pid, np.nan) for pid in all_players], dtype=float)
+
+    off_gamescore_per100 = _get_player_column("off_gamescore_per100")
+    def_gamescore_per100 = _get_player_column("def_gamescore_per100")
+    off_possession_weights = np.nan_to_num(_get_player_column("poss_off_on"))
+    def_possession_weights = np.nan_to_num(_get_player_column("poss_def_on"))
+
+    def _center_and_clip(values, possession_weights_for_centering):
+        """Subtract possession-weighted mean and clip outliers to ±4 std devs."""
+        valid_mask = np.isfinite(values) & (possession_weights_for_centering > 0)
+        weighted_mean = np.average(values[valid_mask], weights=possession_weights_for_centering[valid_mask])
+        centered = np.where(np.isfinite(values), values - weighted_mean, 0.0)
+        weighted_std = np.sqrt(np.average(centered[valid_mask] ** 2,
+                                          weights=possession_weights_for_centering[valid_mask]))
+        return np.clip(centered, -4 * weighted_std, 4 * weighted_std)
+
+    centered_off_gamescore = _center_and_clip(off_gamescore_per100, off_possession_weights)
+    centered_def_gamescore = _center_and_clip(def_gamescore_per100, def_possession_weights)
+
+    def _weighted_least_squares_calibrate(centered_gamescore, vanilla_rapm, possession_weights_for_fit):
+        """Fit a linear calibration: vanilla_rapm ≈ a + b * centered_gamescore.
+
+        Uses only players with enough possessions to have a stable estimate.
+        Returns coefficients [intercept, slope].
+        """
+        high_poss_mask = possession_weights_for_fit >= min_possessions_for_calibration
+        feature_matrix = np.column_stack([
+            np.ones(int(high_poss_mask.sum())),
+            centered_gamescore[high_poss_mask]
+        ])
+        weight_vector = possession_weights_for_fit[high_poss_mask]
+        return np.linalg.solve(
+            feature_matrix.T @ (feature_matrix * weight_vector[:, None]),
+            feature_matrix.T @ (vanilla_rapm[high_poss_mask] * weight_vector)
+        )
+
+    offense_calibration_coefs = _weighted_least_squares_calibrate(
+        centered_off_gamescore, vanilla_off_rapm, off_possession_weights)
+    defense_calibration_coefs = _weighted_least_squares_calibrate(
+        centered_def_gamescore, vanilla_def_rapm, def_possession_weights)
+
+    # Apply calibration to get the per-player prior in RAPM units.
+    prior_off_means = (offense_calibration_coefs[0]
+                       + offense_calibration_coefs[1] * centered_off_gamescore)
+    prior_def_means = (defense_calibration_coefs[0]
+                       + defense_calibration_coefs[1] * centered_def_gamescore)
+    prior_means_combined = np.concatenate([prior_off_means, prior_def_means])
+
+    # --- Step 3: Fit Ridge on residual, then add prior back ---
+    # t = y_centered - X @ prior  (what the ridge hasn't yet explained)
+    adjusted_target_residuals = centered_net_ratings - stint_design_matrix.dot(prior_means_combined)
+    informed_prior_ridge = Ridge(alpha=ridge_alpha, fit_intercept=False)
+    informed_prior_ridge.fit(weighted_design_matrix, adjusted_target_residuals * sqrt_possession_weights)
+    rapm_deviation_from_prior = informed_prior_ridge.coef_
+
+    # Final estimate: prior + deviation learned by Ridge
+    boxscore_prior_off_rapm = rapm_deviation_from_prior[:num_players] + prior_off_means
+    boxscore_prior_def_rapm = rapm_deviation_from_prior[num_players:] + prior_def_means
+    return boxscore_prior_off_rapm, boxscore_prior_def_rapm
+
+
+# ---------------------------------------------------------------------------
+# Main pipeline
+# ---------------------------------------------------------------------------
 def run_pipeline(game_filter="all"):
-    """Run the full on/off + RAPM pipeline for a given game filter."""
-    label = {"all": "all games", "conf": "conference only"}[game_filter]
+    """Run the full on/off + RAPM pipeline for a given game filter.
+
+    game_filter: "all" uses every regular-season game;
+                 "conf" restricts to conference games only.
+    """
+    filter_label = {"all": "all games", "conf": "conference only"}[game_filter]
     print(f"\n{'='*60}")
-    print(f"Running pipeline: {label}")
+    print(f"Running pipeline: {filter_label}")
     print(f"{'='*60}")
 
+    # --- Filter raw data to the appropriate game set ---
     if game_filter == "conf":
-        pbp   = pbp_raw[pbp_raw["game_id"].isin(conf_game_ids)].reset_index(drop=True)
-        plyr  = player_df[player_df["game_id"].isin(conf_game_ids)].reset_index(drop=True)
-        team  = team_df[team_df["game_id"].isin(conf_game_ids)].reset_index(drop=True)
+        play_by_play       = raw_play_by_play[raw_play_by_play["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
+        player_boxscores   = raw_player_boxscores[raw_player_boxscores["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
+        team_boxscores     = raw_team_boxscores[raw_team_boxscores["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
     else:
-        pbp, plyr, team = pbp_raw.copy(), player_df.copy(), team_df.copy()
+        play_by_play       = raw_play_by_play.copy()
+        player_boxscores   = raw_player_boxscores.copy()
+        team_boxscores     = raw_team_boxscores.copy()
 
-    print(f"  {pbp['game_id'].nunique()} games, {len(pbp):,} plays")
+    print(f"  {play_by_play['game_id'].nunique()} games, {len(play_by_play):,} plays")
 
-    # ── Prepare PBP ──────────────────────────────────────────────────────────
-    base_cols = [
+    # -----------------------------------------------------------------------
+    # Prepare play-by-play
+    # -----------------------------------------------------------------------
+    base_columns = [
         "game_id", "sequence_number", "type_text", "text", "team_id",
         "athlete_id_1", "athlete_id_2", "scoring_play", "score_value",
         "shooting_play", "home_team_id", "away_team_id",
     ]
-    has_pts_attempted = "points_attempted" in pbp.columns
-    if has_pts_attempted:
-        base_cols.append("points_attempted")
-    pbp = pbp[[c for c in base_cols if c in pbp.columns]].copy()
-    if not has_pts_attempted:
-        pbp["points_attempted"] = float("nan")
+    has_points_attempted_column = "points_attempted" in play_by_play.columns
+    if has_points_attempted_column:
+        base_columns.append("points_attempted")
+    play_by_play = play_by_play[[c for c in base_columns if c in play_by_play.columns]].copy()
+    if not has_points_attempted_column:
+        play_by_play["points_attempted"] = float("nan")
 
-    pbp["sequence_number"]  = pd.to_numeric(pbp["sequence_number"],  errors="coerce")
-    pbp["score_value"]      = pd.to_numeric(pbp["score_value"],      errors="coerce").fillna(0).astype(int)
-    pbp["points_attempted"] = pd.to_numeric(pbp["points_attempted"], errors="coerce")
-    pbp["scoring_play"]     = pbp["scoring_play"].astype(bool)
-    pbp["shooting_play"]    = pbp["shooting_play"].astype(bool)
+    play_by_play["sequence_number"]  = pd.to_numeric(play_by_play["sequence_number"],  errors="coerce")
+    play_by_play["score_value"]      = pd.to_numeric(play_by_play["score_value"],      errors="coerce").fillna(0).astype(int)
+    play_by_play["points_attempted"] = pd.to_numeric(play_by_play["points_attempted"], errors="coerce")
+    play_by_play["scoring_play"]     = play_by_play["scoring_play"].astype(bool)
+    play_by_play["shooting_play"]    = play_by_play["shooting_play"].astype(bool)
     for col in ["team_id", "athlete_id_1", "athlete_id_2", "home_team_id", "away_team_id"]:
-        pbp[col] = pd.to_numeric(pbp[col], errors="coerce")
+        play_by_play[col] = pd.to_numeric(play_by_play[col], errors="coerce")
 
-    pbp["is_sub"]     = pbp["type_text"] == "Substitution"
-    pbp["is_sub_in"]  = pbp["is_sub"] & pbp["text"].str.contains("subbing in",  case=False, na=False)
-    pbp["is_sub_out"] = pbp["is_sub"] & pbp["text"].str.contains("subbing out", case=False, na=False)
-    pbp["is_ft"]      = pbp["type_text"].str.contains("FreeThrow", na=False)
-    pbp["is_fga"]     = pbp["shooting_play"] & ~pbp["is_ft"]
-    pbp["is_to"]      = pbp["type_text"].str.contains("Turnover",  na=False)
-    pbp["is_fgm"]     = pbp["is_fga"] & pbp["scoring_play"]
-    pbp["is_3pa"]     = pbp["is_fga"] & (pbp["points_attempted"] == 3)
-    pbp["is_3pm"]     = pbp["is_3pa"] & pbp["scoring_play"]
-    pbp["is_ftm"]     = pbp["is_ft"]  & pbp["scoring_play"]
-    pbp["is_orb"]     = pbp["type_text"].str.contains("Offensive Rebound", na=False)
-    pbp["is_drb"]     = pbp["type_text"].str.contains("Defensive Rebound", na=False)
-    pbp = pbp.sort_values(["game_id", "sequence_number"]).reset_index(drop=True)
+    # Boolean flags for every event type we care about.
+    play_by_play["is_substitution"]     = play_by_play["type_text"] == "Substitution"
+    play_by_play["is_subbing_in"]       = play_by_play["is_substitution"] & play_by_play["text"].str.contains("subbing in",  case=False, na=False)
+    play_by_play["is_subbing_out"]      = play_by_play["is_substitution"] & play_by_play["text"].str.contains("subbing out", case=False, na=False)
+    play_by_play["is_free_throw"]       = play_by_play["type_text"].str.contains("FreeThrow", na=False)
+    play_by_play["is_field_goal_att"]   = play_by_play["shooting_play"] & ~play_by_play["is_free_throw"]
+    play_by_play["is_turnover"]         = play_by_play["type_text"].str.contains("Turnover",  na=False)
+    play_by_play["is_field_goal_made"]  = play_by_play["is_field_goal_att"] & play_by_play["scoring_play"]
+    play_by_play["is_three_att"]        = play_by_play["is_field_goal_att"] & (play_by_play["points_attempted"] == 3)
+    play_by_play["is_three_made"]       = play_by_play["is_three_att"] & play_by_play["scoring_play"]
+    play_by_play["is_free_throw_made"]  = play_by_play["is_free_throw"] & play_by_play["scoring_play"]
+    play_by_play["is_off_rebound"]      = play_by_play["type_text"].str.contains("Offensive Rebound", na=False)
+    play_by_play["is_def_rebound"]      = play_by_play["type_text"].str.contains("Defensive Rebound", na=False)
+    play_by_play = play_by_play.sort_values(["game_id", "sequence_number"]).reset_index(drop=True)
 
-    # ── Game-level possessions ────────────────────────────────────────────────
-    team["poss_box"]   = (team["field_goals_attempted"] + 0.44 * team["free_throws_attempted"]
-                          + team["total_turnovers"] - team["offensive_rebounds"])
-    team["team_id_n"]  = pd.to_numeric(team["team_id"], errors="coerce")
-    game_poss          = team.set_index(["game_id", "team_id_n"])["poss_box"].to_dict()
+    # -----------------------------------------------------------------------
+    # Game-level possession estimates from team box scores
+    # (used later to scale stint-level possession weights)
+    # -----------------------------------------------------------------------
+    team_boxscores["box_possessions"] = (
+        team_boxscores["field_goals_attempted"]
+        + 0.44 * team_boxscores["free_throws_attempted"]
+        + team_boxscores["total_turnovers"]
+        - team_boxscores["offensive_rebounds"]
+    )
+    team_boxscores["team_id_numeric"] = pd.to_numeric(team_boxscores["team_id"], errors="coerce")
+    game_team_possession_dict = (
+        team_boxscores.set_index(["game_id", "team_id_numeric"])["box_possessions"].to_dict()
+    )
 
-    # ── Starters ─────────────────────────────────────────────────────────────
-    plyr["athlete_id"]  = pd.to_numeric(plyr["athlete_id"],  errors="coerce")
-    plyr["team_id_num"] = pd.to_numeric(plyr["team_id"],     errors="coerce")
-    starters = (
-        plyr[(plyr["starter"] == True) & plyr["athlete_id"].notna()]
-        .groupby(["game_id", "team_id_num"])["athlete_id"]
+    # -----------------------------------------------------------------------
+    # Starters
+    # -----------------------------------------------------------------------
+    player_boxscores["athlete_id"]   = pd.to_numeric(player_boxscores["athlete_id"],  errors="coerce")
+    player_boxscores["team_id_numeric"] = pd.to_numeric(player_boxscores["team_id"], errors="coerce")
+    starters_by_game_team = (
+        player_boxscores[(player_boxscores["starter"] == True) & player_boxscores["athlete_id"].notna()]
+        .groupby(["game_id", "team_id_numeric"])["athlete_id"]
         .apply(frozenset).to_dict()
     )
 
-    # ── Build stints ─────────────────────────────────────────────────────────
+    # -----------------------------------------------------------------------
+    # Build stints
+    # Each stint is a period between two substitutions where lineups are fixed.
+    # -----------------------------------------------------------------------
     print("  Building stints...")
-    games      = pbp["game_id"].unique()
-    stint_ids  = np.zeros(len(pbp), dtype=np.int32)
-    stint_rows = []
+    all_game_ids   = play_by_play["game_id"].unique()
+    play_stint_ids = np.zeros(len(play_by_play), dtype=np.int32)  # stint number for every play row
+    lineup_change_records = []    # one record per lineup state (game × stint)
 
-    for game_id in games:
-        mask      = pbp["game_id"] == game_id
-        game_idx  = pbp.index[mask].to_numpy()
-        game_rows = pbp.loc[game_idx]
+    for game_id in all_game_ids:
+        game_mask         = play_by_play["game_id"] == game_id
+        game_play_indices = play_by_play.index[game_mask].to_numpy()
+        game_plays        = play_by_play.loc[game_play_indices]
 
-        home_id = int(game_rows["home_team_id"].iloc[0])
-        away_id = int(game_rows["away_team_id"].iloc[0])
-        home_lu = set(starters.get((game_id, home_id), set()))
-        away_lu = set(starters.get((game_id, away_id), set()))
+        home_team_id = int(game_plays["home_team_id"].iloc[0])
+        away_team_id = int(game_plays["away_team_id"].iloc[0])
+        home_lineup  = set(starters_by_game_team.get((game_id, home_team_id), set()))
+        away_lineup  = set(starters_by_game_team.get((game_id, away_team_id), set()))
 
-        cur_stint   = 0
-        gstint_ids  = np.zeros(len(game_idx), dtype=np.int32)
-        is_in_arr   = game_rows["is_sub_in"].to_numpy()
-        is_out_arr  = game_rows["is_sub_out"].to_numpy()
-        team_arr    = game_rows["team_id"].to_numpy()
-        ath1_arr    = game_rows["athlete_id_1"].to_numpy()
+        current_stint_number = 0
+        game_stint_ids        = np.zeros(len(game_play_indices), dtype=np.int32)
+        is_subbing_in_array   = game_plays["is_subbing_in"].to_numpy()
+        is_subbing_out_array  = game_plays["is_subbing_out"].to_numpy()
+        team_id_array         = game_plays["team_id"].to_numpy()
+        primary_athlete_id_array = game_plays["athlete_id_1"].to_numpy()
 
-        for j in range(len(game_idx)):
-            if is_in_arr[j] or is_out_arr[j]:
-                stint_rows.append({"game_id": game_id, "stint_id": cur_stint,
-                                    "home_team_id": home_id, "away_team_id": away_id,
-                                    "home_lineup": frozenset(home_lu),
-                                    "away_lineup": frozenset(away_lu)})
-                cur_stint += 1
-                pid = ath1_arr[j]
-                if pd.notna(pid):
-                    pid = int(pid)
-                    t   = team_arr[j]
-                    if is_in_arr[j]:
-                        if t == home_id: home_lu.add(pid)
-                        elif t == away_id: away_lu.add(pid)
+        for play_index in range(len(game_play_indices)):
+            if is_subbing_in_array[play_index] or is_subbing_out_array[play_index]:
+                # A substitution ends the current stint — record the lineup state.
+                lineup_change_records.append({
+                    "game_id":      game_id,
+                    "stint_id":     current_stint_number,
+                    "home_team_id": home_team_id,
+                    "away_team_id": away_team_id,
+                    "home_lineup":  frozenset(home_lineup),
+                    "away_lineup":  frozenset(away_lineup),
+                })
+                current_stint_number += 1
+                player_id = primary_athlete_id_array[play_index]
+                if pd.notna(player_id):
+                    player_id = int(player_id)
+                    team_id_of_sub = team_id_array[play_index]
+                    if is_subbing_in_array[play_index]:
+                        if team_id_of_sub == home_team_id:
+                            home_lineup.add(player_id)
+                        elif team_id_of_sub == away_team_id:
+                            away_lineup.add(player_id)
                     else:
-                        if t == home_id: home_lu.discard(pid)
-                        elif t == away_id: away_lu.discard(pid)
-            gstint_ids[j] = cur_stint
+                        if team_id_of_sub == home_team_id:
+                            home_lineup.discard(player_id)
+                        elif team_id_of_sub == away_team_id:
+                            away_lineup.discard(player_id)
+            game_stint_ids[play_index] = current_stint_number
 
-        stint_rows.append({"game_id": game_id, "stint_id": cur_stint,
-                            "home_team_id": home_id, "away_team_id": away_id,
-                            "home_lineup": frozenset(home_lu),
-                            "away_lineup": frozenset(away_lu)})
-        stint_ids[game_idx] = gstint_ids
+        # Record the final stint (after the last substitution).
+        lineup_change_records.append({
+            "game_id":      game_id,
+            "stint_id":     current_stint_number,
+            "home_team_id": home_team_id,
+            "away_team_id": away_team_id,
+            "home_lineup":  frozenset(home_lineup),
+            "away_lineup":  frozenset(away_lineup),
+        })
+        play_stint_ids[game_play_indices] = game_stint_ids
 
-    pbp = pbp.copy()
-    pbp["stint_id"] = stint_ids
-    stint_info = (pd.DataFrame(stint_rows)
-                  .drop_duplicates(subset=["game_id", "stint_id"], keep="last")
-                  .reset_index(drop=True))
-    print(f"  {len(stint_info):,} stints built")
+    play_by_play = play_by_play.copy()
+    play_by_play["stint_id"] = play_stint_ids
+    stint_lineup_info = (
+        pd.DataFrame(lineup_change_records)
+        .drop_duplicates(subset=["game_id", "stint_id"], keep="last")
+        .reset_index(drop=True)
+    )
+    print(f"  {len(stint_lineup_info):,} stints built")
 
-    # ── Stint stats ───────────────────────────────────────────────────────────
-    scoring  = pbp[pbp["scoring_play"]].copy()
-    pts_df   = (scoring.groupby(["game_id", "stint_id", "team_id"])["score_value"]
+    # -----------------------------------------------------------------------
+    # Aggregate per-stint statistics
+    # -----------------------------------------------------------------------
+
+    # --- Points scored per (game, stint, scoring_team) ---
+    scoring_plays_df = play_by_play[play_by_play["scoring_play"]].copy()
+    points_by_stint_team = (
+        scoring_plays_df.groupby(["game_id", "stint_id", "team_id"])["score_value"]
+        .sum().reset_index()
+        .rename(columns={"score_value": "pts_scored", "team_id": "scoring_team_id"})
+    )
+
+    # --- Possessions per (game, stint, team) ---
+    # Each field goal attempt = 1 possession, each FT counts as 0.44 possessions,
+    # each turnover = 1 possession.  This is the standard Possessions formula.
+    possession_events = play_by_play[
+        play_by_play["is_field_goal_att"] | play_by_play["is_free_throw"] | play_by_play["is_turnover"]
+    ].copy()
+    possession_events["possession_weight"] = np.where(
+        possession_events["is_field_goal_att"], 1.0,
+        np.where(possession_events["is_free_throw"], 0.44, 1.0)
+    )
+    stint_possession_weights_df = (
+        possession_events.groupby(["game_id", "stint_id", "team_id"])["possession_weight"]
+        .sum().reset_index()
+        .rename(columns={"team_id": "possession_team_id"})
+    )
+
+    # Scale stint-level possession fractions up to match the team's box-score
+    # total (PBP undercounts slightly).
+    game_total_possession_weights = (
+        stint_possession_weights_df.groupby(["game_id", "possession_team_id"])["possession_weight"]
+        .sum().reset_index()
+        .rename(columns={"possession_weight": "game_possession_weight_total",
+                         "possession_team_id": "team_id_for_join"})
+    )
+    game_possession_estimates = pd.DataFrame(
+        [(g, t, p) for (g, t), p in game_team_possession_dict.items()],
+        columns=["game_id", "team_id_for_join", "box_score_possessions"]
+    )
+    game_total_possession_weights = game_total_possession_weights.merge(
+        game_possession_estimates, on=["game_id", "team_id_for_join"], how="left"
+    )
+    stint_possession_weights_df = stint_possession_weights_df.merge(
+        game_total_possession_weights.rename(columns={"team_id_for_join": "possession_team_id"}),
+        on=["game_id", "possession_team_id"], how="left"
+    )
+    stint_possession_weights_df["scaled_possessions"] = np.where(
+        stint_possession_weights_df["game_possession_weight_total"] > 0,
+        stint_possession_weights_df["possession_weight"]
+            / stint_possession_weights_df["game_possession_weight_total"]
+            * stint_possession_weights_df["box_score_possessions"],
+        0
+    )
+
+    # --- Shooting stats per (game, stint, team) ---
+    # Maps each counting stat name to the boolean flag column in play_by_play.
+    PLAY_TYPE_TO_FLAG_MAP = {
+        "fga": "is_field_goal_att",
+        "fgm": "is_field_goal_made",
+        "tpa": "is_three_att",
+        "tpm": "is_three_made",
+        "fta": "is_free_throw",
+        "ftm": "is_free_throw_made",
+        "orb": "is_off_rebound",
+        "drb": "is_def_rebound",
+    }
+    COUNTING_STAT_NAMES = list(PLAY_TYPE_TO_FLAG_MAP.keys())
+    shooting_stats_by_stint_team = None
+    for stat_name, flag_column in PLAY_TYPE_TO_FLAG_MAP.items():
+        stat_counts = (
+            play_by_play[play_by_play[flag_column]]
+            .groupby(["game_id", "stint_id", "team_id"])
+            .size().reset_index(name=stat_name)
+        )
+        shooting_stats_by_stint_team = (
+            stat_counts if shooting_stats_by_stint_team is None
+            else shooting_stats_by_stint_team.merge(
+                stat_counts, on=["game_id", "stint_id", "team_id"], how="outer"
+            )
+        )
+    shooting_stats_by_stint_team = shooting_stats_by_stint_team.fillna(0)
+    for stat_name in COUNTING_STAT_NAMES:
+        shooting_stats_by_stint_team[stat_name] = shooting_stats_by_stint_team[stat_name].astype(int)
+
+    # -----------------------------------------------------------------------
+    # Pivot home vs. away — each stint row gets home and away columns
+    # -----------------------------------------------------------------------
+    stint_stats = stint_lineup_info[
+        ["game_id", "stint_id", "home_team_id", "away_team_id"]
+    ].copy()
+
+    def _aggregate_side(df, points_or_poss_col, output_col, group_cols):
+        return (df.groupby(group_cols)[points_or_poss_col]
                 .sum().reset_index()
-                .rename(columns={"score_value": "pts_scored", "team_id": "scoring_team_id"}))
+                .rename(columns={points_or_poss_col: output_col}))
 
-    poss_ev  = pbp[pbp["is_fga"] | pbp["is_ft"] | pbp["is_to"]].copy()
-    poss_ev["poss_weight"] = np.where(poss_ev["is_fga"], 1.0,
-                             np.where(poss_ev["is_ft"],  0.44, 1.0))
-    poss_w   = (poss_ev.groupby(["game_id", "stint_id", "team_id"])["poss_weight"]
-                .sum().reset_index().rename(columns={"team_id": "poss_team_id"}))
+    # Points
+    points_with_home_info = points_by_stint_team.merge(
+        stint_lineup_info[["game_id", "stint_id", "home_team_id"]],
+        on=["game_id", "stint_id"]
+    )
+    points_with_home_info["is_home_team"] = (
+        points_with_home_info["scoring_team_id"] == points_with_home_info["home_team_id"]
+    )
+    home_points_by_stint = _aggregate_side(
+        points_with_home_info[points_with_home_info["is_home_team"]],
+        "pts_scored", "home_pts", ["game_id", "stint_id"]
+    )
+    away_points_by_stint = _aggregate_side(
+        points_with_home_info[~points_with_home_info["is_home_team"]],
+        "pts_scored", "away_pts", ["game_id", "stint_id"]
+    )
+    stint_stats = stint_stats.merge(home_points_by_stint, on=["game_id", "stint_id"], how="left")
+    stint_stats = stint_stats.merge(away_points_by_stint, on=["game_id", "stint_id"], how="left")
 
-    gpw = (poss_w.groupby(["game_id", "poss_team_id"])["poss_weight"]
-           .sum().reset_index().rename(columns={"poss_weight": "game_poss_weight",
-                                                "poss_team_id": "team_id_gw"}))
-    gpdf = pd.DataFrame([(g, t, p) for (g, t), p in game_poss.items()],
-                        columns=["game_id", "team_id_gw", "poss_box"])
-    gpw  = gpw.merge(gpdf, on=["game_id", "team_id_gw"], how="left")
-    poss_w = poss_w.merge(gpw.rename(columns={"team_id_gw": "poss_team_id"}),
-                          on=["game_id", "poss_team_id"], how="left")
-    poss_w["poss_scaled"] = np.where(
-        poss_w["game_poss_weight"] > 0,
-        poss_w["poss_weight"] / poss_w["game_poss_weight"] * poss_w["poss_box"], 0)
+    # Possessions
+    poss_with_home_info = stint_possession_weights_df.merge(
+        stint_lineup_info[["game_id", "stint_id", "home_team_id"]],
+        on=["game_id", "stint_id"]
+    )
+    poss_with_home_info["is_home_team"] = (
+        poss_with_home_info["possession_team_id"] == poss_with_home_info["home_team_id"]
+    )
+    home_possessions_by_stint = _aggregate_side(
+        poss_with_home_info[poss_with_home_info["is_home_team"]],
+        "scaled_possessions", "home_poss", ["game_id", "stint_id"]
+    )
+    away_possessions_by_stint = _aggregate_side(
+        poss_with_home_info[~poss_with_home_info["is_home_team"]],
+        "scaled_possessions", "away_poss", ["game_id", "stint_id"]
+    )
+    stint_stats = stint_stats.merge(home_possessions_by_stint, on=["game_id", "stint_id"], how="left")
+    stint_stats = stint_stats.merge(away_possessions_by_stint, on=["game_id", "stint_id"], how="left")
+    stint_stats[["home_pts", "away_pts", "home_poss", "away_poss"]] = (
+        stint_stats[["home_pts", "away_pts", "home_poss", "away_poss"]].fillna(0)
+    )
 
-    STAT_FLAGS = {"fga": "is_fga", "fgm": "is_fgm", "tpa": "is_3pa", "tpm": "is_3pm",
-                  "fta": "is_ft",  "ftm": "is_ftm",  "orb": "is_orb", "drb": "is_drb"}
-    STAT_COLS  = list(STAT_FLAGS.keys())
-    shoot_df   = None
-    for stat, flag in STAT_FLAGS.items():
-        sub = (pbp[pbp[flag]].groupby(["game_id", "stint_id", "team_id"])
-               .size().reset_index(name=stat))
-        shoot_df = sub if shoot_df is None else shoot_df.merge(
-            sub, on=["game_id", "stint_id", "team_id"], how="outer")
-    shoot_df = shoot_df.fillna(0)
-    for c in STAT_COLS:
-        shoot_df[c] = shoot_df[c].astype(int)
+    # Shooting stats (side-split)
+    shooting_with_home_info = shooting_stats_by_stint_team.merge(
+        stint_lineup_info[["game_id", "stint_id", "home_team_id"]],
+        on=["game_id", "stint_id"]
+    )
+    shooting_with_home_info["is_home_team"] = (
+        shooting_with_home_info["team_id"] == shooting_with_home_info["home_team_id"]
+    )
+    home_shooting_by_stint = (shooting_with_home_info[shooting_with_home_info["is_home_team"]]
+                               .groupby(["game_id", "stint_id"])[COUNTING_STAT_NAMES].sum().reset_index())
+    away_shooting_by_stint = (shooting_with_home_info[~shooting_with_home_info["is_home_team"]]
+                               .groupby(["game_id", "stint_id"])[COUNTING_STAT_NAMES].sum().reset_index())
+    home_shooting_by_stint = home_shooting_by_stint.rename(columns={c: f"home_{c}" for c in COUNTING_STAT_NAMES})
+    away_shooting_by_stint = away_shooting_by_stint.rename(columns={c: f"away_{c}" for c in COUNTING_STAT_NAMES})
+    stint_stats = stint_stats.merge(home_shooting_by_stint, on=["game_id", "stint_id"], how="left")
+    stint_stats = stint_stats.merge(away_shooting_by_stint, on=["game_id", "stint_id"], how="left")
+    shooting_stat_columns = ([f"home_{c}" for c in COUNTING_STAT_NAMES]
+                              + [f"away_{c}" for c in COUNTING_STAT_NAMES])
+    stint_stats[shooting_stat_columns] = stint_stats[shooting_stat_columns].fillna(0).astype(int)
 
-    # ── Pivot to home/away ────────────────────────────────────────────────────
-    stint_full = stint_info[["game_id", "stint_id", "home_team_id", "away_team_id"]].copy()
-
-    def side_agg(df, key_col, val_col, new_col, group_cols):
-        return df.groupby(group_cols)[val_col].sum().reset_index().rename(columns={val_col: new_col})
-
-    hp  = pts_df.merge(stint_info[["game_id", "stint_id", "home_team_id"]], on=["game_id", "stint_id"])
-    hp["is_home"] = hp["scoring_team_id"] == hp["home_team_id"]
-    hpts = side_agg(hp[hp["is_home"]],  None, "pts_scored", "home_pts", ["game_id", "stint_id"])
-    apts = side_agg(hp[~hp["is_home"]], None, "pts_scored", "away_pts", ["game_id", "stint_id"])
-    stint_full = stint_full.merge(hpts, on=["game_id", "stint_id"], how="left")
-    stint_full = stint_full.merge(apts, on=["game_id", "stint_id"], how="left")
-
-    pw  = poss_w.merge(stint_info[["game_id", "stint_id", "home_team_id"]], on=["game_id", "stint_id"])
-    pw["is_home"] = pw["poss_team_id"] == pw["home_team_id"]
-    hpos = side_agg(pw[pw["is_home"]],  None, "poss_scaled", "home_poss", ["game_id", "stint_id"])
-    apos = side_agg(pw[~pw["is_home"]], None, "poss_scaled", "away_poss", ["game_id", "stint_id"])
-    stint_full = stint_full.merge(hpos, on=["game_id", "stint_id"], how="left")
-    stint_full = stint_full.merge(apos, on=["game_id", "stint_id"], how="left")
-    stint_full[["home_pts", "away_pts", "home_poss", "away_poss"]] = \
-        stint_full[["home_pts", "away_pts", "home_poss", "away_poss"]].fillna(0)
-
-    sh = shoot_df.merge(stint_info[["game_id", "stint_id", "home_team_id"]], on=["game_id", "stint_id"])
-    sh["is_home"] = sh["team_id"] == sh["home_team_id"]
-    hsh = sh[sh["is_home"]].groupby(["game_id", "stint_id"])[STAT_COLS].sum().reset_index()
-    ash = sh[~sh["is_home"]].groupby(["game_id", "stint_id"])[STAT_COLS].sum().reset_index()
-    hsh = hsh.rename(columns={c: f"home_{c}" for c in STAT_COLS})
-    ash = ash.rename(columns={c: f"away_{c}" for c in STAT_COLS})
-    stint_full = stint_full.merge(hsh, on=["game_id", "stint_id"], how="left")
-    stint_full = stint_full.merge(ash, on=["game_id", "stint_id"], how="left")
-    new_cols = [f"home_{c}" for c in STAT_COLS] + [f"away_{c}" for c in STAT_COLS]
-    stint_full[new_cols] = stint_full[new_cols].fillna(0).astype(int)
-
-    # ── Presence table ────────────────────────────────────────────────────────
+    # -----------------------------------------------------------------------
+    # Presence table
+    # One row per (player, stint) — on_court = True if player was in the lineup.
+    # -----------------------------------------------------------------------
     print("  Building presence table...")
-    active = (plyr[plyr["did_not_play"] != True].dropna(subset=["athlete_id", "minutes"])
-              .groupby(["game_id", "team_id_num"])["athlete_id"].apply(set).to_dict())
+    # "active" = played at least one minute (not DNP).
+    active_players_by_game_team = (
+        player_boxscores[player_boxscores["did_not_play"] != True]
+        .dropna(subset=["athlete_id", "minutes"])
+        .groupby(["game_id", "team_id_numeric"])["athlete_id"]
+        .apply(set).to_dict()
+    )
 
-    rows = []
-    for _, s in stint_info.iterrows():
-        gid  = s["game_id"]; sid  = s["stint_id"]
-        htid = s["home_team_id"]; atid = s["away_team_id"]
-        hl   = s["home_lineup"]; al   = s["away_lineup"]
-        for team_id, lineup in [(htid, hl), (atid, al)]:
-            for pid in active.get((gid, team_id), set()):
-                rows.append({"game_id": gid, "stint_id": sid, "athlete_id": pid,
-                              "team_id": team_id, "is_on_court": pid in lineup})
+    presence_rows = []
+    for _, stint_row in stint_lineup_info.iterrows():
+        game_id      = stint_row["game_id"]
+        stint_id     = stint_row["stint_id"]
+        home_team_id = stint_row["home_team_id"]
+        away_team_id = stint_row["away_team_id"]
+        home_lineup_frozenset = stint_row["home_lineup"]
+        away_lineup_frozenset = stint_row["away_lineup"]
 
-    presence_df = pd.DataFrame(rows)
+        for team_id, lineup_frozenset in [(home_team_id, home_lineup_frozenset),
+                                          (away_team_id, away_lineup_frozenset)]:
+            for player_id in active_players_by_game_team.get((game_id, team_id), set()):
+                presence_rows.append({
+                    "game_id":      game_id,
+                    "stint_id":     stint_id,
+                    "athlete_id":   player_id,
+                    "team_id":      team_id,
+                    "is_on_court":  player_id in lineup_frozenset,
+                })
+
+    presence_df = pd.DataFrame(presence_rows)
     presence_full = presence_df.merge(
-        stint_full[["game_id", "stint_id", "home_team_id", "away_team_id",
-                    "home_pts", "away_pts", "home_poss", "away_poss"] + new_cols],
-        on=["game_id", "stint_id"], how="left")
+        stint_stats[[
+            "game_id", "stint_id", "home_team_id", "away_team_id",
+            "home_pts", "away_pts", "home_poss", "away_poss"
+        ] + shooting_stat_columns],
+        on=["game_id", "stint_id"], how="left"
+    )
 
-    presence_full["is_home"]     = presence_full["team_id"] == presence_full["home_team_id"]
-    presence_full["pts_for"]     = np.where(presence_full["is_home"], presence_full["home_pts"], presence_full["away_pts"])
-    presence_full["pts_against"] = np.where(presence_full["is_home"], presence_full["away_pts"], presence_full["home_pts"])
-    presence_full["poss_off"]    = np.where(presence_full["is_home"], presence_full["home_poss"], presence_full["away_poss"])
-    presence_full["poss_def"]    = np.where(presence_full["is_home"], presence_full["away_poss"], presence_full["home_poss"])
-    for c in STAT_COLS:
-        presence_full[f"{c}_for"]     = np.where(presence_full["is_home"], presence_full[f"home_{c}"], presence_full[f"away_{c}"])
-        presence_full[f"{c}_against"] = np.where(presence_full["is_home"], presence_full[f"away_{c}"], presence_full[f"home_{c}"])
+    # Assign each row the correct "for" and "against" from team perspective.
+    presence_full["is_home_team"]  = presence_full["team_id"] == presence_full["home_team_id"]
+    presence_full["pts_for"]       = np.where(presence_full["is_home_team"], presence_full["home_pts"], presence_full["away_pts"])
+    presence_full["pts_against"]   = np.where(presence_full["is_home_team"], presence_full["away_pts"], presence_full["home_pts"])
+    presence_full["poss_off"]      = np.where(presence_full["is_home_team"], presence_full["home_poss"], presence_full["away_poss"])
+    presence_full["poss_def"]      = np.where(presence_full["is_home_team"], presence_full["away_poss"], presence_full["home_poss"])
+    for stat_name in COUNTING_STAT_NAMES:
+        presence_full[f"{stat_name}_for"]     = np.where(presence_full["is_home_team"],
+                                                          presence_full[f"home_{stat_name}"],
+                                                          presence_full[f"away_{stat_name}"])
+        presence_full[f"{stat_name}_against"] = np.where(presence_full["is_home_team"],
+                                                          presence_full[f"away_{stat_name}"],
+                                                          presence_full[f"home_{stat_name}"])
 
-    # ── Aggregate on/off ──────────────────────────────────────────────────────
+    # -----------------------------------------------------------------------
+    # Aggregate on/off splits
+    # -----------------------------------------------------------------------
     print("  Aggregating on/off stats...")
-    shoot_cols = [f"{c}_for" for c in STAT_COLS] + [f"{c}_against" for c in STAT_COLS]
-    agg = (presence_full
-           .groupby(["athlete_id", "team_id", "is_on_court"])
-           [["pts_for", "pts_against", "poss_off", "poss_def"] + shoot_cols]
-           .sum().reset_index())
+    shooting_for_and_against_cols = (
+        [f"{c}_for" for c in COUNTING_STAT_NAMES]
+        + [f"{c}_against" for c in COUNTING_STAT_NAMES]
+    )
+    on_off_aggregates = (
+        presence_full
+        .groupby(["athlete_id", "team_id", "is_on_court"])
+        [["pts_for", "pts_against", "poss_off", "poss_def"] + shooting_for_and_against_cols]
+        .sum().reset_index()
+    )
 
-    on_df  = (agg[agg["is_on_court"]].drop(columns="is_on_court")
-              .add_suffix("_on").rename(columns={"athlete_id_on": "athlete_id", "team_id_on": "team_id"}))
-    off_df = (agg[~agg["is_on_court"]].drop(columns="is_on_court")
-              .add_suffix("_off").rename(columns={"athlete_id_off": "athlete_id", "team_id_off": "team_id"}))
-    player_agg = on_df.merge(off_df, on=["athlete_id", "team_id"], how="outer").fillna(0)
+    on_court_stats  = (on_off_aggregates[on_off_aggregates["is_on_court"]].drop(columns="is_on_court")
+                       .add_suffix("_on")
+                       .rename(columns={"athlete_id_on": "athlete_id", "team_id_on": "team_id"}))
+    off_court_stats = (on_off_aggregates[~on_off_aggregates["is_on_court"]].drop(columns="is_on_court")
+                       .add_suffix("_off")
+                       .rename(columns={"athlete_id_off": "athlete_id", "team_id_off": "team_id"}))
+    player_on_off_stats = (on_court_stats
+                            .merge(off_court_stats, on=["athlete_id", "team_id"], how="outer")
+                            .fillna(0))
 
-    def rtg(pts, poss):
-        return np.where(poss > 10, pts / poss * 100, np.nan)
+    def _net_rating(points_scored, possessions):
+        """Points per 100 possessions; NaN when fewer than 10 possessions."""
+        return np.where(possessions > 10, points_scored / possessions * 100, np.nan)
 
-    def safe_div(n, d):
-        return np.where(d > 0, n / d, np.nan)
+    def _safe_divide(numerator, denominator):
+        return np.where(denominator > 0, numerator / denominator, np.nan)
 
-    player_agg["ortg_on"]  = rtg(player_agg["pts_for_on"],     player_agg["poss_off_on"])
-    player_agg["drtg_on"]  = rtg(player_agg["pts_against_on"], player_agg["poss_def_on"])
-    player_agg["nrtg_on"]  = player_agg["ortg_on"]  - player_agg["drtg_on"]
-    player_agg["ortg_off"] = rtg(player_agg["pts_for_off"],     player_agg["poss_off_off"])
-    player_agg["drtg_off"] = rtg(player_agg["pts_against_off"], player_agg["poss_def_off"])
-    player_agg["nrtg_off"] = player_agg["ortg_off"] - player_agg["drtg_off"]
-    player_agg["on_off"]   = player_agg["nrtg_on"]  - player_agg["nrtg_off"]
+    player_on_off_stats["ortg_on"]  = _net_rating(player_on_off_stats["pts_for_on"],     player_on_off_stats["poss_off_on"])
+    player_on_off_stats["drtg_on"]  = _net_rating(player_on_off_stats["pts_against_on"], player_on_off_stats["poss_def_on"])
+    player_on_off_stats["nrtg_on"]  = player_on_off_stats["ortg_on"]  - player_on_off_stats["drtg_on"]
+    player_on_off_stats["ortg_off"] = _net_rating(player_on_off_stats["pts_for_off"],     player_on_off_stats["poss_off_off"])
+    player_on_off_stats["drtg_off"] = _net_rating(player_on_off_stats["pts_against_off"], player_on_off_stats["poss_def_off"])
+    player_on_off_stats["nrtg_off"] = player_on_off_stats["ortg_off"] - player_on_off_stats["drtg_off"]
+    player_on_off_stats["on_off"]   = player_on_off_stats["nrtg_on"]  - player_on_off_stats["nrtg_off"]
 
-    for sfx in ["on", "off"]:
-        fga = player_agg[f"fga_for_{sfx}"]; fgm = player_agg[f"fgm_for_{sfx}"]
-        tpa = player_agg[f"tpa_for_{sfx}"]; tpm = player_agg[f"tpm_for_{sfx}"]
-        fta = player_agg[f"fta_for_{sfx}"]; ftm = player_agg[f"ftm_for_{sfx}"]
-        orb = player_agg[f"orb_for_{sfx}"]; drb = player_agg[f"drb_for_{sfx}"]
-        poss   = player_agg[f"poss_off_{sfx}"]
-        poss_d = player_agg[f"poss_def_{sfx}"]
-        opp_fga = player_agg[f"fga_against_{sfx}"]; opp_fgm = player_agg[f"fgm_against_{sfx}"]
-        opp_tpa = player_agg[f"tpa_against_{sfx}"]; opp_tpm = player_agg[f"tpm_against_{sfx}"]
-        opp_fta = player_agg[f"fta_against_{sfx}"]
-        opp_orb = player_agg[f"orb_against_{sfx}"]; opp_drb = player_agg[f"drb_against_{sfx}"]
+    # Shooting split ratings for both on-court and off-court.
+    for court_suffix in ["on", "off"]:
+        fga  = player_on_off_stats[f"fga_for_{court_suffix}"]
+        fgm  = player_on_off_stats[f"fgm_for_{court_suffix}"]
+        tpa  = player_on_off_stats[f"tpa_for_{court_suffix}"]
+        tpm  = player_on_off_stats[f"tpm_for_{court_suffix}"]
+        fta  = player_on_off_stats[f"fta_for_{court_suffix}"]
+        ftm  = player_on_off_stats[f"ftm_for_{court_suffix}"]
+        orb  = player_on_off_stats[f"orb_for_{court_suffix}"]
+        drb  = player_on_off_stats[f"drb_for_{court_suffix}"]
+        poss_off_side  = player_on_off_stats[f"poss_off_{court_suffix}"]
+        poss_def_side  = player_on_off_stats[f"poss_def_{court_suffix}"]
+        opp_fga = player_on_off_stats[f"fga_against_{court_suffix}"]
+        opp_fgm = player_on_off_stats[f"fgm_against_{court_suffix}"]
+        opp_tpa = player_on_off_stats[f"tpa_against_{court_suffix}"]
+        opp_tpm = player_on_off_stats[f"tpm_against_{court_suffix}"]
+        opp_fta = player_on_off_stats[f"fta_against_{court_suffix}"]
+        opp_orb = player_on_off_stats[f"orb_against_{court_suffix}"]
+        opp_drb = player_on_off_stats[f"drb_against_{court_suffix}"]
 
-        player_agg[f"fg_pct_{sfx}"]      = safe_div(fgm, fga)
-        player_agg[f"efg_pct_{sfx}"]     = safe_div(fgm + 0.5 * tpm, fga)
-        player_agg[f"3p_pct_{sfx}"]      = safe_div(tpm, tpa)
-        player_agg[f"3p_rate_{sfx}"]     = safe_div(tpa, fga)
-        player_agg[f"ft_rate_{sfx}"]     = safe_div(fta, fga)
-        player_agg[f"ft_pct_{sfx}"]      = safe_div(ftm, fta)
-        player_agg[f"opp_fg_pct_{sfx}"]  = safe_div(opp_fgm, opp_fga)
-        player_agg[f"opp_efg_pct_{sfx}"] = safe_div(opp_fgm + 0.5 * opp_tpm, opp_fga)
-        player_agg[f"opp_3p_pct_{sfx}"]  = safe_div(opp_tpm, opp_tpa)
-        player_agg[f"opp_3p_rate_{sfx}"] = safe_div(opp_tpa, opp_fga)
-        player_agg[f"drb_pct_{sfx}"]     = safe_div(drb, drb + opp_orb)
-        player_agg[f"orb_pct_{sfx}"]     = safe_div(orb, orb + opp_drb)
-        player_agg[f"orb_per100_{sfx}"]      = safe_div(orb,     poss)   * 100
-        player_agg[f"drb_per100_{sfx}"]      = safe_div(drb,     poss_d) * 100
-        player_agg[f"opp_orb_per100_{sfx}"]  = safe_div(opp_orb, poss_d) * 100
+        player_on_off_stats[f"fg_pct_{court_suffix}"]       = _safe_divide(fgm, fga)
+        player_on_off_stats[f"efg_pct_{court_suffix}"]      = _safe_divide(fgm + 0.5 * tpm, fga)
+        player_on_off_stats[f"3p_pct_{court_suffix}"]       = _safe_divide(tpm, tpa)
+        player_on_off_stats[f"3p_rate_{court_suffix}"]      = _safe_divide(tpa, fga)
+        player_on_off_stats[f"ft_rate_{court_suffix}"]      = _safe_divide(fta, fga)
+        player_on_off_stats[f"ft_pct_{court_suffix}"]       = _safe_divide(ftm, fta)
+        player_on_off_stats[f"opp_fg_pct_{court_suffix}"]   = _safe_divide(opp_fgm, opp_fga)
+        player_on_off_stats[f"opp_efg_pct_{court_suffix}"]  = _safe_divide(opp_fgm + 0.5 * opp_tpm, opp_fga)
+        player_on_off_stats[f"opp_3p_pct_{court_suffix}"]   = _safe_divide(opp_tpm, opp_tpa)
+        player_on_off_stats[f"opp_3p_rate_{court_suffix}"]  = _safe_divide(opp_tpa, opp_fga)
+        player_on_off_stats[f"drb_pct_{court_suffix}"]      = _safe_divide(drb, drb + opp_orb)
+        player_on_off_stats[f"orb_pct_{court_suffix}"]      = _safe_divide(orb, orb + opp_drb)
+        player_on_off_stats[f"orb_per100_{court_suffix}"]      = _safe_divide(orb,     poss_off_side) * 100
+        player_on_off_stats[f"drb_per100_{court_suffix}"]      = _safe_divide(drb,     poss_def_side) * 100
+        player_on_off_stats[f"opp_orb_per100_{court_suffix}"]  = _safe_divide(opp_orb, poss_def_side) * 100
 
-    names = (plyr[["athlete_id", "team_id_num", "athlete_display_name", "team_display_name"]]
-             .drop_duplicates().rename(columns={"team_id_num": "team_id"}))
-    player_agg = player_agg.merge(names, on=["athlete_id", "team_id"], how="left")
-    result = player_agg.copy().sort_values("on_off", ascending=False)
+    # Attach player and team names.
+    player_name_team_lookup = (
+        player_boxscores[["athlete_id", "team_id_numeric",
+                          "athlete_display_name", "team_display_name"]]
+        .drop_duplicates()
+        .rename(columns={"team_id_numeric": "team_id"})
+    )
+    player_on_off_stats = player_on_off_stats.merge(
+        player_name_team_lookup, on=["athlete_id", "team_id"], how="left"
+    )
+    on_off_results = player_on_off_stats.copy().sort_values("on_off", ascending=False)
 
-    # ── Save on/off ───────────────────────────────────────────────────────────
-    out_cols = [
+    # -----------------------------------------------------------------------
+    # Save on/off CSV
+    # -----------------------------------------------------------------------
+    output_column_names = [
         "athlete_id", "athlete_display_name", "team_id", "team_display_name",
         "ortg_on", "drtg_on", "nrtg_on", "ortg_off", "drtg_off", "nrtg_off", "on_off",
         "ortg_on_pct", "drtg_on_pct", "nrtg_on_pct",
@@ -349,103 +697,288 @@ def run_pipeline(game_filter="all"):
         "fga_against_on", "fgm_against_on", "tpa_against_on", "tpm_against_on",
         "orb_for_on", "drb_for_on", "orb_against_on", "drb_against_on",
     ]
-    # percentile cols may not exist if run on small conf subset — add them if absent
-    for col in ["ortg_on_pct", "drtg_on_pct", "nrtg_on_pct",
-                "ortg_off_pct", "drtg_off_pct", "nrtg_off_pct", "on_off_pct"]:
-        if col not in result.columns:
-            result[col] = np.nan
-    sfx   = "" if game_filter == "all" else f"_{game_filter}"
-    fname = f"mbb_onoff_{SEASON}{sfx}_v2.csv"
-    result[[c for c in out_cols if c in result.columns]].round(4).to_csv(fname, index=False)
-    print(f"  Saved {fname} — {len(result)} players")
+    for percentile_col in ["ortg_on_pct", "drtg_on_pct", "nrtg_on_pct",
+                           "ortg_off_pct", "drtg_off_pct", "nrtg_off_pct", "on_off_pct"]:
+        if percentile_col not in on_off_results.columns:
+            on_off_results[percentile_col] = np.nan
 
-    # ── RAPM ─────────────────────────────────────────────────────────────────
+    filename_suffix = "" if game_filter == "all" else f"_{game_filter}"
+    onoff_output_filename = f"mbb_onoff_{SEASON}{filename_suffix}_v2.csv"
+    on_off_results[[c for c in output_column_names if c in on_off_results.columns]].round(4).to_csv(
+        onoff_output_filename, index=False
+    )
+    print(f"  Saved {onoff_output_filename} — {len(on_off_results)} players")
+
+    # -----------------------------------------------------------------------
+    # RAPM — Regularized Adjusted Plus-Minus
+    # -----------------------------------------------------------------------
     print("  Fitting RAPM...")
-    rapm_stints = stint_full.merge(
-        stint_info[["game_id", "stint_id", "home_lineup", "away_lineup"]],
-        on=["game_id", "stint_id"]).copy()
+    rapm_stint_data = stint_stats.merge(
+        stint_lineup_info[["game_id", "stint_id", "home_lineup", "away_lineup"]],
+        on=["game_id", "stint_id"]
+    ).copy()
 
+    # Build the universe of all player IDs who appeared in any lineup.
     all_players = sorted({
-        pid for _, row in rapm_stints[["home_lineup", "away_lineup"]].iterrows()
+        player_id
+        for _, row in rapm_stint_data[["home_lineup", "away_lineup"]].iterrows()
         for lineup in (row["home_lineup"], row["away_lineup"])
-        for pid in lineup if pd.notna(pid)})
-    p2i = {pid: i for i, pid in enumerate(all_players)}
-    n_p = len(all_players)
+        for player_id in lineup
+        if pd.notna(player_id)
+    })
+    player_to_matrix_index = {player_id: idx for idx, player_id in enumerate(all_players)}
+    num_players = len(all_players)
 
-    obs_r, obs_c, obs_v, y_v, w_v = [], [], [], [], []
-    idx = 0
-    for row in rapm_stints.itertuples():
-        for is_home, lineup_off, lineup_def, pts, poss in [
-            (True,  row.home_lineup, row.away_lineup, row.home_pts, row.home_poss),
-            (False, row.away_lineup, row.home_lineup, row.away_pts, row.away_poss),
+    # Build sparse design matrix X of shape (num_stints * 2, num_players * 2).
+    # For each (stint, side) observation:
+    #   - Offensive players get +1 in their offensive column (cols 0..n-1)
+    #   - Defensive players get -1 in their defensive column (cols n..2n-1)
+    # The target y is the net rating (pts / poss * 100) for the offensive team.
+    matrix_row_indices, matrix_col_indices, matrix_values = [], [], []
+    net_ratings_per_stint, possession_weights_per_stint = [], []
+    stint_observation_count = 0
+
+    for row in rapm_stint_data.itertuples():
+        for offensive_lineup, defensive_lineup, points_scored, possessions in [
+            (row.home_lineup, row.away_lineup, row.home_pts, row.home_poss),
+            (row.away_lineup, row.home_lineup, row.away_pts, row.away_poss),
         ]:
-            if poss <= 0: continue
-            if len(lineup_off) != 5 or len(lineup_def) != 5: continue
-            for pid in lineup_off:
-                if pd.isna(pid): continue
-                obs_r.append(idx); obs_c.append(p2i[pid]);       obs_v.append(1.0)
-            for pid in lineup_def:
-                if pd.isna(pid): continue
-                obs_r.append(idx); obs_c.append(p2i[pid] + n_p); obs_v.append(-1.0)
-            y_v.append(pts / poss * 100)
-            w_v.append(poss)
-            idx += 1
+            if possessions <= 0:
+                continue
+            if len(offensive_lineup) != 5 or len(defensive_lineup) != 5:
+                continue
+            for player_id in offensive_lineup:
+                if pd.isna(player_id):
+                    continue
+                matrix_row_indices.append(stint_observation_count)
+                matrix_col_indices.append(player_to_matrix_index[player_id])
+                matrix_values.append(1.0)
+            for player_id in defensive_lineup:
+                if pd.isna(player_id):
+                    continue
+                matrix_row_indices.append(stint_observation_count)
+                matrix_col_indices.append(player_to_matrix_index[player_id] + num_players)
+                matrix_values.append(-1.0)
+            net_ratings_per_stint.append(points_scored / possessions * 100)
+            possession_weights_per_stint.append(possessions)
+            stint_observation_count += 1
 
-    X  = csr_matrix((obs_v, (obs_r, obs_c)), shape=(idx, 2 * n_p))
-    y  = np.array(y_v); w = np.array(w_v)
-    ym = np.average(y, weights=w)
-    sw = np.sqrt(w)
-    ridge = Ridge(alpha=4000, fit_intercept=False)
-    ridge.fit(X.multiply(sw[:, None]).tocsr(), (y - ym) * sw)
+    RIDGE_REGULARIZATION_ALPHA = 4000  # tuned to balance bias-variance in backtests
 
-    rapm_raw = pd.DataFrame({"athlete_id": all_players,
-                              "o_rapm": ridge.coef_[:n_p],
-                              "d_rapm": ridge.coef_[n_p:],
-                              "rapm":   ridge.coef_[:n_p] + ridge.coef_[n_p:]})
-    poss_pl = (presence_full[presence_full["is_on_court"]]
-               .groupby("athlete_id")["poss_off"].sum().reset_index()
-               .rename(columns={"poss_off": "total_poss"}))
-    pnames  = (plyr[["athlete_id", "athlete_display_name", "team_id", "team_display_name", "game_id"]]
-               .sort_values("game_id").drop_duplicates("athlete_id", keep="last")
-               .drop(columns="game_id"))
-    rapm_df = (rapm_raw.merge(pnames, on="athlete_id", how="left")
-               .merge(poss_pl, on="athlete_id", how="left")
-               .query("total_poss >= 500")
-               .sort_values("rapm", ascending=False).reset_index(drop=True))
-    rapm_df["o_rapm"] = rapm_df["o_rapm"].round(2)
-    rapm_df["d_rapm"] = rapm_df["d_rapm"].round(2)
-    rapm_df["rapm"]   = rapm_df["o_rapm"] + rapm_df["d_rapm"]
+    # Assemble the Ridge regression inputs.
+    stint_design_matrix     = csr_matrix(
+        (matrix_values, (matrix_row_indices, matrix_col_indices)),
+        shape=(stint_observation_count, 2 * num_players)
+    )
+    observed_net_ratings     = np.array(net_ratings_per_stint)
+    stint_possession_weights = np.array(possession_weights_per_stint)
 
-    season_str = f"{SEASON-1}{str(SEASON)[2:]}"
-    rfname = f"mbb_rapm_{season_str}{sfx}.csv"
-    rapm_df.to_csv(rfname, index=False)
-    print(f"  Saved {rfname} — {len(rapm_df)} qualified players")
+    league_avg_net_rating    = np.average(observed_net_ratings, weights=stint_possession_weights)
+    sqrt_possession_weights  = np.sqrt(stint_possession_weights)
+    centered_net_ratings     = observed_net_ratings - league_avg_net_rating
+    # Weighted Ridge: multiply both X and y by sqrt(w) so Ridge minimizes
+    # the possession-weighted residual sum of squares.
+    weighted_design_matrix   = stint_design_matrix.multiply(sqrt_possession_weights[:, None]).tocsr()
 
-    return presence_full, player_agg
+    # --- (1) Vanilla RAPM: every player shrinks toward 0 ---
+    vanilla_ridge_model = Ridge(alpha=RIDGE_REGULARIZATION_ALPHA, fit_intercept=False)
+    vanilla_ridge_model.fit(weighted_design_matrix, centered_net_ratings * sqrt_possession_weights)
+    vanilla_off_rapm = vanilla_ridge_model.coef_[:num_players]
+    vanilla_def_rapm = vanilla_ridge_model.coef_[num_players:]
+
+    # --- (2) Box-score prior RAPM ---
+    boxscore_prior_off_rapm, boxscore_prior_def_rapm = _compute_boxscore_prior_rapm(
+        player_boxscores, player_on_off_stats, all_players, num_players,
+        stint_design_matrix, weighted_design_matrix,
+        centered_net_ratings, sqrt_possession_weights,
+        RIDGE_REGULARIZATION_ALPHA, vanilla_off_rapm, vanilla_def_rapm
+    )
+
+    # Assemble output DataFrame.
+    raw_rapm_estimates = pd.DataFrame({
+        "athlete_id":  all_players,
+        "o_rapm":      vanilla_off_rapm,
+        "d_rapm":      vanilla_def_rapm,
+        "rapm":        vanilla_off_rapm + vanilla_def_rapm,
+        "o_rapm_bp":   boxscore_prior_off_rapm,
+        "d_rapm_bp":   boxscore_prior_def_rapm,
+        "rapm_bp":     boxscore_prior_off_rapm + boxscore_prior_def_rapm,
+    })
+
+    # Possession totals for the minimum-sample filter.
+    player_on_court_possessions = (
+        presence_full[presence_full["is_on_court"]]
+        .groupby("athlete_id")["poss_off"].sum().reset_index()
+        .rename(columns={"poss_off": "total_poss"})
+    )
+    player_name_most_recent = (
+        player_boxscores[["athlete_id", "athlete_display_name",
+                          "team_id", "team_display_name", "game_id"]]
+        .sort_values("game_id").drop_duplicates("athlete_id", keep="last")
+        .drop(columns="game_id")
+        .rename(columns={"team_id": "team_id"})
+    )
+    qualified_rapm_players = (
+        raw_rapm_estimates
+        .merge(player_name_most_recent, on="athlete_id", how="left")
+        .merge(player_on_court_possessions, on="athlete_id", how="left")
+        .query("total_poss >= 500")
+        .sort_values("rapm", ascending=False)
+        .reset_index(drop=True)
+    )
+    for rapm_col in ["o_rapm", "d_rapm", "o_rapm_bp", "d_rapm_bp"]:
+        qualified_rapm_players[rapm_col] = qualified_rapm_players[rapm_col].round(2)
+    qualified_rapm_players["rapm"]    = (qualified_rapm_players["o_rapm"]
+                                          + qualified_rapm_players["d_rapm"])
+    qualified_rapm_players["rapm_bp"] = (qualified_rapm_players["o_rapm_bp"]
+                                          + qualified_rapm_players["d_rapm_bp"])
+
+    season_file_suffix  = f"{SEASON - 1}{str(SEASON)[2:]}"
+    rapm_output_filename = f"mbb_rapm_{season_file_suffix}{filename_suffix}.csv"
+    qualified_rapm_players.to_csv(rapm_output_filename, index=False)
+    print(f"  Saved {rapm_output_filename} — {len(qualified_rapm_players)} qualified players")
+
+    return presence_full, player_on_off_stats
 
 
-# ── Run both passes ───────────────────────────────────────────────────────────
-presence_all, player_agg_all = run_pipeline("all")
+# ---------------------------------------------------------------------------
+# Run both passes (all games, then conference only) and save shared outputs
+# ---------------------------------------------------------------------------
+presence_all_games, player_on_off_all_games = run_pipeline("all")
 run_pipeline("conf")
 
-# ── Save shared outputs (from the all-games run) ──────────────────────────────
-SHOT_COLS = ["fga", "fgm", "tpa", "tpm", "fta", "ftm", "orb", "drb"]
-save_cols = (["game_id", "stint_id", "athlete_id", "team_id", "is_on_court",
-               "pts_for", "pts_against", "poss_off", "poss_def"]
-             + [f"{c}_for" for c in SHOT_COLS]
-             + [f"{c}_against" for c in SHOT_COLS])
-presence_all[[c for c in save_cols if c in presence_all.columns]].to_parquet(
-    "presence_full.parquet", index=False)
+# Presence parquet: used downstream by build_lineups.py for WOWY synergy.
+SHOT_STAT_NAMES = ["fga", "fgm", "tpa", "tpm", "fta", "ftm", "orb", "drb"]
+columns_to_save = (
+    ["game_id", "stint_id", "athlete_id", "team_id", "is_on_court",
+     "pts_for", "pts_against", "poss_off", "poss_def"]
+    + [f"{c}_for"     for c in SHOT_STAT_NAMES]
+    + [f"{c}_against" for c in SHOT_STAT_NAMES]
+)
+presence_all_games[[c for c in columns_to_save if c in presence_all_games.columns]].to_parquet(
+    "presence_full.parquet", index=False
+)
 
-player_agg_all[["athlete_id", "athlete_display_name", "team_id", "team_display_name"]]\
-    .drop_duplicates("athlete_id").reset_index(drop=True)\
-    .to_csv("player_lookup.csv", index=False)
+# Player lookup: a lightweight name/team map used by the web app.
+player_on_off_all_games[
+    ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
+].drop_duplicates("athlete_id").reset_index(drop=True).to_csv("player_lookup.csv", index=False)
 
-_ss = f"{SEASON-1}{str(SEASON)[2:]}"
+_season_suffix = f"{SEASON-1}{str(SEASON)[2:]}"
 print("\nDone. Files saved:")
 print(f"  mbb_onoff_{SEASON}_v2.csv")
 print(f"  mbb_onoff_{SEASON}_conf_v2.csv")
-print(f"  mbb_rapm_{_ss}.csv")
-print(f"  mbb_rapm_{_ss}_conf.csv")
+print(f"  mbb_rapm_{_season_suffix}.csv")
+print(f"  mbb_rapm_{_season_suffix}_conf.csv")
 print("  presence_full.parquet")
 print("  player_lookup.csv")
+
+
+# ===========================================================================
+# VARIABLE GLOSSARY
+# ===========================================================================
+#
+# SEASON                      int   Calendar year the season ENDS (e.g. 2026 for the 2025-26 season).
+# REGULAR_SEASON_TYPE         int   sportsdataverse code for regular-season games (2).
+# _season_override            str   Value of OVERRIDE_SEASON env var; used to build historical seasons.
+#
+# raw_play_by_play            DataFrame   Every play from every regular-season game (PBP feed).
+# raw_player_boxscores        DataFrame   Per-player per-game box score stats.
+# raw_team_boxscores          DataFrame   Per-team per-game box score stats.
+# schedule_df                 DataFrame   Game schedule; used to identify conference games.
+# conference_game_id_set      set[int]    game_ids flagged as conference competition.
+#
+# --- Inside run_pipeline() ---
+# play_by_play                DataFrame   PBP filtered to the current game_filter.
+# player_boxscores            DataFrame   Player box scores filtered to current game_filter.
+# team_boxscores              DataFrame   Team box scores filtered to current game_filter.
+# game_team_possession_dict   dict        {(game_id, team_id): box_possessions} — ground-truth poss counts.
+# starters_by_game_team       dict        {(game_id, team_id): frozenset(athlete_ids)} — opening lineups.
+#
+# play_stint_ids              ndarray     Stint number assigned to every play row.
+# lineup_change_records       list[dict]  One dict per lineup state transition (game × stint).
+# stint_lineup_info           DataFrame   Deduplicated lineup state per (game_id, stint_id).
+# stint_stats                 DataFrame   Aggregated pts/poss/shooting for each stint (home & away).
+#
+# PLAY_TYPE_TO_FLAG_MAP       dict        Maps short stat name (e.g. "fga") to its boolean flag column.
+# COUNTING_STAT_NAMES         list[str]   Short names of counting stats: fga, fgm, tpa, tpm, fta, ftm, orb, drb.
+# shooting_stats_by_stint_team DataFrame  Counting stat totals per (game, stint, team).
+# shooting_stat_columns       list[str]   Column names for home_*/away_* shooting stats in stint_stats.
+#
+# points_by_stint_team        DataFrame   Points scored per (game_id, stint_id, scoring_team).
+# possession_events           DataFrame   PBP rows that represent an offensive possession ending.
+# stint_possession_weights_df DataFrame   Possession totals per (game_id, stint_id, team).
+# game_total_possession_weights DataFrame Denominator for scaling: total possession weight per (game, team).
+# game_possession_estimates   DataFrame   Box-score-derived possession counts per (game, team).
+#
+# active_players_by_game_team dict        {(game_id, team_id): set(athlete_ids)} — players who actually played.
+# presence_rows               list[dict]  Raw rows for the presence table (player × stint × on/off).
+# presence_df                 DataFrame   Presence table before merging stint stats.
+# presence_full               DataFrame   Presence table with pts/poss/shooting attached per stint.
+#
+# on_off_aggregates           DataFrame   Sum of on-court and off-court stats by (athlete, team, is_on_court).
+# on_court_stats              DataFrame   Aggregates for is_on_court=True rows.
+# off_court_stats             DataFrame   Aggregates for is_on_court=False rows.
+# player_on_off_stats         DataFrame   One row per player with both on and off totals merged.
+# player_name_team_lookup     DataFrame   Athlete names + team names looked up from box scores.
+# on_off_results              DataFrame   player_on_off_stats sorted by on_off descending.
+# output_column_names         list[str]   Columns to retain in the final on/off CSV.
+# onoff_output_filename       str         e.g. "mbb_onoff_2026_v2.csv".
+# filename_suffix             str         "" for all-games, "_conf" for conference.
+#
+# --- RAPM section ---
+# rapm_stint_data             DataFrame   Stint stats merged with home/away lineups for RAPM input.
+# all_players                 list[int]   Sorted list of all player IDs who appeared in any lineup.
+# player_to_matrix_index      dict        {athlete_id: column_index} for the design matrix.
+# num_players                 int         Number of unique players; matrix has 2*num_players columns.
+# matrix_row_indices          list[int]   Row index for each nonzero entry in the design matrix.
+# matrix_col_indices          list[int]   Column index for each nonzero entry.
+# matrix_values               list[float] +1 (offensive player) or -1 (defensive player).
+# net_ratings_per_stint       list[float] Observed net rating (pts/poss*100) for each stint observation.
+# possession_weights_per_stint list[float] Possession count for each stint observation (regression weight).
+# stint_observation_count     int         Total number of (stint, side) rows in the design matrix.
+# RIDGE_REGULARIZATION_ALPHA  int         Ridge penalty λ; higher = more shrinkage toward the prior.
+# stint_design_matrix         csr_matrix  Sparse X, shape (observations, 2*num_players).
+# observed_net_ratings        ndarray     Target y: net rating per observation.
+# stint_possession_weights    ndarray     Regression weights w (possession counts).
+# league_avg_net_rating       float       Possession-weighted mean net rating across all stints.
+# sqrt_possession_weights     ndarray     √w; used to convert Ridge to a WLS problem.
+# centered_net_ratings        ndarray     y - ȳ (mean-centered target for Ridge).
+# weighted_design_matrix      csr_matrix  X * √w elementwise (for WLS via Ridge).
+# vanilla_ridge_model         Ridge       sklearn Ridge fit with zero-shrinkage prior.
+# vanilla_off_rapm            ndarray     Offensive RAPM coefficients from vanilla Ridge.
+# vanilla_def_rapm            ndarray     Defensive RAPM coefficients from vanilla Ridge.
+# boxscore_prior_off_rapm     ndarray     Offensive RAPM with box-score prior (empirical Bayes).
+# boxscore_prior_def_rapm     ndarray     Defensive RAPM with box-score prior.
+# raw_rapm_estimates          DataFrame   Both RAPM flavors for every player.
+# player_on_court_possessions DataFrame   Total on-court possessions per player (for minimum filter).
+# player_name_most_recent     DataFrame   Most recent name/team per athlete_id.
+# qualified_rapm_players      DataFrame   Players with ≥500 on-court possessions; sorted by RAPM.
+# season_file_suffix          str         e.g. "202526" — used in filenames.
+# rapm_output_filename        str         e.g. "mbb_rapm_202526.csv".
+#
+# --- Inside _compute_boxscore_prior_rapm() ---
+# player_season_box           DataFrame   Season box-score totals per player.
+# offensive_gamescore         Series      Hollinger's Game Score offensive component (counting).
+# defensive_gamescore         Series      Hollinger's Game Score defensive component (counting).
+# player_possession_totals    DataFrame   On-court offensive/defensive possessions per player.
+# off_gamescore_per100        ndarray     Offensive game score normalized to per-100-possessions rate.
+# def_gamescore_per100        ndarray     Defensive game score normalized to per-100-possessions rate.
+# off_possession_weights      ndarray     Offensive possession counts (for weighted mean/clip).
+# def_possession_weights      ndarray     Defensive possession counts.
+# centered_off_gamescore      ndarray     off_gamescore_per100 minus possession-weighted mean, clipped.
+# centered_def_gamescore      ndarray     def_gamescore_per100 minus possession-weighted mean, clipped.
+# offense_calibration_coefs   ndarray     [intercept, slope] from WLS of vanilla_off_rapm ~ gamescore.
+# defense_calibration_coefs   ndarray     [intercept, slope] from WLS of vanilla_def_rapm ~ gamescore.
+# prior_off_means             ndarray     Calibrated box-score prior in offensive RAPM units.
+# prior_def_means             ndarray     Calibrated box-score prior in defensive RAPM units.
+# prior_means_combined        ndarray     Concatenation of off and def priors for matrix multiplication.
+# adjusted_target_residuals   ndarray     t = centered_y - X @ prior (what Ridge still needs to explain).
+# informed_prior_ridge        Ridge       Ridge fit on the residual target.
+# rapm_deviation_from_prior   ndarray     γ coefficients: how much each player deviates from their prior.
+#
+# --- Top-level outputs ---
+# presence_all_games          DataFrame   Full presence table from the all-games run.
+# player_on_off_all_games     DataFrame   On/off stats from the all-games run.
+# SHOT_STAT_NAMES             list[str]   Stat names retained in the parquet output.
+# columns_to_save             list[str]   Columns written to presence_full.parquet.

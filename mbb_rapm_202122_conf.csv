@@ -1,0 +1,1904 @@
+athlete_id,o_rapm,d_rapm,rapm,o_rapm_bp,d_rapm_bp,rapm_bp,athlete_display_name,team_id,team_display_name,total_poss
+4592945,2.5,1.47,3.9699999999999998,2.33,1.51,3.84,Isaiah Powell,261,Vermont Catamounts,1360.96
+4066789,2.5,1.47,3.9699999999999998,2.75,1.59,4.34,Ben Shungu,261,Vermont Catamounts,1360.96
+4278493,2.62,1.27,3.89,2.55,1.27,3.82,Justin Mazzulla,261,Vermont Catamounts,1292.48
+4397759,2.78,1.04,3.82,2.75,1.15,3.9,Finn Sullivan,261,Vermont Catamounts,1165.72
+4395712,2.12,1.58,3.7,2.31,1.63,3.94,Andrew Nembhard,2250,Gonzaga Bulldogs,1194.56
+4431695,2.12,1.58,3.7,2.33,1.64,3.9699999999999998,Drew Timme,2250,Gonzaga Bulldogs,1194.56
+4397242,2.12,1.58,3.7,2.12,1.56,3.68,Rasir Bolton,2250,Gonzaga Bulldogs,1194.56
+4396597,2.26,1.37,3.63,2.64,1.39,4.03,Ryan Davis,261,Vermont Catamounts,1171.96
+4432181,2.01,1.55,3.5599999999999996,2.02,1.55,3.5700000000000003,Julian Strawther,2250,Gonzaga Bulldogs,1125.76
+4433255,2.01,1.55,3.5599999999999996,2.16,1.94,4.1,Chet Holmgren,2250,Gonzaga Bulldogs,1125.76
+4278347,1.55,1.5,3.05,1.35,1.43,2.7800000000000002,Carter Collins,93,Murray State Racers,1318.64
+4279886,1.55,1.5,3.05,1.69,1.63,3.32,Tevin Brown,93,Murray State Racers,1318.64
+4594111,1.55,1.5,3.05,1.49,1.54,3.0300000000000002,DJ Burns,93,Murray State Racers,1318.64
+4703264,1.55,1.5,3.05,1.69,1.5,3.19,Justice Hill,93,Murray State Racers,1318.64
+4398348,1.55,1.5,3.05,1.93,1.71,3.6399999999999997,KJ Williams,93,Murray State Racers,1318.64
+4593842,2.16,0.79,2.95,2.4,0.85,3.25,Douglas Wilson,2571,South Dakota State Jackrabbits,1390.84
+4397127,1.55,1.36,2.91,1.55,1.42,2.9699999999999998,Jules Bernard,26,UCLA Bruins,1454.48
+4593841,2.4,0.47,2.87,2.71,0.63,3.34,Baylor Scheierman,2571,South Dakota State Jackrabbits,1461.88
+4279531,2.4,0.47,2.87,2.26,0.52,2.78,Alex Arians,2571,South Dakota State Jackrabbits,1461.88
+4702372,1.83,0.97,2.8,1.96,1.06,3.02,Azuolas Tubelis,12,Arizona Wildcats,1492.08
+4397081,1.33,1.28,2.6100000000000003,1.42,1.39,2.8099999999999996,Kyler Edwards,248,Houston Cougars,1307.52
+4433159,1.8,0.81,2.6100000000000003,1.75,0.84,2.59,Dalen Terry,12,Arizona Wildcats,1636.24
+4683634,1.8,0.81,2.6100000000000003,1.97,0.84,2.81,Bennedict Mathurin,12,Arizona Wildcats,1636.24
+4431778,1.8,0.81,2.6100000000000003,1.85,0.91,2.7600000000000002,Christian Koloko,12,Arizona Wildcats,1636.24
+4066808,1.41,1.17,2.58,1.46,1.25,2.71,Taze Moore,248,Houston Cougars,1367.32
+4278229,1.41,1.17,2.58,1.59,1.2,2.79,Josh Carlton,248,Houston Cougars,1367.32
+4278263,1.41,1.17,2.58,1.57,1.3,2.87,Fabian White Jr.,248,Houston Cougars,1367.32
+4431941,1.81,0.76,2.5700000000000003,1.85,0.8,2.6500000000000004,RayJ Dennis,2649,Toledo Rockets,1525.16
+4703538,1.81,0.76,2.5700000000000003,1.8,0.86,2.66,Ra'Heim Moss,2649,Toledo Rockets,1525.16
+4703541,1.81,0.76,2.5700000000000003,2.04,0.81,2.85,JT Shumate,2649,Toledo Rockets,1525.16
+4703540,1.81,0.76,2.5700000000000003,1.89,0.81,2.7,Setric Millner Jr.,2649,Toledo Rockets,1525.16
+4591725,1.81,0.76,2.5700000000000003,2.03,0.91,2.94,Ryan Rollins,2649,Toledo Rockets,1525.16
+4432848,1.16,1.37,2.5300000000000002,1.26,1.44,2.7,Jaime Jaquez Jr.,26,UCLA Bruins,1458.2
+4280048,1.49,1.02,2.51,1.58,1.1,2.68,Jack Ferguson,2142,Colgate Raiders,1396.8
+4398040,1.49,1.02,2.51,1.61,1.15,2.76,Tucker Richardson,2142,Colgate Raiders,1396.8
+4279317,1.49,1.02,2.51,1.46,1.0,2.46,Nelly Cummings,2142,Colgate Raiders,1396.8
+4432241,1.4,1.01,2.41,1.41,1.06,2.4699999999999998,Jamal Shead,248,Houston Cougars,1299.4
+4593087,1.38,1.02,2.4,1.5,1.04,2.54,Ryan Moffatt,2142,Colgate Raiders,1329.16
+4593089,1.38,1.02,2.4,1.53,1.09,2.62,Keegan Records,2142,Colgate Raiders,1329.16
+4592707,2.23,0.08,2.31,2.19,0.11,2.3,Charlie Easley,2571,South Dakota State Jackrabbits,1386.68
+4897251,2.23,0.08,2.31,2.24,0.09,2.33,Zeke Mayo,2571,South Dakota State Jackrabbits,1386.68
+4395623,1.49,0.73,2.2199999999999998,1.37,0.77,2.14,Trey Jemison,5,UAB Blazers,1458.96
+4067781,1.49,0.73,2.2199999999999998,1.54,0.91,2.45,Quan Jackson,5,UAB Blazers,1458.96
+4432573,1.79,0.33,2.12,1.97,0.49,2.46,Paolo Banchero,150,Duke Blue Devils,1522.6
+4701232,1.79,0.33,2.12,1.92,0.51,2.4299999999999997,Mark Williams,150,Duke Blue Devils,1522.6
+4592187,1.79,0.33,2.12,1.85,0.44,2.29,Wendell Moore Jr.,150,Duke Blue Devils,1522.6
+4067472,0.71,1.39,2.0999999999999996,0.66,1.5,2.16,Johnny McCants,166,New Mexico State Aggies,1207.44
+4398206,0.86,1.24,2.1,1.16,1.37,2.5300000000000002,Joe Bryant Jr.,2450,Norfolk State Spartans,1036.84
+4397180,0.86,1.24,2.1,0.8,1.29,2.09,Dana Tate Jr.,2450,Norfolk State Spartans,1036.84
+4280289,0.86,1.24,2.1,0.98,1.36,2.34,Kris Bankston,2450,Norfolk State Spartans,1036.84
+4433130,2.01,0.09,2.0999999999999996,2.09,0.1,2.19,Tony Perkins,2294,Iowa Hawkeyes,979.64
+4067255,0.95,1.1,2.05,1.07,1.15,2.2199999999999998,David Jean-Baptiste,236,Chattanooga Mocs,1186.44
+4431768,0.96,1.1,2.06,0.97,1.13,2.0999999999999996,Quinn Slazinski,314,Iona Gaels,916.32
+4431736,1.03,1.03,2.06,1.12,1.13,2.25,Toumani Camara,2168,Dayton Flyers,1190.48
+4396656,1.46,0.59,2.05,1.8,0.63,2.43,Jordan Walker,5,UAB Blazers,1389.68
+4397778,0.61,1.43,2.04,0.62,1.43,2.05,Braden Norris,2350,Loyola Chicago Ramblers,1390.2
+4279147,0.61,1.43,2.04,0.78,1.52,2.3,Lucas Williamson,2350,Loyola Chicago Ramblers,1390.2
+4066717,0.61,1.43,2.04,0.56,1.45,2.01,Aher Uguak,2350,Loyola Chicago Ramblers,1390.2
+4397128,1.11,0.93,2.04,1.15,0.96,2.11,Tyger Campbell,26,UCLA Bruins,1393.8
+4397355,0.64,1.36,2.0,0.76,1.45,2.21,DeAndre Williams,235,Memphis Tigers,966.88
+4703015,1.08,0.91,1.9900000000000002,1.15,1.08,2.23,Nelly Junior Joseph,314,Iona Gaels,1380.12
+4397023,0.66,1.31,1.9700000000000002,0.62,1.32,1.94,Uros Plavsic,2633,Tennessee Volunteers,1145.68
+4395873,1.05,0.91,1.96,0.94,0.85,1.79,Antonio Rizzuto,119,Towson Tigers,1118.28
+4398203,1.51,0.44,1.95,1.8,0.52,2.3200000000000003,Mike Bothwell,231,Furman Paladins,1230.24
+4397724,0.64,1.3,1.94,0.81,1.35,2.16,Matthias Tass,2608,Saint Mary's Gaels,1036.12
+4431902,0.64,1.3,1.94,0.59,1.32,1.9100000000000001,Kyle Bowen,2608,Saint Mary's Gaels,1036.12
+4396608,0.64,1.3,1.94,0.73,1.47,2.2,Logan Johnson,2608,Saint Mary's Gaels,1036.12
+4432971,0.64,1.3,1.94,0.66,1.36,2.02,Alex Ducas,2608,Saint Mary's Gaels,1036.12
+4897262,0.91,1.03,1.94,0.96,1.13,2.09,Will Richard,2057,Belmont Bruins,1319.32
+4433076,0.91,1.03,1.94,1.12,1.08,2.2,Ben Sheppard,2057,Belmont Bruins,1319.32
+4279920,0.91,1.03,1.94,0.91,1.21,2.12,Grayson Murphy,2057,Belmont Bruins,1319.32
+4402243,0.91,1.03,1.94,0.81,1.01,1.82,Luke Smith,2057,Belmont Bruins,1319.32
+4279923,0.91,1.03,1.94,1.12,1.08,2.2,Nick Muszynski,2057,Belmont Bruins,1319.32
+4593263,1.14,0.8,1.94,1.47,0.96,2.4299999999999997,Charles Pride,2803,Bryant Bulldogs,1461.88
+4279105,1.14,0.8,1.94,1.01,0.78,1.79,Luis Hurtado Jr.,2803,Bryant Bulldogs,1461.88
+4593304,1.14,0.8,1.94,1.03,0.85,1.88,Adham Eleeda,2803,Bryant Bulldogs,1461.88
+4897385,1.72,0.21,1.93,1.82,0.32,2.14,Conley Garrison,231,Furman Paladins,1234.56
+4280016,1.6,0.32,1.9200000000000002,1.62,0.4,2.02,Alex Hunter,231,Furman Paladins,1292.08
+4398207,1.6,0.32,1.9200000000000002,1.77,0.58,2.35,Jalen Slawson,231,Furman Paladins,1292.08
+4432585,1.84,0.07,1.9100000000000001,1.95,0.15,2.1,AJ Griffin,150,Duke Blue Devils,1323.48
+4396633,1.19,0.69,1.88,1.13,0.8,1.93,Alex Lomax,235,Memphis Tigers,1028.36
+4396750,0.17,1.69,1.8599999999999999,0.13,1.62,1.75,Jake Wolfe,2413,Morehead State Eagles,1246.04
+4397783,0.17,1.69,1.8599999999999999,0.18,1.72,1.9,Skyelar Potter,2413,Morehead State Eagles,1246.04
+4700864,0.91,0.96,1.87,0.84,0.97,1.81,R.J. Blakney,2168,Dayton Flyers,1251.64
+4433607,0.91,0.96,1.87,1.17,1.16,2.33,DaRon Holmes II,2168,Dayton Flyers,1251.64
+4709318,0.91,0.95,1.8599999999999999,0.76,0.88,1.6400000000000001,AJ Braun,2750,Wright State Raiders,1145.92
+4702722,0.95,0.91,1.8599999999999999,0.69,0.83,1.52,Chris Conway,2473,Oakland Golden Grizzlies,940.36
+4070686,1.02,0.83,1.85,1.39,0.94,2.33,Peter Kiss,2803,Bryant Bulldogs,1322.8
+4280181,0.51,1.32,1.83,0.47,1.33,1.8,Sir'Jabari Rice,166,New Mexico State Aggies,1269.48
+4683633,1.13,0.7,1.8299999999999998,1.08,0.65,1.73,Kerr Kriisa,12,Arizona Wildcats,1356.24
+4396968,1.17,0.65,1.8199999999999998,1.2,0.7,1.9,KJ Buffen,5,UAB Blazers,1321.08
+4396010,0.59,1.23,1.8199999999999998,0.51,1.25,1.76,Clayton Henry,166,New Mexico State Aggies,1005.28
+4398002,1.26,0.56,1.82,1.34,0.6,1.94,Jaelin Llewellyn,163,Princeton Tigers,963.76
+4701200,0.79,1.04,1.83,0.83,1.13,1.96,Latrell Jones,2447,Nicholls Colonels,1224.32
+4397560,0.31,1.5,1.81,0.2,1.61,1.81,JJ Murray,249,North Texas Mean Green,1178.24
+4702773,0.31,1.5,1.81,0.4,1.56,1.96,Abou Ousmane,249,North Texas Mean Green,1178.24
+4432430,0.31,1.5,1.81,0.27,1.54,1.81,Rubin Jones,249,North Texas Mean Green,1178.24
+4702770,0.31,1.5,1.81,0.39,1.52,1.9100000000000001,Mardrez McBride,249,North Texas Mean Green,1178.24
+4592870,0.31,1.5,1.81,0.46,1.61,2.0700000000000003,Thomas Bell,249,North Texas Mean Green,1178.24
+4397227,0.29,1.51,1.8,0.58,1.7,2.28,Vince Williams Jr.,2670,VCU Rams,1077.84
+4397133,1.37,0.43,1.8,1.33,0.43,1.76,Brandon Slater,222,Villanova Wildcats,1462.48
+4278585,1.37,0.43,1.8,1.58,0.45,2.0300000000000002,Collin Gillespie,222,Villanova Wildcats,1462.48
+4431718,1.37,0.43,1.8,1.45,0.45,1.9,Eric Dixon,222,Villanova Wildcats,1462.48
+4592617,0.92,0.86,1.78,1.09,1.01,2.1,Jubrile Belo,147,Montana State Bobcats,1485.8400000000001
+4278588,1.4,0.38,1.7799999999999998,1.44,0.47,1.91,Jermaine Samuels,222,Villanova Wildcats,1400.68
+4595430,0.82,0.96,1.7799999999999998,0.89,0.97,1.8599999999999999,Tyrese Jenkins,2450,Norfolk State Spartans,613.8
+4431795,0.91,0.84,1.75,0.9,0.91,1.81,Josh Pierre-Louis,2540,UC Santa Barbara Gauchos,850.96
+4589474,0.62,1.12,1.7400000000000002,0.51,1.1,1.61,VonCameron Davis,2309,Kent State Golden Flashes,1202.6
+4397559,0.96,0.76,1.72,0.87,0.86,1.73,Abdul Mohamed,147,Montana State Bobcats,1563.64
+4067581,0.96,0.76,1.72,1.13,0.76,1.89,Xavier Bishop,147,Montana State Bobcats,1563.64
+4702074,0.96,0.76,1.72,0.81,0.73,1.54,Tyler Patterson,147,Montana State Bobcats,1563.64
+4396787,1.63,0.09,1.72,1.85,0.15,2.0,Luka Brajkovic,2166,Davidson Wildcats,1365.44
+4396784,1.63,0.09,1.72,1.62,0.11,1.7300000000000002,Michael Jones,2166,Davidson Wildcats,1365.44
+4397371,-0.3,2.02,1.72,-0.34,2.15,1.8099999999999998,Nathan Mensah,21,San Diego State Aztecs,1293.2
+4431786,-0.3,2.02,1.72,-0.29,2.08,1.79,Keshad Johnson,21,San Diego State Aztecs,1293.2
+4397049,-0.3,2.02,1.72,-0.01,2.1,2.0900000000000003,Matt Bradley,21,San Diego State Aztecs,1293.2
+4593305,0.71,1.0,1.71,0.67,1.0,1.67,Bryson Langdon,94,Northern Kentucky Norse,1342.0
+4066291,0.82,0.88,1.7,0.85,0.86,1.71,Tyson Jolly,314,Iona Gaels,1453.16
+4285624,0.83,0.86,1.69,0.98,1.03,2.01,Yauhen Massalski,2539,San Francisco Dons,1214.24
+4702127,1.14,0.54,1.68,1.42,0.71,2.13,Justin Hill,2344,Longwood Lancers,1050.1200000000001
+4066768,0.54,1.12,1.6600000000000001,0.48,1.1,1.58,Andrew Garcia,2309,Kent State Golden Flashes,1482.0
+4398005,1.31,0.35,1.6600000000000001,1.36,0.41,1.77,Ethan Wright,163,Princeton Tigers,1095.28
+4398004,1.31,0.35,1.6600000000000001,1.3,0.32,1.62,Drew Friberg,163,Princeton Tigers,1095.28
+4683135,0.46,1.19,1.65,0.49,1.14,1.63,Kobe Elvis,2168,Dayton Flyers,1191.4
+4683861,0.46,1.19,1.65,0.51,1.29,1.8,Malachi Smith,2168,Dayton Flyers,1191.4
+4066805,0.83,0.82,1.65,0.74,0.81,1.55,Patrick Tape,2539,San Francisco Dons,1286.16
+4280245,0.83,0.82,1.65,0.99,1.04,2.0300000000000002,Jamaree Bouyea,2539,San Francisco Dons,1286.16
+4279467,0.83,0.82,1.65,0.78,0.8,1.58,Gabe Stefanini,2539,San Francisco Dons,1286.16
+4397745,0.83,0.82,1.65,0.98,0.88,1.8599999999999999,Khalil Shabazz,2539,San Francisco Dons,1286.16
+4431915,1.27,0.37,1.6400000000000001,1.42,0.44,1.8599999999999999,Trey Calvin,2750,Wright State Raiders,1546.88
+4279448,0.84,0.79,1.63,1.01,0.95,1.96,Ben Vander Plas,195,Ohio Bobcats,1495.12
+4703530,0.84,0.79,1.63,1.16,0.87,2.03,Mark Sears,195,Ohio Bobcats,1495.12
+4432959,0.4,1.22,1.62,0.46,1.26,1.72,Ta'lon Cooper,2413,Morehead State Eagles,1316.96
+4433569,0.4,1.22,1.62,0.64,1.6,2.24,Johni Broome,2413,Morehead State Eagles,1316.96
+4397784,0.73,0.88,1.6099999999999999,1.11,1.12,2.2300000000000004,Malachi Smith,236,Chattanooga Mocs,1315.28
+4279210,0.73,0.88,1.6099999999999999,0.76,0.96,1.72,Darius Banks,236,Chattanooga Mocs,1315.28
+4311618,0.67,0.94,1.6099999999999999,0.57,0.87,1.44,Zep Jasper,2,Auburn Tigers,1213.8
+4432828,0.93,0.68,1.61,1.27,0.84,2.11,Kofi Cockburn,356,Illinois Fighting Illini,1284.72
+4593267,0.66,0.95,1.6099999999999999,0.78,1.16,1.94,Hall Elisias,2803,Bryant Bulldogs,840.4
+4897771,0.62,0.98,1.6,0.63,1.07,1.7000000000000002,AJ Lawson,2640,Texas Southern Tigers,758.36
+4432646,0.4,1.2,1.6,0.55,1.31,1.86,Kennedy Chandler,2633,Tennessee Volunteers,1360.52
+4593773,0.74,0.84,1.58,0.76,0.86,1.62,Seikou Sisoho Jawara,2692,Weber State Wildcats,1538.44
+4593976,0.74,0.84,1.58,0.73,0.84,1.5699999999999998,JJ Overton,2692,Weber State Wildcats,1538.44
+4066755,0.74,0.84,1.58,1.0,0.88,1.88,Koby McEwen,2692,Weber State Wildcats,1538.44
+4597865,1.14,0.45,1.5899999999999999,1.4,0.57,1.9699999999999998,Tosan Evbuomwan,163,Princeton Tigers,1032.1200000000001
+4280022,0.69,0.9,1.5899999999999999,0.61,0.94,1.5499999999999998,Mladen Armus,68,Boise State Broncos,1336.32
+4278513,0.69,0.9,1.5899999999999999,0.88,0.97,1.85,Abu Kigab,68,Boise State Broncos,1336.32
+4898260,0.69,0.9,1.5899999999999999,0.76,0.92,1.6800000000000002,Tyson Degenhart,68,Boise State Broncos,1336.32
+4280208,0.69,0.9,1.5899999999999999,0.78,0.96,1.74,Marcus Shaver Jr.,68,Boise State Broncos,1336.32
+4433103,0.79,0.79,1.58,1.0,0.91,1.9100000000000001,Charles Thompson,119,Towson Tigers,1306.04
+4397595,0.79,0.79,1.58,0.88,0.84,1.72,Nicolas Timberlake,119,Towson Tigers,1306.04
+4703407,0.79,0.79,1.58,0.87,0.94,1.81,Cameron Holden,119,Towson Tigers,1306.04
+4592985,0.97,0.6,1.5699999999999998,0.98,0.62,1.6,Jason Gibson,119,Towson Tigers,1244.1200000000001
+4594327,1.84,-0.27,1.57,2.32,-0.03,2.29,Keegan Murray,2294,Iowa Hawkeyes,1604.76
+4395671,0.2,1.37,1.57,0.29,1.34,1.6300000000000001,Au'Diese Toney,8,Arkansas Razorbacks,1212.64
+4397374,0.79,0.77,1.56,1.06,0.81,1.87,Josh Jefferson,2393,Middle Tennessee Blue Raiders,1063.56
+4395664,1.07,0.49,1.56,1.15,0.53,1.68,Prentiss Hubb,87,Notre Dame Fighting Irish,1320.64
+4432827,1.36,0.2,1.56,1.63,0.54,2.17,Oscar Tshiebwe,96,Kentucky Wildcats,1373.68
+4431689,1.36,0.2,1.56,1.29,0.18,1.47,Keion Brooks,96,Kentucky Wildcats,1373.68
+4278349,1.36,0.2,1.56,1.27,0.12,1.3900000000000001,Kellan Grady,96,Kentucky Wildcats,1373.68
+4592615,0.54,1.01,1.55,0.61,1.06,1.67,Amin Adamu,147,Montana State Bobcats,1431.88
+4593134,0.66,0.89,1.55,0.87,0.99,1.8599999999999999,Jalen Hawkins,2450,Norfolk State Spartans,970.36
+4433183,-0.17,1.71,1.54,-0.28,1.74,1.46,Lamont Butler,21,San Diego State Aztecs,1226.64
+4593083,-0.17,1.71,1.54,-0.26,1.67,1.41,Trey Pulliam,21,San Diego State Aztecs,1226.64
+4398386,-0.27,1.8,1.53,-0.25,2.05,1.7999999999999998,KC Ndefo,2612,Saint Peter's Peacocks,1502.0
+4593388,0.23,1.3,1.53,0.22,1.26,1.48,Matthew Lee,2612,Saint Peter's Peacocks,1109.36
+4592308,1.51,0.01,1.52,1.63,0.08,1.71,Hyunjung Lee,2166,Davidson Wildcats,1301.6399999999999
+4700862,1.51,0.01,1.52,1.48,0.03,1.51,Sam Mennenga,2166,Davidson Wildcats,1301.6399999999999
+4592666,-0.0,1.52,1.52,-0.07,1.54,1.47,Davion Warren,2641,Texas Tech Red Raiders,1327.68
+4593825,1.46,0.06,1.52,1.35,0.1,1.4500000000000002,DeShang Weaver,198,Oral Roberts Golden Eagles,1228.04
+4431928,0.53,0.99,1.52,0.52,1.09,1.61,Chase Claxton,2737,Winthrop Eagles,657.28
+4592697,1.34,0.17,1.51,1.26,0.2,1.46,Greg Tribble,2006,Akron Zips,1383.68
+4397617,1.11,0.4,1.5100000000000002,1.11,0.4,1.5100000000000002,Zac Watson,2344,Longwood Lancers,1245.48
+4702126,1.11,0.4,1.5100000000000002,0.93,0.35,1.28,Jesper Granlund,2344,Longwood Lancers,1245.48
+4395681,1.11,0.4,1.5100000000000002,1.24,0.57,1.81,Isaiah Wilkins,2344,Longwood Lancers,1245.48
+4396618,1.11,0.4,1.5100000000000002,1.19,0.45,1.64,DeShaun Wade,2344,Longwood Lancers,1245.48
+4395686,0.78,0.73,1.51,0.74,0.76,1.5,Isaiah Mucius,154,Wake Forest Demon Deacons,1410.76
+4277932,0.36,1.14,1.5,0.67,1.25,1.92,Teddy Allen,166,New Mexico State Aggies,1204.08
+4593036,0.59,0.91,1.5,0.71,1.1,1.81,Elijah Ford,2681,Wagner Seahawks,699.8
+4289536,0.37,1.14,1.5099999999999998,0.47,1.35,1.82,Tate Hall,2350,Loyola Chicago Ramblers,604.6
+4398306,1.15,0.36,1.5099999999999998,1.16,0.39,1.5499999999999998,Carlos Jurgens,198,Oral Roberts Golden Eagles,995.2
+4592491,0.99,0.51,1.5,1.08,0.62,1.7000000000000002,Justin Moore,222,Villanova Wildcats,1397.8
+4397019,0.86,0.64,1.5,1.02,0.65,1.67,David McCormack,2305,Kansas Jayhawks,1248.6
+4431990,1.53,-0.03,1.5,1.78,0.07,1.85,Tanner Holden,2750,Wright State Raiders,1680.24
+4396017,1.53,-0.03,1.5,1.43,0.03,1.46,Tim Finke,2750,Wright State Raiders,1680.24
+4397787,1.53,-0.03,1.5,1.79,0.13,1.92,Grant Basile,2750,Wright State Raiders,1680.24
+4278435,0.26,1.24,1.5,0.41,1.36,1.77,JD Notae,8,Arkansas Razorbacks,1357.84
+4431720,0.72,0.77,1.49,0.7,0.75,1.45,Lester Quinones,235,Memphis Tigers,1459.0
+4900671,0.67,0.81,1.48,0.82,0.73,1.5499999999999998,Ajay Mitchell,2540,UC Santa Barbara Gauchos,1051.32
+4593387,0.08,1.4,1.48,0.1,1.4,1.5,Hassan Drame,2612,Saint Peter's Peacocks,1364.12
+4397348,0.58,0.89,1.47,0.91,1.12,2.0300000000000002,Garrett Sturtz,2181,Drake Bulldogs,1011.64
+4397840,0.9,0.56,1.46,0.81,0.52,1.33,Micheal Anumba,2737,Winthrop Eagles,1286.3600000000001
+4397615,-0.13,1.59,1.46,-0.2,1.7,1.5,Jordan Gilliam,2640,Texas Southern Tigers,783.16
+4402919,-0.19,1.65,1.46,-0.04,1.78,1.74,Jayden Saddler,2582,Southern Jaguars,1205.4
+4397229,-0.19,1.65,1.46,-0.26,1.69,1.43,P.J. Byrd,2582,Southern Jaguars,1205.4
+4398221,-0.19,1.65,1.46,0.01,1.77,1.78,Tyrone Lyons,2582,Southern Jaguars,1205.4
+4594110,-0.19,1.65,1.46,-0.09,1.68,1.5899999999999999,Terrell Williams Jr.,2582,Southern Jaguars,1205.4
+4592883,0.99,0.46,1.45,1.12,0.48,1.6,Tre Gomillion,325,Cleveland State Vikings,1576.84
+4397548,0.99,0.46,1.45,0.88,0.46,1.34,Deshon Parker,325,Cleveland State Vikings,1576.84
+4702702,0.99,0.46,1.45,1.17,0.61,1.7799999999999998,D'Moi Hodge,325,Cleveland State Vikings,1576.84
+4279311,0.99,0.46,1.45,1.1,0.58,1.6800000000000002,Torrey Patton,325,Cleveland State Vikings,1576.84
+4399102,0.99,0.46,1.45,0.99,0.56,1.55,Deante Johnson,325,Cleveland State Vikings,1576.84
+4592271,0.84,0.61,1.45,0.85,0.66,1.51,Shiloh Robinson,2335,Liberty Flames,1197.08
+4396745,0.84,0.61,1.45,1.35,0.73,2.08,Darius McGhee,2335,Liberty Flames,1197.08
+4592272,0.84,0.61,1.45,1.0,0.69,1.69,Kyle Rode,2335,Liberty Flames,1197.08
+4897572,0.84,0.61,1.45,0.6,0.62,1.22,Joseph Venzant,2335,Liberty Flames,1197.08
+4278525,0.72,0.73,1.45,0.73,0.75,1.48,Cody Riley,26,UCLA Bruins,1002.84
+4279111,0.09,1.35,1.4400000000000002,-0.07,1.3,1.23,Trey Wade,8,Arkansas Razorbacks,1279.92
+4396641,1.1,0.34,1.4400000000000002,1.21,0.38,1.5899999999999999,Xavier Castaneda,2006,Akron Zips,1445.3600000000001
+4592699,1.1,0.34,1.4400000000000002,1.3,0.5,1.8,Enrique Freeman,2006,Akron Zips,1445.3600000000001
+4593102,0.77,0.66,1.4300000000000002,0.75,0.62,1.37,Sean Bairstow,328,Utah State Aggies,1124.16
+4431987,0.71,0.72,1.43,0.72,0.88,1.6,PJ Henry,2640,Texas Southern Tigers,827.8
+4702670,0.77,0.66,1.4300000000000002,1.09,0.81,1.9000000000000001,Grant Nelson,2449,North Dakota State Bison,617.92
+4433621,0.58,0.84,1.42,0.7,0.98,1.68,Jalen Duren,235,Memphis Tigers,1177.8
+4066366,1.58,-0.15,1.4300000000000002,1.54,-0.18,1.36,Jordan Bohannon,2294,Iowa Hawkeyes,1679.44
+4398190,1.58,-0.15,1.4300000000000002,1.44,-0.16,1.28,Filip Rebraca,2294,Iowa Hawkeyes,1679.44
+4433077,0.21,1.22,1.43,0.33,1.31,1.6400000000000001,Airion Simmons,2000,Abilene Christian Wildcats,1409.04
+4278303,0.4,1.02,1.42,0.36,1.05,1.4100000000000001,Ryghe Lyons,2447,Nicholls Colonels,1302.72
+4592700,1.21,0.2,1.41,1.34,0.17,1.51,Ali Ali,2006,Akron Zips,1322.2
+4433135,0.09,1.32,1.4100000000000001,0.27,1.24,1.51,Jeremy Roach,150,Duke Blue Devils,725.64
+4431953,1.67,-0.26,1.41,1.74,-0.18,1.56,Marcus Foster,231,Furman Paladins,1149.88
+4067398,0.46,0.95,1.41,0.53,1.05,1.58,Jason Carter,195,Ohio Bobcats,1425.56
+4397737,0.53,0.87,1.4,0.58,0.98,1.56,Chris Brandon,94,Northern Kentucky Norse,1280.04
+4397774,0.53,0.86,1.3900000000000001,0.54,0.86,1.4,Trevon Faulkner,94,Northern Kentucky Norse,1405.92
+4431685,0.16,1.23,1.39,0.19,1.32,1.51,Josiah-Jordan James,2633,Tennessee Volunteers,1433.32
+4609299,0.16,1.23,1.39,0.31,1.32,1.6300000000000001,Santiago Vescovi,2633,Tennessee Volunteers,1433.32
+4897670,0.43,0.95,1.38,0.51,1.08,1.59,Aboubacar Traore,299,Long Beach State Beach,1322.08
+4897197,0.62,0.76,1.38,0.38,0.75,1.13,Augustas Marciulionis,2608,Saint Mary's Gaels,639.44
+4431674,0.89,0.49,1.38,1.18,0.75,1.93,Armando Bacot,153,North Carolina Tar Heels,1530.1200000000001
+4433176,0.89,0.49,1.38,0.99,0.54,1.53,R.J. Davis,153,North Carolina Tar Heels,1530.1200000000001
+4395650,0.89,0.49,1.38,0.8,0.55,1.35,Leaky Black,153,North Carolina Tar Heels,1530.1200000000001
+4279241,0.55,0.82,1.37,0.66,0.85,1.51,Manny Patterson,2546,Southeast Missouri State Redhawks,1068.52
+4433182,-0.14,1.52,1.38,-0.1,1.67,1.5699999999999998,Adrian Baldwin Jr.,2670,VCU Rams,1286.92
+4397228,-0.14,1.52,1.38,-0.11,1.55,1.44,KeShawn Curry,2670,VCU Rams,1286.92
+4397066,0.64,0.73,1.37,0.9,0.79,1.69,Kendric Davis,2567,SMU Mustangs,1151.04
+4397199,0.55,0.82,1.37,0.62,0.91,1.53,Fred Thatch Jr.,139,Saint Louis Billikens,1233.44
+4703008,0.54,0.82,1.3599999999999999,0.44,0.84,1.28,Berrick JeanLouis,314,Iona Gaels,1188.88
+4702382,0.89,0.47,1.3599999999999999,0.94,0.48,1.42,Tristan da Silva,38,Colorado Buffaloes,1374.32
+4592706,0.11,1.25,1.36,-0.06,1.27,1.21,Yvan Ouedraogo,2253,Grand Canyon Lopes,1274.12
+4431826,0.11,1.25,1.36,0.25,1.31,1.56,Jovan Blacksher Jr.,2253,Grand Canyon Lopes,1274.12
+4398356,0.11,1.25,1.36,0.06,1.27,1.33,Gabe McGlothan,2253,Grand Canyon Lopes,1274.12
+4592413,0.11,1.25,1.36,0.04,1.26,1.3,Sean Miller-Moore,2253,Grand Canyon Lopes,1274.12
+4397379,1.2,0.15,1.3499999999999999,1.33,0.21,1.54,Maizen Fausett,253,Southern Utah Thunderbirds,1324.68
+4278751,0.24,1.1,1.34,0.1,1.07,1.1700000000000002,Jordan Roberts,299,Long Beach State Beach,1093.4
+4703243,1.11,0.22,1.33,1.27,0.24,1.51,Jalen Finch,55,Jacksonville State Gamecocks,978.36
+4609661,0.91,0.43,1.34,1.18,0.63,1.81,Mikal Dawson,2006,Akron Zips,565.6800000000001
+4397018,0.96,0.37,1.33,1.12,0.41,1.53,Ochai Agbaji,2305,Kansas Jayhawks,1376.0
+4280260,0.85,0.48,1.33,1.17,0.55,1.72,Michael Ertel,5,UAB Blazers,624.56
+4398304,-0.16,1.49,1.33,-0.15,1.46,1.31,Kevin Obanor,2641,Texas Tech Red Raiders,1398.4
+4066678,-0.16,1.49,1.33,0.02,1.46,1.48,Bryson Williams,2641,Texas Tech Red Raiders,1398.4
+4896614,-0.01,1.32,1.31,-0.13,1.37,1.2400000000000002,Jayden Nunn,2670,VCU Rams,1227.04
+4601284,0.35,0.96,1.31,0.33,0.9,1.23,Latrell Jossell,2617,Stephen F. Austin Lumberjacks,1332.4
+4279493,0.35,0.96,1.31,0.58,0.98,1.56,Gavin Kensmil,2617,Stephen F. Austin Lumberjacks,1332.4
+4278450,0.35,0.96,1.31,0.28,0.94,1.22,David Kachelries,2617,Stephen F. Austin Lumberjacks,1332.4
+4594155,0.35,0.96,1.31,0.4,1.08,1.48,Calvin Solomon,2617,Stephen F. Austin Lumberjacks,1332.4
+4279553,0.45,0.86,1.31,0.6,1.0,1.6,Chris Knight,2350,Loyola Chicago Ramblers,865.04
+4702155,1.22,0.09,1.31,1.2,0.1,1.3,Jason Spurgin,253,Southern Utah Thunderbirds,1459.3600000000001
+4431903,0.21,1.1,1.31,0.35,1.13,1.48,Jalen Benjamin,116,Mount St. Mary's Mountaineers,1003.6
+4593386,-0.03,1.31,1.28,0.03,1.33,1.36,Daryl Banks III,2612,Saint Peter's Peacocks,1307.32
+4703979,1.17,0.1,1.27,1.13,0.08,1.21,Lu'Cye Patterson,2623,Missouri State Bears,1259.88
+4396012,0.34,0.93,1.27,0.32,0.94,1.26,Will McNair Jr.,166,New Mexico State Aggies,787.12
+4433136,0.35,0.92,1.27,0.54,1.25,1.79,Walker Kessler,2,Auburn Tigers,1368.2
+4432639,0.35,0.92,1.27,0.54,1.0,1.54,Jabari Smith Jr.,2,Auburn Tigers,1368.2
+4432363,0.35,0.92,1.27,0.33,0.95,1.28,K.D. Johnson,2,Auburn Tigers,1368.2
+4432847,0.19,1.07,1.26,0.28,1.11,1.3900000000000001,Terrence Shannon Jr.,2641,Texas Tech Red Raiders,739.88
+4278350,1.5,-0.23,1.27,1.44,-0.21,1.23,Luke Frampton,98,Western Kentucky Hilltoppers,1153.64
+4397104,0.57,0.69,1.2599999999999998,0.6,0.79,1.3900000000000001,Miles Norris,2540,UC Santa Barbara Gauchos,1127.68
+4397644,0.57,0.69,1.2599999999999998,0.72,0.79,1.51,Amadou Sow,2540,UC Santa Barbara Gauchos,1127.68
+4593449,0.42,0.84,1.26,0.3,0.81,1.11,Miles Brown,195,Ohio Bobcats,1357.8
+4395667,0.62,0.63,1.25,0.72,0.66,1.38,Dane Goodwin,87,Notre Dame Fighting Irish,1316.04
+4066799,0.05,1.2,1.25,0.23,1.47,1.7,Brison Gresham,2640,Texas Southern Tigers,847.8
+4432957,0.49,0.77,1.26,0.56,0.88,1.44,Yuri Collins,139,Saint Louis Billikens,1433.24
+4897669,0.38,0.87,1.25,0.55,0.93,1.48,Joel Murray,299,Long Beach State Beach,1319.76
+4277940,0.69,0.55,1.24,0.51,0.63,1.1400000000000001,Da'Monte Williams,356,Illinois Fighting Illini,1407.2
+4277936,0.69,0.55,1.24,0.76,0.59,1.35,Trent Frazier,356,Illinois Fighting Illini,1407.2
+4592434,0.69,0.55,1.24,0.75,0.5,1.25,Alfonso Plummer,356,Illinois Fighting Illini,1407.2
+4432680,0.27,0.97,1.24,0.12,1.0,1.12,Brandon Huntley-Hatfield,2633,Tennessee Volunteers,735.24
+4593034,0.71,0.52,1.23,0.96,0.69,1.65,Alex Morales,2681,Wagner Seahawks,1310.84
+4289551,0.71,0.52,1.23,0.78,0.51,1.29,Raekwon Rogers,2681,Wagner Seahawks,1310.84
+4703199,0.71,0.52,1.23,0.67,0.49,1.1600000000000001,DeLonnie Hunt,2681,Wagner Seahawks,1310.84
+4280119,0.48,0.75,1.23,0.45,0.71,1.16,Tray Hollowell,2413,Morehead State Eagles,1122.04
+4397224,0.74,0.49,1.23,0.91,0.68,1.59,Osun Osunniyi,179,St. Bonaventure Bonnies,1116.96
+4279518,0.65,0.57,1.22,0.79,0.67,1.46,Rocky Kreuser,2449,North Dakota State Bison,1464.4
+4279514,0.65,0.57,1.22,0.68,0.66,1.34,Tyree Eady,2449,North Dakota State Bison,1464.4
+4398214,0.65,0.57,1.22,0.53,0.54,1.07,Jarius Cook,2449,North Dakota State Bison,1464.4
+4431767,0.92,0.3,1.22,0.96,0.39,1.35,Christian Braun,2305,Kansas Jayhawks,1375.88
+4431983,0.92,0.3,1.22,0.78,0.31,1.09,Dajuan Harris Jr.,2305,Kansas Jayhawks,1375.88
+4592858,0.29,0.93,1.22,0.38,0.99,1.37,Cobe Williams,2348,Louisiana Tech Bulldogs,1430.0
+4585610,0.29,0.93,1.22,0.52,1.14,1.66,Kenneth Lofton Jr.,2348,Louisiana Tech Bulldogs,1430.0
+4593756,0.29,0.93,1.22,0.38,0.98,1.3599999999999999,Keaston Willis,2348,Louisiana Tech Bulldogs,1430.0
+4279005,0.29,0.93,1.22,0.41,0.98,1.39,Amorie Archibald,2348,Louisiana Tech Bulldogs,1430.0
+4279006,0.29,0.93,1.22,0.07,0.89,0.96,Exavian Christon,2348,Louisiana Tech Bulldogs,1430.0
+4432029,0.34,0.88,1.22,0.35,0.94,1.29,Eli Lawrence,2393,Middle Tennessee Blue Raiders,1355.64
+4067165,0.34,0.88,1.22,0.38,0.97,1.35,Deandre Dishman,2393,Middle Tennessee Blue Raiders,1355.64
+4279080,0.34,0.88,1.22,0.36,0.97,1.33,Donovan Sims,2393,Middle Tennessee Blue Raiders,1355.64
+4395617,1.07,0.15,1.22,1.1,0.18,1.28,Jairus Hamilton,98,Western Kentucky Hilltoppers,941.6
+4277987,0.59,0.62,1.21,0.75,0.91,1.6600000000000001,Myles Johnson,26,UCLA Bruins,519.8
+4611534,0.46,0.75,1.21,0.5,0.86,1.3599999999999999,Jadon Jones,299,Long Beach State Beach,1387.8
+4066475,0.46,0.75,1.21,0.55,0.73,1.28,Colin Slater,299,Long Beach State Beach,1387.8
+4278255,0.58,0.63,1.21,0.69,0.64,1.33,Tobias Cameron,2000,Abilene Christian Wildcats,986.6
+4433144,0.64,0.56,1.2000000000000002,0.71,0.61,1.3199999999999998,Caleb Love,153,North Carolina Tar Heels,1458.32
+4432208,0.65,0.54,1.19,0.51,0.55,1.06,Caleb Lohner,252,BYU Cougars,902.24
+4396591,0.5,0.68,1.1800000000000002,0.44,0.63,1.07,RJ Eytle-Rock,328,Utah State Aggies,1127.6000000000001
+4610175,-0.05,1.23,1.18,-0.07,1.23,1.16,Junior Madut,62,Hawai'i Rainbow Warriors,1208.52
+4279566,-0.05,1.23,1.18,0.02,1.29,1.31,Jerome Desrosiers,62,Hawai'i Rainbow Warriors,1208.52
+4703680,-0.21,1.39,1.18,-0.26,1.41,1.15,Javion May,2534,Sam Houston Bearkats,1045.8
+4600663,1.38,-0.2,1.18,1.61,-0.07,1.54,Zach Edey,2509,Purdue Boilermakers,1455.8
+4592677,0.25,0.93,1.1800000000000002,0.45,1.04,1.49,Rienk Mast,71,Bradley Braves,1255.72
+4897444,0.25,0.93,1.1800000000000002,0.29,1.07,1.36,Terry Roberts,71,Bradley Braves,1255.72
+4597863,0.64,0.54,1.1800000000000002,0.61,0.57,1.18,Ryan Langborg,163,Princeton Tigers,965.96
+4683749,0.48,0.69,1.17,0.6,0.77,1.37,TyTy Washington Jr.,96,Kentucky Wildcats,1039.12
+4278119,0.1,1.07,1.1700000000000002,0.35,1.18,1.5299999999999998,Savion Flagg,2534,Sam Houston Bearkats,1297.4
+4594132,0.1,1.07,1.1700000000000002,0.04,1.02,1.06,Demarkus Lampley,2534,Sam Houston Bearkats,1297.4
+4703681,0.1,1.07,1.1700000000000002,0.02,1.08,1.1,Tristan Ikpe,2534,Sam Houston Bearkats,1297.4
+4592869,-0.1,1.27,1.17,-0.16,1.33,1.1700000000000002,Jalen Jackson,357,Texas A&M-Corpus Christi Islanders,915.76
+4067403,0.32,0.85,1.17,0.3,0.78,1.08,Justin Roberts,315,Niagara Purple Eagles,656.84
+4702646,1.39,-0.22,1.17,1.36,-0.23,1.1300000000000001,Boogie Anderson,233,South Dakota Coyotes,1128.28
+4593107,0.27,0.89,1.1600000000000001,0.25,0.89,1.1400000000000001,Emmanuel Bandoumel,2567,SMU Mustangs,1222.0
+4398309,1.57,-0.41,1.1600000000000001,1.4,-0.37,1.0299999999999998,Francis Lacis,198,Oral Roberts Golden Eagles,1443.04
+4702657,1.57,-0.41,1.1600000000000001,1.47,-0.36,1.1099999999999999,Kareem Thompson,198,Oral Roberts Golden Eagles,1443.04
+4432932,1.57,-0.41,1.1600000000000001,1.89,-0.38,1.5099999999999998,Max Abmas,198,Oral Roberts Golden Eagles,1443.04
+4067250,0.54,0.62,1.1600000000000001,0.5,0.63,1.13,Rodney Chatman,238,Vanderbilt Commodores,701.56
+4066353,0.69,0.46,1.15,0.71,0.52,1.23,Dallas Walton,154,Wake Forest Demon Deacons,1476.92
+4592691,0.69,0.46,1.15,0.95,0.64,1.5899999999999999,Jake LaRavia,154,Wake Forest Demon Deacons,1476.92
+4592216,0.69,0.46,1.15,0.89,0.57,1.46,Alondes Williams,154,Wake Forest Demon Deacons,1476.92
+4898164,0.32,0.83,1.15,0.33,0.93,1.26,Sam Vinson,94,Northern Kentucky Norse,1471.76
+4702714,0.32,0.83,1.15,0.54,0.89,1.4300000000000002,Marques Warrick,94,Northern Kentucky Norse,1471.76
+4594117,-0.02,1.17,1.15,-0.23,1.14,0.9099999999999999,Kirk Parker,2582,Southern Jaguars,924.76
+4702013,-0.06,1.2,1.14,-0.14,1.23,1.0899999999999999,Emeka Udenyi,2547,Seattle U Redhawks,1377.56
+4702011,-0.06,1.2,1.14,0.21,1.31,1.52,Darrion Trammell,2547,Seattle U Redhawks,1377.56
+4397285,-0.06,1.2,1.14,-0.02,1.13,1.1099999999999999,Cameron Tyson,2547,Seattle U Redhawks,1377.56
+4432836,1.6,-0.45,1.1500000000000001,1.56,-0.41,1.1500000000000001,Patrick McCaffery,2294,Iowa Hawkeyes,1538.52
+4278657,-0.07,1.21,1.14,0.16,1.23,1.39,Holland Woods,2253,Grand Canyon Lopes,1207.0
+4397702,0.41,0.73,1.14,0.64,0.77,1.4100000000000001,Mason Harrell,326,Texas State Bobcats,954.72
+4280276,0.41,0.73,1.14,0.48,0.79,1.27,Shelby Adams,326,Texas State Bobcats,954.72
+4432823,0.14,1.0,1.1400000000000001,0.19,1.23,1.42,Jaylin Williams,8,Arkansas Razorbacks,1429.0
+4897327,0.58,0.56,1.1400000000000001,0.79,0.72,1.51,Manny Littles,2447,Nicholls Colonels,593.44
+4278220,-0.1,1.24,1.14,0.02,1.36,1.3800000000000001,Eliel Nsoseme,2247,Georgia State Panthers,1069.12
+4432117,0.78,0.36,1.1400000000000001,0.99,0.36,1.35,Isaiah Stevens,36,Colorado State Rams,1276.96
+4397269,0.78,0.36,1.1400000000000001,0.65,0.39,1.04,Kendle Moore,36,Colorado State Rams,1276.96
+4593041,0.78,0.36,1.1400000000000001,1.16,0.52,1.68,David Roddy,36,Colorado State Rams,1276.96
+4278623,-0.35,1.48,1.13,-0.16,1.65,1.49,Joirdon Karl Nicholas,2640,Texas Southern Tigers,830.68
+4397193,0.37,0.75,1.12,0.26,0.82,1.08,Andre Gustavson,257,Richmond Spiders,1183.6
+4278884,0.78,0.35,1.13,0.71,0.39,1.1,Keegan McDowell,2335,Liberty Flames,1132.6
+4397475,1.04,0.08,1.12,1.38,0.15,1.5299999999999998,AJ Green,2460,Northern Iowa Panthers,1286.48
+4397000,1.08,0.04,1.12,1.09,0.05,1.1400000000000001,Tevian Jones,253,Southern Utah Thunderbirds,1254.52
+4703529,0.02,1.07,1.09,-0.1,1.07,0.9700000000000001,Oumar Diahame,2612,Saint Peter's Peacocks,1173.4
+4397521,0.81,0.28,1.09,0.74,0.29,1.03,Calvin Wishart,2540,UC Santa Barbara Gauchos,866.2
+4397346,0.62,0.46,1.08,0.49,0.55,1.04,Tremell Murphy,2181,Drake Bulldogs,1333.4
+4279754,0.62,0.46,1.08,0.64,0.43,1.07,Roman Penn,2181,Drake Bulldogs,1333.4
+4397820,0.85,0.23,1.08,0.96,0.28,1.24,Ronaldo Segu,2084,Buffalo Bulls,1422.8
+4278495,0.85,0.23,1.08,0.8,0.21,1.01,Maceo Jack,2084,Buffalo Bulls,1422.8
+4593409,0.85,0.23,1.08,0.88,0.29,1.17,David Skogman,2084,Buffalo Bulls,1422.8
+4397821,0.85,0.23,1.08,1.07,0.37,1.44,Jeenathan Williams,2084,Buffalo Bulls,1422.8
+4704109,0.38,0.69,1.0699999999999998,0.66,0.73,1.3900000000000001,Justin Wright,2428,North Carolina Central Eagles,925.16
+4398180,1.25,-0.18,1.07,1.3,-0.2,1.1,Daivien Williamson,154,Wake Forest Demon Deacons,1256.24
+4066345,1.37,-0.3,1.07,1.47,-0.25,1.22,Charlie Moore,2390,Miami Hurricanes,1466.08
+4066310,1.37,-0.3,1.07,1.52,-0.19,1.33,Kameron McGusty,2390,Miami Hurricanes,1466.08
+4432496,0.21,0.86,1.07,-0.01,0.79,0.78,Akeem Odusipe,2309,Kent State Golden Flashes,849.92
+4702159,0.37,0.69,1.06,0.5,0.98,1.48,Dillon Jones,2692,Weber State Wildcats,1465.32
+4279699,0.99,0.07,1.06,1.14,0.12,1.2599999999999998,Paul Atkinson Jr.,87,Notre Dame Fighting Irish,1309.08
+4432008,0.4,0.66,1.06,0.57,0.64,1.21,Gibson Jimerson,139,Saint Louis Billikens,1366.24
+4397105,0.4,0.66,1.06,0.52,0.79,1.31,Francis Okoro,139,Saint Louis Billikens,1366.24
+4067338,0.82,0.23,1.05,0.79,0.22,1.01,Nate Johnson,2752,Xavier Musketeers,1009.36
+4431727,1.37,-0.32,1.05,1.44,-0.28,1.16,Isaiah Wong,2390,Miami Hurricanes,1403.3600000000001
+4397726,0.67,0.38,1.05,0.77,0.47,1.24,Tavin Lovan,5,UAB Blazers,903.68
+4433254,0.66,0.39,1.05,0.62,0.41,1.03,Kendall Brown,239,Baylor Bears,1272.04
+4395692,0.66,0.39,1.05,0.63,0.36,0.99,Flo Thamba,239,Baylor Bears,1272.04
+4395697,0.66,0.39,1.05,0.62,0.46,1.08,Matthew Mayer,239,Baylor Bears,1272.04
+4396647,0.24,0.81,1.05,0.31,0.95,1.26,Madut Akec,2174,Detroit Mercy Titans,717.24
+4397655,0.92,0.13,1.05,0.92,0.21,1.1300000000000001,Cory Hightower,2737,Winthrop Eagles,1022.9200000000001
+4277985,1.36,-0.32,1.04,1.34,-0.3,1.04,Sasha Stefanovic,2509,Purdue Boilermakers,1521.36
+4592866,1.05,-0.0,1.05,0.91,-0.07,0.8400000000000001,Tyler Millin,2393,Middle Tennessee Blue Raiders,1092.8400000000001
+4703889,0.06,0.98,1.04,-0.08,0.97,0.89,Jayson Kent,71,Bradley Braves,919.4
+4431725,0.27,0.77,1.04,0.34,0.74,1.08,Sahvir Wheeler,96,Kentucky Wildcats,1045.4
+4432514,-0.11,1.14,1.0299999999999998,-0.07,1.29,1.22,Jahlil White,218,Temple Owls,1010.6
+4067390,0.18,0.84,1.02,0.46,0.91,1.37,Marcus Weathers,2567,SMU Mustangs,954.8
+4067391,0.18,0.84,1.02,0.3,1.08,1.3800000000000001,Michael Weathers,2567,SMU Mustangs,954.8
+4431749,0.92,0.11,1.03,0.77,0.05,0.8200000000000001,Isaiah Thompson,2509,Purdue Boilermakers,680.88
+4714246,0.42,0.59,1.01,0.32,0.58,0.8999999999999999,Jordan Nesbitt,139,Saint Louis Billikens,1292.44
+4067456,0.51,0.51,1.02,0.44,0.55,0.99,Everett Winchester,2226,Florida Atlantic Owls,1157.92
+4278407,0.65,0.36,1.01,0.71,0.33,1.04,Elijah Joiner,314,Iona Gaels,1244.56
+4278231,0.49,0.52,1.01,0.46,0.62,1.08,Isaiah Whaley,41,UConn Huskies,1309.64
+4592730,0.94,0.07,1.01,0.91,0.15,1.06,Donovan Clay,2623,Missouri State Bears,1337.52
+4592711,0.94,0.07,1.01,1.22,0.2,1.42,Gaige Prim,2623,Missouri State Bears,1337.52
+4432879,0.94,0.07,1.01,1.26,0.21,1.47,Isiaih Mosley,2623,Missouri State Bears,1337.52
+4278670,1.21,-0.2,1.01,1.14,-0.26,0.8799999999999999,Dre Marin,253,Southern Utah Thunderbirds,1251.44
+4433009,-0.02,1.02,1.0,-0.03,1.04,1.01,Justin Hohn,300,UC Irvine Anteaters,968.04
+4279050,0.74,0.25,0.99,1.1,0.27,1.37,LJ Thorpe,2427,UNC Asheville Bulldogs,850.4
+4700823,0.25,0.74,0.99,0.32,0.83,1.15,Alec Pfriem,91,Bellarmine Knights,568.64
+4593040,0.54,0.45,0.99,0.32,0.41,0.73,Dischon Thomas,36,Colorado State Rams,1216.6799999999998
+4593965,-0.07,1.06,0.99,-0.1,1.06,0.9600000000000001,Zion Williams,2241,Gardner-Webb Runnin' Bulldogs,994.12
+4277912,0.67,0.32,0.99,0.62,0.39,1.01,Brandon Huffman,55,Jacksonville State Gamecocks,1052.2
+4593671,0.67,0.32,0.99,0.7,0.33,1.03,Kayne Henry,55,Jacksonville State Gamecocks,1052.2
+4278993,0.67,0.32,0.99,0.69,0.39,1.08,Jalen Gibbs,55,Jacksonville State Gamecocks,1052.2
+4067814,0.67,0.32,0.99,0.88,0.46,1.34,Darian Adams,55,Jacksonville State Gamecocks,1052.2
+4594120,-0.19,1.17,0.98,-0.11,1.29,1.18,Bryson Etienne,2640,Texas Southern Tigers,968.92
+4398281,0.13,0.85,0.98,-0.07,0.84,0.77,Zach Nutall,2567,SMU Mustangs,1085.68
+4431714,0.89,0.09,0.98,1.04,0.19,1.23,Jalen Wilson,2305,Kansas Jayhawks,1305.6
+4397421,1.2,-0.23,0.97,1.3,-0.09,1.21,John Knight III,253,Southern Utah Thunderbirds,1322.72
+4683833,0.91,0.06,0.97,0.93,0.24,1.17,Wade Taylor IV,245,Texas A&M Aggies,597.6
+4703168,-0.19,1.16,0.97,-0.31,1.08,0.77,Deandre Thomas,116,Mount St. Mary's Mountaineers,1069.1200000000001
+4292484,0.58,0.39,0.97,0.67,0.47,1.1400000000000001,Silvio De Sousa,236,Chattanooga Mocs,787.24
+4397080,0.01,0.96,0.97,-0.02,1.04,1.02,Kamaka Hepa,62,Hawai'i Rainbow Warriors,1147.04
+4897696,1.06,-0.09,0.9700000000000001,1.02,0.16,1.18,Jamarion Sharp,98,Western Kentucky Hilltoppers,1221.48
+4574710,1.06,-0.09,0.9700000000000001,1.29,-0.05,1.24,Dayvion McKnight,98,Western Kentucky Hilltoppers,1221.48
+3911625,1.06,-0.09,0.9700000000000001,1.15,-0.06,1.0899999999999999,Camron Justice,98,Western Kentucky Hilltoppers,1221.48
+4406489,-0.57,1.52,0.9500000000000001,-0.61,1.62,1.0100000000000002,Adonis Arms,2641,Texas Tech Red Raiders,1181.28
+4593407,0.42,0.53,0.95,0.5,0.69,1.19,Devante Carter,2447,Nicholls Colonels,1148.2
+4279789,0.76,0.19,0.95,0.95,0.16,1.1099999999999999,R.J. Cole,41,UConn Huskies,1381.92
+4397179,0.76,0.19,0.95,0.89,0.27,1.1600000000000001,Tyrese Martin,41,UConn Huskies,1381.92
+4837238,0.48,0.47,0.95,0.61,0.51,1.12,Tucker DeVries,2181,Drake Bulldogs,1270.8
+4396001,-0.5,1.45,0.95,-0.55,1.44,0.8899999999999999,Riley Grigsby,2547,Seattle U Redhawks,1308.1200000000001
+4702656,0.6,0.34,0.94,0.78,0.5,1.28,Alijah Martin,2226,Florida Atlantic Owls,1294.12
+4592701,0.6,0.34,0.94,0.58,0.36,0.94,Bryan Greenlee,2226,Florida Atlantic Owls,1294.12
+4397485,0.6,0.34,0.94,0.7,0.39,1.0899999999999999,Michael Forrest,2226,Florida Atlantic Owls,1294.12
+4702724,0.68,0.26,0.9400000000000001,0.82,0.36,1.18,Jalen Moore,2473,Oakland Golden Grizzlies,1423.24
+4278572,0.68,0.26,0.9400000000000001,0.93,0.38,1.31,Jamal Cain,2473,Oakland Golden Grizzlies,1423.24
+4593930,-0.17,1.11,0.9400000000000001,-0.27,1.11,0.8400000000000001,Desmond Williams,2653,Troy Trojans,981.2
+4432874,0.07,0.87,0.94,-0.09,0.84,0.75,Allen Flanigan,2,Auburn Tigers,1222.4
+4431753,1.49,-0.55,0.94,1.42,-0.53,0.8899999999999999,Mason Gillis,2509,Purdue Boilermakers,1382.04
+4397654,0.45,0.49,0.94,0.57,0.49,1.06,Adam Flagler,239,Baylor Bears,1137.28
+4702023,0.99,-0.06,0.9299999999999999,1.15,0.11,1.26,Adama Sanogo,41,UConn Huskies,1248.28
+4277982,0.79,0.14,0.93,0.96,0.24,1.2,Aaron Wheeler,2599,St. John's Red Storm,1106.52
+4397535,-0.24,1.16,0.9199999999999999,-0.28,1.19,0.9099999999999999,Justin Roberts,2247,Georgia State Panthers,1135.64
+4280167,-0.24,1.16,0.9199999999999999,-0.12,1.25,1.13,Kane Williams,2247,Georgia State Panthers,1135.64
+4432122,1.07,-0.14,0.93,1.17,-0.0,1.17,Evan Taylor,2329,Lehigh Mountain Hawks,1274.16
+4703551,0.11,0.82,0.9299999999999999,0.18,1.02,1.2,Malique Jacobs,2309,Kent State Golden Flashes,1360.76
+4279697,0.07,0.86,0.9299999999999999,0.21,0.85,1.06,Azar Swain,43,Yale Bulldogs,1104.32
+4898246,0.07,0.86,0.9299999999999999,0.15,0.89,1.04,Matt Knowling,43,Yale Bulldogs,1104.32
+4279696,0.07,0.86,0.9299999999999999,0.12,0.86,0.98,Jalen Gabbidon,43,Yale Bulldogs,1104.32
+4432645,1.65,-0.72,0.9299999999999999,1.81,-0.65,1.1600000000000001,Trevor Keels,150,Duke Blue Devils,996.08
+4277954,0.47,0.45,0.9199999999999999,0.52,0.51,1.03,Darryl Morsell,269,Marquette Golden Eagles,1341.8
+4397976,0.18,0.74,0.9199999999999999,0.19,0.75,0.94,Damian Chong Qui,2870,Purdue Fort Wayne Mastodons,1595.4
+4279863,0.18,0.74,0.9199999999999999,0.18,0.77,0.95,Bobby Planutis,2870,Purdue Fort Wayne Mastodons,1595.4
+4278735,0.18,0.74,0.9199999999999999,0.23,0.86,1.09,Jalon Pipkins,2870,Purdue Fort Wayne Mastodons,1595.4
+4398080,0.18,0.74,0.9199999999999999,0.35,0.94,1.29,Jarred Godfrey,2870,Purdue Fort Wayne Mastodons,1595.4
+4432190,0.67,0.25,0.92,0.61,0.34,0.95,Andre Jackson Jr.,41,UConn Huskies,1316.44
+4067190,0.47,0.44,0.9099999999999999,0.51,0.47,0.98,Jalen Dupree,2634,Tennessee State Tigers,552.44
+4433277,0.97,-0.06,0.9099999999999999,0.69,-0.15,0.5399999999999999,Manny Obaseki,245,Texas A&M Aggies,613.36
+4897714,0.32,0.59,0.9099999999999999,0.35,0.62,0.97,Trazarien White,350,UNC Wilmington Seahawks,985.52
+4066460,1.26,-0.35,0.91,1.37,-0.38,0.9900000000000001,Keon Clergeot,2545,SE Louisiana Lions,1310.76
+4700818,0.49,0.41,0.8999999999999999,0.51,0.46,0.97,Vladislav Goldin,2226,Florida Atlantic Owls,1221.36
+4397732,0.91,-0.01,0.9,1.31,0.03,1.34,Antoine Davis,2174,Detroit Mercy Titans,1217.88
+4397740,0.91,-0.01,0.9,0.76,-0.01,0.75,Willy Isiani,2174,Detroit Mercy Titans,1217.88
+4279167,0.98,-0.08,0.9,0.81,-0.09,0.7200000000000001,Tywhon Pickford,2460,Northern Iowa Panthers,1361.76
+4703912,0.98,-0.08,0.9,0.91,-0.01,0.9,Nate Heise,2460,Northern Iowa Panthers,1361.76
+4280203,0.98,-0.08,0.9,0.96,-0.03,0.9299999999999999,Trae Berhow,2460,Northern Iowa Panthers,1361.76
+4433268,0.42,0.48,0.8999999999999999,0.57,0.59,1.16,Trey Alexander,156,Creighton Bluejays,755.12
+4066775,0.8,0.1,0.9,1.2,0.36,1.56,Arkel Lamar,140,Kansas City Roos,675.72
+4279162,0.17,0.72,0.89,0.26,0.76,1.02,Brandon Horvath,328,Utah State Aggies,1318.72
+4278720,0.17,0.72,0.89,0.35,0.94,1.29,Justin Bean,328,Utah State Aggies,1318.72
+4431868,-0.09,0.98,0.89,-0.08,1.06,0.9800000000000001,Bernardo da Silva,62,Hawai'i Rainbow Warriors,1151.08
+4432934,1.04,-0.17,0.87,0.99,-0.14,0.85,Nahiem Alleyne,259,Virginia Tech Hokies,1492.56
+4280118,1.04,-0.17,0.87,1.01,-0.19,0.8200000000000001,Storm Murphy,259,Virginia Tech Hokies,1492.56
+4280120,1.04,-0.17,0.87,1.38,-0.03,1.3499999999999999,Keve Aluma,259,Virginia Tech Hokies,1492.56
+4278693,1.04,-0.17,0.87,1.18,0.0,1.18,Justyn Mutts,259,Virginia Tech Hokies,1492.56
+4432954,1.04,-0.17,0.87,1.06,-0.09,0.9700000000000001,Hunter Cattoor,259,Virginia Tech Hokies,1492.56
+4397392,-0.04,0.91,0.87,-0.07,0.9,0.8300000000000001,Tim Fuller,3084,Utah Valley Wolverines,1201.76
+4702703,0.76,0.11,0.87,0.82,0.21,1.03,Noah Waterman,2174,Detroit Mercy Titans,890.36
+4597790,0.8,0.07,0.8700000000000001,0.77,0.08,0.85,Ebby Asamoah,48,Delaware Blue Hens,1277.92
+4594254,0.08,0.78,0.86,0.03,0.91,0.9400000000000001,Mykel Derring,2771,Merrimack Warriors,529.6800000000001
+4593139,-0.45,1.31,0.8600000000000001,-0.41,1.38,0.97,Tyler Nelson,2426,Navy Midshipmen,1290.96
+4433132,-0.45,1.31,0.8600000000000001,-0.61,1.31,0.7000000000000001,Sean Yoder,2426,Navy Midshipmen,1290.96
+4593010,0.19,0.67,0.8600000000000001,0.14,0.64,0.78,Tray Jackson,2550,Seton Hall Pirates,1123.8400000000001
+4432401,0.38,0.48,0.86,0.34,0.51,0.8500000000000001,Zed Key,194,Ohio State Buckeyes,1034.8
+4398213,0.59,0.26,0.85,0.83,0.38,1.21,Sam Griesel,2449,North Dakota State Bison,1396.8
+4396807,0.07,0.78,0.8500000000000001,0.33,0.88,1.21,Sincere Carry,2309,Kent State Golden Flashes,1480.68
+4397109,0.4,0.45,0.8500000000000001,0.37,0.4,0.77,A.J. Reeves,2507,Providence Friars,884.32
+4279871,-0.33,1.17,0.8399999999999999,-0.23,1.29,1.06,Nana Opoku,116,Mount St. Mary's Mountaineers,1137.96
+4396837,-0.33,1.17,0.8399999999999999,-0.29,1.22,0.9299999999999999,Mezie Offurum,116,Mount St. Mary's Mountaineers,1137.96
+4395684,0.58,0.26,0.84,0.74,0.38,1.12,Landers Nolley II,235,Memphis Tigers,749.24
+4278131,0.02,0.82,0.84,0.01,0.92,0.93,Emmanuel Akot,68,Boise State Broncos,956.4000000000001
+4398147,-0.59,1.43,0.84,-0.46,1.48,1.02,John Carter Jr.,2426,Navy Midshipmen,1349.24
+4592747,0.4,0.42,0.8200000000000001,0.63,0.65,1.28,Ja'von Franklin,6,South Alabama Jaguars,978.44
+4593043,0.18,0.65,0.8300000000000001,0.31,0.64,0.95,John Tonje,36,Colorado State Rams,622.4399999999999
+4278117,0.18,0.64,0.8200000000000001,0.3,0.59,0.8899999999999999,Jay Jay Chandler,6,South Alabama Jaguars,983.88
+4592703,0.84,-0.02,0.82,0.98,0.07,1.05,Kevin Cross,2655,Tulane Green Wave,1305.8400000000001
+4602025,0.84,-0.02,0.82,0.82,0.11,0.9299999999999999,Sion James,2655,Tulane Green Wave,1305.8400000000001
+4431722,0.84,-0.02,0.82,1.0,0.09,1.09,Jaylen Forbes,2655,Tulane Green Wave,1305.8400000000001
+4431793,0.23,0.59,0.82,0.59,0.72,1.31,Drew Pember,2427,UNC Asheville Bulldogs,1005.28
+4593106,0.55,0.26,0.81,0.63,0.24,0.87,Boogie Ellis,30,USC Trojans,1386.48
+4592829,0.23,0.58,0.8099999999999999,0.89,0.83,1.72,Quenton Jackson,245,Texas A&M Aggies,675.64
+4703885,0.48,0.33,0.81,0.62,0.38,1.0,Max Klesmit,2747,Wofford Terriers,1145.3600000000001
+4433566,0.75,0.06,0.81,0.98,0.07,1.05,Jalen Cook,2655,Tulane Green Wave,1035.04
+4066357,0.57,0.23,0.7999999999999999,0.62,0.25,0.87,Te'Jon Lucas,252,BYU Cougars,1104.68
+4066258,0.54,0.26,0.8,0.51,0.28,0.79,Dontay Bassett,2692,Weber State Wildcats,1257.1200000000001
+4433177,0.79,0.01,0.8,0.76,0.11,0.87,Brandon Stroud,338,Kennesaw State Owls,923.0
+4898237,-0.01,0.81,0.8,-0.13,0.93,0.8,Bez Mbeng,43,Yale Bulldogs,1040.32
+4079701,0.54,0.25,0.79,0.57,0.35,0.9199999999999999,Sam Waardenburg,2390,Miami Hurricanes,1253.2
+4703205,0.46,0.32,0.78,0.41,0.4,0.81,Kyndall Davis,112358,Long Island University Sharks,1313.2
+4712863,0.12,0.66,0.78,0.14,0.75,0.89,Mouhamed Gueye,265,Washington State Cougars,1259.88
+4702068,0.37,0.41,0.78,0.16,0.35,0.51,Nate Martin,326,Texas State Bobcats,1018.88
+4593924,0.37,0.41,0.78,0.51,0.51,1.02,Caleb Asberry,326,Texas State Bobcats,1018.88
+4593923,0.37,0.41,0.78,0.4,0.58,0.98,Isiah Small,326,Texas State Bobcats,1018.88
+4397028,0.45,0.33,0.78,0.37,0.41,0.78,Kur Kuath,269,Marquette Golden Eagles,1410.28
+4432239,0.45,0.33,0.78,0.64,0.47,1.1099999999999999,Justin Lewis,269,Marquette Golden Eagles,1410.28
+4433225,0.45,0.33,0.78,0.4,0.36,0.76,Tyler Kolek,269,Marquette Golden Eagles,1410.28
+4702017,0.02,0.76,0.78,0.04,0.92,0.9600000000000001,Kobe Williamson,2547,Seattle U Redhawks,568.36
+4702609,0.18,0.59,0.77,0.15,0.58,0.73,Tyrell Roberts,265,Washington State Cougars,1390.04
+4279431,0.27,0.5,0.77,0.5,0.56,1.06,Jalen Adaway,179,St. Bonaventure Bonnies,1188.76
+4397221,0.27,0.5,0.77,0.29,0.57,0.8599999999999999,Dominick Welch,179,St. Bonaventure Bonnies,1188.76
+4397220,0.27,0.5,0.77,0.31,0.62,0.9299999999999999,Kyle Lofton,179,St. Bonaventure Bonnies,1188.76
+4701016,0.27,0.5,0.77,0.24,0.53,0.77,Jaren Holmes,179,St. Bonaventure Bonnies,1188.76
+4406975,0.51,0.26,0.77,0.39,0.16,0.55,Darrian Wilson,2296,Jackson State Tigers,689.32
+4396818,1.19,-0.42,0.77,1.42,-0.23,1.19,Jordan Miller,2390,Miami Hurricanes,1265.76
+4700826,1.2,-0.43,0.77,1.43,-0.32,1.1099999999999999,Dylan Penn,91,Bellarmine Knights,1181.32
+4700822,1.2,-0.43,0.77,1.2,-0.31,0.8899999999999999,Juston Betz,91,Bellarmine Knights,1181.32
+4700829,1.2,-0.43,0.77,1.5,-0.4,1.1,CJ Fleming,91,Bellarmine Knights,1181.32
+4897013,1.2,-0.43,0.77,1.04,-0.48,0.56,Curt Hopf,91,Bellarmine Knights,1181.32
+4702362,0.82,-0.06,0.76,0.83,-0.07,0.76,Le'Tre Darthard,3084,Utah Valley Wolverines,926.16
+4593903,-0.19,0.95,0.76,-0.16,1.07,0.91,Jalen Thomas,2247,Georgia State Panthers,867.0
+4280267,0.4,0.36,0.76,0.72,0.42,1.14,Hunter Maldonado,2751,Wyoming Cowboys,1319.8
+4703397,0.4,0.36,0.76,0.42,0.51,0.9299999999999999,Drake Jeffries,2751,Wyoming Cowboys,1319.8
+4398413,0.16,0.6,0.76,-0.06,0.61,0.55,Matt Herasme,2368,Marist Red Foxes,1272.16
+4278247,0.0,0.74,0.74,0.05,0.8,0.8500000000000001,Ra Kpedi,2870,Purdue Fort Wayne Mastodons,1502.2
+4599257,0.13,0.62,0.75,0.51,0.69,1.2,Ty Gordon,2447,Nicholls Colonels,735.36
+4593971,0.71,0.03,0.74,0.38,-0.09,0.29000000000000004,Sam Martin,140,Kansas City Roos,545.52
+4277986,0.28,0.46,0.74,0.39,0.52,0.91,Geo Baker,164,Rutgers Scarlet Knights,1229.24
+4590402,0.16,0.57,0.73,0.01,0.5,0.51,Jacob Hutson,2350,Loyola Chicago Ramblers,525.16
+4595400,0.76,-0.03,0.73,0.77,-0.02,0.75,Olivier-Maxence Prosper,269,Marquette Golden Eagles,1188.4
+4592954,1.38,-0.65,0.7299999999999999,1.2,-0.67,0.5299999999999999,Caleb Burgess,2275,Hofstra Pride,1047.56
+4703104,-0.31,1.04,0.73,-0.4,1.01,0.61,Myles Parker,2010,Alabama A&M Bulldogs,698.76
+4593021,0.44,0.29,0.73,0.52,0.42,0.94,Charles Manning Jr.,6,South Alabama Jaguars,977.84
+4593795,-0.06,0.79,0.73,0.07,0.77,0.8400000000000001,Noel Coleman,62,Hawai'i Rainbow Warriors,837.48
+4395998,0.42,0.31,0.73,0.37,0.37,0.74,Ian Burke,2502,Portland State Vikings,1300.2
+4897449,-0.04,0.77,0.73,0.04,0.87,0.91,Malevy Leons,71,Bradley Braves,1193.0
+4593447,0.48,0.25,0.73,0.29,0.2,0.49,Ben Roderick,195,Ohio Bobcats,1357.84
+4398257,1.32,-0.6,0.7200000000000001,1.8,-0.34,1.46,Jake Stephens,2678,VMI Keydets,1100.4
+4593385,1.17,-0.45,0.72,1.5,-0.29,1.21,Aaron Estrada,2275,Hofstra Pride,1330.72
+4896937,-0.04,0.76,0.72,-0.06,0.8,0.74,Jaden Ray,2534,Sam Houston Bearkats,1227.12
+4702065,-0.33,1.05,0.72,-0.12,1.08,0.9600000000000001,D'Maurian Williams,2241,Gardner-Webb Runnin' Bulldogs,1124.12
+4592662,-0.33,1.05,0.72,-0.4,1.09,0.6900000000000001,Kareem Reid,2241,Gardner-Webb Runnin' Bulldogs,1124.12
+4278296,0.1,0.61,0.71,0.13,0.71,0.84,Will Douglas,2504,Prairie View A&M Panthers,858.48
+4897300,0.04,0.67,0.7100000000000001,0.22,0.82,1.04,Isaac Mushila,357,Texas A&M-Corpus Christi Islanders,1362.64
+4703703,0.04,0.67,0.7100000000000001,-0.08,0.73,0.65,Simeon Fryer,357,Texas A&M-Corpus Christi Islanders,1362.64
+4703701,0.04,0.67,0.7100000000000001,-0.0,0.74,0.74,De'Lazarus Keys,357,Texas A&M-Corpus Christi Islanders,1362.64
+4593051,-0.04,0.75,0.71,0.07,0.87,0.94,Anthony Holland,278,Fresno State Bulldogs,1123.6
+4279052,0.32,0.39,0.71,0.31,0.49,0.8,Tajion Jones,2427,UNC Asheville Bulldogs,1176.88
+4397101,0.2,0.51,0.71,0.38,0.58,0.96,Will Richardson,2483,Oregon Ducks,1315.52
+4702721,0.73,-0.03,0.7,0.86,0.07,0.9299999999999999,Trey Townsend,2473,Oakland Golden Grizzlies,1358.56
+4432121,-0.54,1.24,0.7,-0.36,1.26,0.9,Lance Terry,2241,Gardner-Webb Runnin' Bulldogs,1192.52
+4396953,0.29,0.42,0.71,0.28,0.49,0.77,Xavier Pinson,99,LSU Tigers,981.36
+4592959,-0.17,0.87,0.7,-0.2,0.97,0.77,Austin Johnson,300,UC Irvine Anteaters,1032.04
+4397596,-0.17,0.87,0.7,-0.3,0.82,0.52,JC Butler,300,UC Irvine Anteaters,1032.04
+4279073,-0.17,0.87,0.7,-0.01,1.0,0.99,Collin Welp,300,UC Irvine Anteaters,1032.04
+4397342,0.12,0.57,0.69,0.04,0.58,0.62,Vincent Lee,2239,Cal State Fullerton Titans,1256.4
+4280171,0.12,0.57,0.69,0.27,0.68,0.9500000000000001,Damari Milstead,2239,Cal State Fullerton Titans,1256.4
+4279647,0.12,0.57,0.69,0.42,0.65,1.07,E.J. Anosike,2239,Cal State Fullerton Titans,1256.4
+4592709,0.76,-0.07,0.69,0.64,-0.08,0.56,JaMonta' Black,2623,Missouri State Bears,1266.8
+4593803,0.91,-0.22,0.6900000000000001,1.25,-0.15,1.1,Jalen Williams,2541,Santa Clara Broncos,1006.88
+4396957,0.91,-0.22,0.6900000000000001,0.72,-0.18,0.54,Parker Braun,2541,Santa Clara Broncos,1006.88
+4280250,0.91,-0.22,0.6900000000000001,1.17,-0.15,1.02,Josip Vrankic,2541,Santa Clara Broncos,1006.88
+4397751,0.91,-0.22,0.6900000000000001,0.97,-0.1,0.87,Keshawn Justice,2541,Santa Clara Broncos,1006.88
+4279237,0.91,-0.22,0.6900000000000001,0.98,-0.19,0.79,PJ Pipes,2541,Santa Clara Broncos,1006.88
+4592317,0.15,0.53,0.68,0.06,0.54,0.6000000000000001,Joel Soriano,2599,St. John's Red Storm,1392.48
+4398153,-0.39,1.07,0.68,-0.45,1.08,0.6300000000000001,Richard Njoku,2426,Navy Midshipmen,1286.68
+4397415,0.13,0.55,0.68,0.36,0.66,1.02,Adrian Delph,2026,Appalachian State Mountaineers,1284.24
+4280003,0.13,0.55,0.68,0.06,0.57,0.6299999999999999,James Lewis Jr.,2026,Appalachian State Mountaineers,1284.24
+4432904,0.13,0.55,0.68,0.23,0.63,0.86,Donovan Gregory,2026,Appalachian State Mountaineers,1284.24
+4066766,0.13,0.55,0.68,0.14,0.57,0.71,Michael Almonacy,2026,Appalachian State Mountaineers,1284.24
+4280018,0.08,0.6,0.6799999999999999,0.17,0.78,0.9500000000000001,Bo Hodges,2086,Butler Bulldogs,854.32
+4432180,1.02,-0.35,0.67,1.39,-0.23,1.16,Hunter Dickinson,130,Michigan Wolverines,1270.72
+4702484,0.18,0.48,0.6599999999999999,0.07,0.52,0.5900000000000001,Latrell Wrightsell Jr.,2239,Cal State Fullerton Titans,1186.68
+4397350,0.62,0.04,0.66,0.6,-0.03,0.57,D.J. Wilkins,2181,Drake Bulldogs,1136.32
+4279709,0.37,0.29,0.6599999999999999,0.57,0.42,0.99,Austin Williams,42,Hartford Hawks,1055.92
+4396933,0.21,0.44,0.65,0.42,0.39,0.81,D.J. Burns Jr.,2737,Winthrop Eagles,1004.64
+4279628,0.22,0.44,0.66,0.45,0.59,1.04,Eral Penn,112358,Long Island University Sharks,1460.36
+4397160,0.22,0.44,0.66,0.1,0.47,0.57,Tre Wood,112358,Long Island University Sharks,1460.36
+4278066,0.22,0.44,0.66,0.22,0.44,0.66,Isaac Kante,112358,Long Island University Sharks,1460.36
+4592753,0.23,0.42,0.65,0.1,0.55,0.65,Trent Stephney,2427,UNC Asheville Bulldogs,1085.04
+4432821,1.13,-0.47,0.6599999999999999,1.47,-0.24,1.23,E.J. Liddell,194,Ohio State Buckeyes,1356.68
+4565201,1.13,-0.47,0.6599999999999999,1.35,-0.44,0.9100000000000001,Malaki Branham,194,Ohio State Buckeyes,1356.68
+4278506,0.15,0.5,0.65,0.24,0.52,0.76,Evan Battey,38,Colorado Buffaloes,1502.88
+4432446,0.15,0.5,0.65,0.33,0.68,1.01,Jabari Walker,38,Colorado Buffaloes,1502.88
+4397715,0.89,-0.23,0.66,0.85,-0.14,0.71,Spencer Rodgers,338,Kennesaw State Owls,991.16
+4279532,0.02,0.63,0.65,0.15,0.72,0.87,Stanley Umude,8,Arkansas Razorbacks,1285.4
+4277902,0.33,0.32,0.65,0.53,0.42,0.95,Brady Manek,153,North Carolina Tar Heels,1393.24
+4703399,0.34,0.31,0.65,0.24,0.35,0.59,Jeremiah Oden,2751,Wyoming Cowboys,1255.0
+4592939,1.06,-0.42,0.6400000000000001,1.05,-0.35,0.7000000000000001,Nathan Johnson,2378,UMBC Retrievers,1139.32
+4066518,0.15,0.49,0.64,0.07,0.38,0.45,Josh Ayeni,236,Chattanooga Mocs,528.04
+4431816,0.8,-0.16,0.64,0.97,0.05,1.02,Jesse Edwards,183,Syracuse Orange,879.48
+4592444,0.65,-0.01,0.64,0.71,0.08,0.7899999999999999,Jameer Nelson Jr.,48,Delaware Blue Hens,1407.08
+4279189,0.65,-0.01,0.64,0.64,0.05,0.6900000000000001,Kevin Anderson,48,Delaware Blue Hens,1407.08
+4702743,0.65,-0.01,0.64,0.67,0.04,0.7100000000000001,Andrew Carr,48,Delaware Blue Hens,1407.08
+4432193,0.72,-0.08,0.64,0.67,-0.07,0.6000000000000001,Earl Timberlake,235,Memphis Tigers,637.2
+4897447,-0.06,0.7,0.6399999999999999,-0.14,0.67,0.53,Connor Hickman,71,Bradley Braves,1125.28
+4397295,-0.2,0.84,0.6399999999999999,-0.39,0.82,0.42999999999999994,Mack Anderson,149,Montana Grizzlies,942.84
+4397427,0.26,0.37,0.63,0.45,0.4,0.8500000000000001,Camren Wynter,2182,Drexel Dragons,1266.0
+4593747,0.13,0.49,0.62,-0.01,0.57,0.5599999999999999,Reggie Miller,2000,Abilene Christian Wildcats,1545.08
+4593750,0.13,0.49,0.62,0.12,0.46,0.5800000000000001,Coryon Mason,2000,Abilene Christian Wildcats,1545.08
+4593748,0.13,0.49,0.62,0.13,0.5,0.63,Mahki Morris,2000,Abilene Christian Wildcats,1545.08
+4592495,-0.33,0.96,0.6299999999999999,-0.33,1.02,0.69,Hason Ward,2670,VCU Rams,959.68
+4432850,0.1,0.52,0.62,0.05,0.54,0.5900000000000001,Noah Williams,265,Washington State Cougars,1060.92
+4397200,0.63,-0.0,0.63,0.54,0.09,0.63,KC Hankton,236,Chattanooga Mocs,844.8
+4279455,-0.11,0.73,0.62,-0.0,0.77,0.77,Michael Flowers,265,Washington State Cougars,1457.44
+4397634,0.99,-0.37,0.62,0.82,-0.41,0.41,Fletcher Tynen,104,Boston University Terriers,1309.84
+4397631,0.99,-0.37,0.62,0.83,-0.41,0.42,Jonas Harper,104,Boston University Terriers,1309.84
+4280041,0.99,-0.37,0.62,1.23,-0.3,0.9299999999999999,Javante McCoy,104,Boston University Terriers,1309.84
+4280042,0.99,-0.37,0.62,1.33,-0.18,1.1500000000000001,Sukhmail Mathon,104,Boston University Terriers,1309.84
+4683935,0.59,0.03,0.62,0.63,0.09,0.72,Blake Wesley,87,Notre Dame Fighting Irish,1320.56
+4278351,0.54,0.06,0.6000000000000001,0.42,0.1,0.52,Jordan Davis,294,Jacksonville Dolphins,1024.48
+4396697,0.54,0.06,0.6000000000000001,0.55,0.16,0.7100000000000001,Tyreese Davis,294,Jacksonville Dolphins,1024.48
+4280064,0.54,0.06,0.6000000000000001,0.76,0.23,0.99,Kevion Nolan,294,Jacksonville Dolphins,1024.48
+4397311,1.21,-0.61,0.6,1.16,-0.51,0.6499999999999999,Bodie Hume,2458,Northern Colorado Bears,1642.72
+4397060,1.21,-0.61,0.6,1.51,-0.59,0.92,Daylen Kountz,2458,Northern Colorado Bears,1642.72
+4897941,1.21,-0.61,0.6,1.33,-0.62,0.7100000000000001,Matt Johnson II,2458,Northern Colorado Bears,1642.72
+4897945,1.21,-0.61,0.6,1.11,-0.56,0.55,Kur Jongkuch,2458,Northern Colorado Bears,1642.72
+4278013,0.18,0.42,0.6,0.07,0.35,0.42,Parker Stewart,84,Indiana Hoosiers,1315.92
+4397689,0.43,0.17,0.6,0.54,0.29,0.8300000000000001,Drew Peterson,30,USC Trojans,1472.48
+4067218,0.43,0.17,0.6,0.4,0.16,0.56,Chevez Goodwin,30,USC Trojans,1472.48
+4431923,0.84,-0.24,0.6,1.11,-0.17,0.9400000000000001,Noah Carter,2460,Northern Iowa Panthers,1226.56
+4433110,0.83,-0.23,0.6,0.75,-0.26,0.49,Brendan Wenzel,2751,Wyoming Cowboys,855.08
+4567590,-0.45,1.05,0.6000000000000001,-0.53,1.1,0.5700000000000001,Mwani Wilkinson,99,LSU Tigers,1183.64
+4702671,-0.06,0.65,0.5900000000000001,-0.12,0.69,0.57,Boden Skunberg,2449,North Dakota State Bison,846.28
+4395676,0.9,-0.31,0.5900000000000001,1.08,-0.24,0.8400000000000001,Buddy Boeheim,183,Syracuse Orange,1428.68
+4395620,0.17,0.41,0.58,0.17,0.46,0.63,Hunter Tyson,228,Clemson Tigers,858.04
+4397648,-0.23,0.81,0.5800000000000001,-0.26,0.82,0.5599999999999999,Connor Harding,3084,Utah Valley Wolverines,1339.68
+4593745,-0.23,0.81,0.5800000000000001,-0.32,0.75,0.43,Blaze Nield,3084,Utah Valley Wolverines,1339.68
+4398226,-0.23,0.81,0.5800000000000001,0.01,1.04,1.05,Fardaws Aimaq,3084,Utah Valley Wolverines,1339.68
+4397803,0.23,0.35,0.58,0.11,0.36,0.47,Coty Jude,2427,UNC Asheville Bulldogs,901.96
+4397504,-0.03,0.61,0.58,-0.06,0.63,0.5700000000000001,Ebrima Dibba,324,Coastal Carolina Chanticleers,1068.48
+4594119,-0.05,0.62,0.57,-0.03,0.69,0.6599999999999999,Yahuza Rasas,2640,Texas Southern Tigers,767.48
+4278380,0.28,0.29,0.5700000000000001,0.3,0.26,0.56,Nathan Cayo,257,Richmond Spiders,1464.08
+4431914,0.28,0.29,0.5700000000000001,0.43,0.45,0.88,Tyler Burton,257,Richmond Spiders,1464.08
+4066836,0.28,0.29,0.5700000000000001,0.37,0.37,0.74,Grant Golden,257,Richmond Spiders,1464.08
+4278378,0.28,0.29,0.5700000000000001,0.55,0.5,1.05,Jacob Gilyard,257,Richmond Spiders,1464.08
+4397530,-0.41,0.98,0.5700000000000001,-0.49,1.1,0.6100000000000001,Ludovic Dufeal,2241,Gardner-Webb Runnin' Bulldogs,1126.24
+4432186,-0.12,0.69,0.57,0.11,0.79,0.9,Henry Coleman III,245,Texas A&M Aggies,1433.32
+4597990,1.34,-0.77,0.5700000000000001,1.52,-0.75,0.77,Brenden Tucker,232,Charleston Cougars,717.96
+4278386,1.1,-0.53,0.5700000000000001,1.25,-0.51,0.74,Darnell Rogers,2378,UMBC Retrievers,1080.28
+4277920,0.58,-0.01,0.57,0.53,0.05,0.5800000000000001,Royce Hamm Jr.,2439,UNLV Rebels,1246.88
+4397433,0.58,-0.01,0.57,0.98,0.05,1.03,Bryce Hamilton,2439,UNLV Rebels,1246.88
+4397100,0.58,-0.01,0.57,0.46,0.0,0.46,Jordan McCabe,2439,UNLV Rebels,1246.88
+4703209,0.2,0.36,0.56,0.56,0.58,1.1400000000000001,Ty Flowers,112358,Long Island University Sharks,1387.88
+4703396,0.08,0.49,0.57,0.3,0.59,0.8899999999999999,Graham Ike,2751,Wyoming Cowboys,1256.88
+4432108,0.04,0.52,0.56,-0.13,0.51,0.38,Tory San Antonio,2239,Cal State Fullerton Titans,849.64
+4397114,0.83,-0.27,0.5599999999999999,1.02,-0.1,0.92,Cormac Ryan,87,Notre Dame Fighting Irish,742.24
+4280264,-0.11,0.66,0.55,0.03,0.81,0.8400000000000001,A.J. Caldwell,236,Chattanooga Mocs,599.32
+4703116,0.83,-0.28,0.5499999999999999,0.94,-0.16,0.7799999999999999,Jordan O'Neal,2011,Alabama State Hornets,613.96
+4398015,-0.3,0.85,0.55,-0.36,0.87,0.51,Isaiah Kelly,43,Yale Bulldogs,895.64
+4431808,0.39,0.15,0.54,0.3,0.2,0.5,Ethan Anderson,30,USC Trojans,676.52
+4702008,-0.21,0.75,0.54,-0.0,0.86,0.86,Vince Cole,324,Coastal Carolina Chanticleers,1002.48
+4433052,-0.21,0.75,0.54,-0.2,0.83,0.6299999999999999,Essam Mostafa,324,Coastal Carolina Chanticleers,1002.48
+4397570,0.59,-0.05,0.5399999999999999,0.77,0.02,0.79,Jaylen Sims,350,UNC Wilmington Seahawks,1407.28
+4278057,0.59,-0.05,0.5399999999999999,0.59,0.01,0.6,Mike Okauru,350,UNC Wilmington Seahawks,1407.28
+4592975,0.59,-0.05,0.5399999999999999,0.66,0.06,0.72,Shykeim Phillips,350,UNC Wilmington Seahawks,1407.28
+4279875,0.59,-0.05,0.5399999999999999,0.54,0.03,0.5700000000000001,James Baker,350,UNC Wilmington Seahawks,1407.28
+4433105,-0.08,0.62,0.54,0.02,0.75,0.77,Tyler Wahl,275,Wisconsin Badgers,1331.92
+4397868,-0.17,0.71,0.5399999999999999,-0.07,0.85,0.78,Efe Odigie,2653,Troy Trojans,1055.44
+4702251,0.71,-0.17,0.5399999999999999,0.75,-0.19,0.56,Osayi Osifo,294,Jacksonville Dolphins,964.6
+4398354,0.86,-0.32,0.54,0.79,-0.26,0.53,Nygal Russell,2546,Southeast Missouri State Redhawks,1365.96
+4703379,0.86,-0.32,0.54,0.65,-0.33,0.32,Dylan Branson,2546,Southeast Missouri State Redhawks,1365.96
+4397072,0.41,0.11,0.52,0.55,0.19,0.74,James Akinjo,239,Baylor Bears,1143.04
+4397347,0.11,0.4,0.51,0.02,0.55,0.5700000000000001,Liam Robbins,238,Vanderbilt Commodores,511.32
+4898002,0.72,-0.2,0.52,0.66,-0.13,0.53,Yaw Obeng-Mensah,2378,UMBC Retrievers,1342.76
+4277978,0.82,-0.31,0.51,0.76,-0.27,0.49,Jamari Wheeler,194,Ohio State Buckeyes,1300.72
+4397154,0.27,0.24,0.51,0.19,0.37,0.56,Jared Kimbrough,42,Hartford Hawks,744.44
+4397958,0.39,0.12,0.51,0.2,0.14,0.34,Joe Pleasant,2724,Wichita State Shockers,851.88
+4598640,1.06,-0.55,0.51,1.06,-0.51,0.55,Darlinstone Dubar,2275,Hofstra Pride,1258.36
+4278475,1.06,-0.55,0.51,1.05,-0.52,0.53,Abayomi Iyiola,2275,Hofstra Pride,1258.36
+4431837,0.34,0.17,0.51,0.69,0.27,0.96,B.J. Mack,2747,Wofford Terriers,1216.76
+4398276,0.34,0.17,0.51,0.27,0.31,0.5800000000000001,Ryan Larson,2747,Wofford Terriers,1216.76
+4278218,0.0,0.5,0.5,0.03,0.45,0.48,Trevor Moore,2415,Morgan State Bears,511.32
+4711312,0.0,0.5,0.5,0.16,0.55,0.7100000000000001,Chad Venning,2415,Morgan State Bears,511.32
+4277942,0.06,0.44,0.5,0.18,0.42,0.6,Al Durham,2507,Providence Friars,1150.72
+4397208,1.13,-0.62,0.5099999999999999,1.42,-0.66,0.7599999999999999,Foster Loyer,2166,Davidson Wildcats,1043.8799999999999
+4702136,0.14,0.37,0.51,-0.03,0.32,0.29000000000000004,Keyon Wesley,2032,Arkansas State Red Wolves,966.6800000000001
+4592979,0.4,0.09,0.49,0.66,0.16,0.8200000000000001,Zyon Pullin,27,UC Riverside Highlanders,1053.04
+4701015,0.97,-0.48,0.49,1.57,-0.45,1.12,Anthony Roberts,2619,Stony Brook Seawolves,544.76
+4397579,-0.4,0.9,0.5,-0.41,0.89,0.48000000000000004,Damion Squire,2502,Portland State Vikings,1013.6800000000001
+4567710,0.0,0.49,0.49,-0.15,0.63,0.48,Quinton Mincey,2349,UMass Lowell River Hawks,932.64
+4280039,0.43,0.06,0.49,0.54,0.13,0.67,Walter Whyte,104,Boston University Terriers,1178.8
+4703098,0.66,-0.17,0.49,0.88,-0.15,0.73,Joe Reece,189,Bowling Green Falcons,519.92
+4702114,0.01,0.48,0.49,0.06,0.76,0.8200000000000001,Eric Boone,2428,North Carolina Central Eagles,988.0
+4397106,0.01,0.48,0.49,0.16,0.54,0.7000000000000001,Kris Monroe,2428,North Carolina Central Eagles,988.0
+4398239,0.01,0.48,0.49,-0.08,0.45,0.37,Randy Miller Jr.,2428,North Carolina Central Eagles,988.0
+4397641,0.99,-0.51,0.48,1.09,-0.37,0.7200000000000001,Gus Okafor,2545,SE Louisiana Lions,1386.84
+4593700,0.99,-0.51,0.48,0.76,-0.54,0.21999999999999997,Roscoe Eastmond,2545,SE Louisiana Lions,1386.84
+4278456,0.99,-0.51,0.48,1.02,-0.55,0.47,Ryan Burkhardt,2545,SE Louisiana Lions,1386.84
+4897312,0.99,-0.51,0.48,1.25,-0.26,0.99,Jalyn Hinton,2545,SE Louisiana Lions,1386.84
+4701991,0.19,0.28,0.47000000000000003,0.3,0.29,0.59,Steven Ashworth,328,Utah State Aggies,926.2
+4077059,0.99,-0.52,0.47,1.06,-0.39,0.67,Dimitrius Underwood,232,Charleston Cougars,1442.24
+4896997,0.99,-0.52,0.47,0.91,-0.46,0.45,Ben Burnham,232,Charleston Cougars,1442.24
+4593739,0.31,0.16,0.47,0.22,0.16,0.38,Morgan Safford,2747,Wofford Terriers,1094.8
+4398149,-1.13,1.6,0.4700000000000002,-0.98,1.72,0.74,Greg Summers,2426,Navy Midshipmen,757.32
+4279472,1.04,-0.57,0.4700000000000001,1.1,-0.54,0.56,Jimmy Boeheim,183,Syracuse Orange,1497.28
+4431746,1.04,-0.57,0.4700000000000001,1.07,-0.5,0.5700000000000001,Joseph Girard III,183,Syracuse Orange,1497.28
+4397134,1.04,-0.57,0.4700000000000001,1.12,-0.51,0.6100000000000001,Cole Swider,183,Syracuse Orange,1497.28
+4432070,0.36,0.11,0.47,0.34,0.24,0.5800000000000001,Quincy Olivari,242,Rice Owls,736.4
+4609216,0.78,-0.32,0.46,1.0,-0.27,0.73,Linton Acliese,331,Eastern Washington Eagles,1471.96
+4431843,0.38,0.08,0.46,0.62,0.13,0.75,Ayinde Hikim,2349,UMass Lowell River Hawks,811.92
+4602027,0.54,-0.08,0.46,0.49,-0.02,0.47,Shakeel Moore,344,Mississippi State Bulldogs,1026.56
+4278453,0.37,0.09,0.45999999999999996,0.36,0.26,0.62,Noah Horchler,2507,Providence Friars,1278.56
+4278573,0.37,0.09,0.45999999999999996,0.49,0.08,0.57,Nate Watson,2507,Providence Friars,1278.56
+4278111,0.37,0.09,0.45999999999999996,0.32,0.17,0.49,Justin Minaya,2507,Providence Friars,1278.56
+4593830,-0.16,0.62,0.45999999999999996,-0.15,0.61,0.45999999999999996,Isaiah Hill,278,Fresno State Bulldogs,1184.48
+4397089,-0.16,0.62,0.45999999999999996,-0.36,0.62,0.26,Jordan Campbell,278,Fresno State Bulldogs,1184.48
+4703241,-0.16,0.62,0.45999999999999996,-0.25,0.61,0.36,Leo Colimerio,278,Fresno State Bulldogs,1184.48
+4593049,-0.16,0.62,0.45999999999999996,0.21,0.74,0.95,Orlando Robinson,278,Fresno State Bulldogs,1184.48
+4432030,0.17,0.28,0.45000000000000007,0.02,0.22,0.24,Jakevan Leftridge,2653,Troy Trojans,596.08
+4898195,0.79,-0.34,0.45,0.85,-0.25,0.6,Tevin Olison,2754,Youngstown State Penguins,1454.2
+4396791,0.79,-0.34,0.45,0.95,-0.27,0.6799999999999999,Dwayne Cohill,2754,Youngstown State Penguins,1454.2
+4279695,0.79,-0.34,0.45,0.94,-0.2,0.74,Michael Akuchie,2754,Youngstown State Penguins,1454.2
+4433218,0.56,-0.11,0.45000000000000007,0.8,0.02,0.8200000000000001,Jaden Ivey,2509,Purdue Boilermakers,1329.52
+4279733,0.03,0.41,0.43999999999999995,0.09,0.54,0.63,Melik Martin,2182,Drexel Dragons,1141.24
+4702626,-0.19,0.63,0.44,-0.18,0.61,0.43,Dawson Baker,300,UC Irvine Anteaters,898.2
+4397084,0.45,-0.0,0.45,0.55,0.13,0.68,Josh Mballa,2084,Buffalo Bulls,1078.48
+4277960,0.81,-0.36,0.45000000000000007,0.84,-0.28,0.5599999999999999,Eli Brooks,130,Michigan Wolverines,1399.72
+4433623,0.81,-0.36,0.45000000000000007,0.78,-0.31,0.47000000000000003,Caleb Houstan,130,Michigan Wolverines,1399.72
+4397506,0.81,-0.36,0.45000000000000007,0.9,-0.31,0.5900000000000001,DeVante' Jones,130,Michigan Wolverines,1399.72
+4432129,0.44,0.0,0.44,0.6,0.02,0.62,Tyson Walker,127,Michigan State Spartans,1129.24
+4397601,0.55,-0.11,0.44000000000000006,0.59,-0.12,0.47,L.J. Owens,2378,UMBC Retrievers,1411.48
+4397181,0.17,0.26,0.43000000000000005,0.29,0.43,0.72,Omar Silverio,2275,Hofstra Pride,621.44
+4684166,-0.1,0.52,0.42000000000000004,-0.04,0.56,0.52,Brandon Murray,99,LSU Tigers,1246.32
+4397814,-0.01,0.44,0.43,-0.12,0.49,0.37,Tayler Mattos,160,New Hampshire Wildcats,809.6
+4700534,-0.24,0.67,0.43000000000000005,0.05,0.81,0.8600000000000001,Rudi Williams,324,Coastal Carolina Chanticleers,735.36
+4278645,-0.22,0.65,0.43000000000000005,0.01,0.82,0.83,Lenell Henry,2016,Alcorn State Braves,561.52
+4398108,0.89,-0.47,0.42000000000000004,1.1,-0.3,0.8,Tykei Greene,2619,Stony Brook Seawolves,1203.2
+4593836,0.83,-0.4,0.42999999999999994,0.76,-0.29,0.47000000000000003,Hunter Goodrick,233,South Dakota Coyotes,1325.2
+4394666,0.83,-0.4,0.42999999999999994,0.95,-0.38,0.57,Kruz Perrott-Hunt,233,South Dakota Coyotes,1325.2
+4702648,0.83,-0.4,0.42999999999999994,1.02,-0.38,0.64,Mason Archambault,233,South Dakota Coyotes,1325.2
+4593838,0.83,-0.4,0.42999999999999994,0.94,-0.34,0.5999999999999999,Tasos Kamateros,233,South Dakota Coyotes,1325.2
+4897413,-0.59,1.02,0.43000000000000005,-0.5,1.13,0.6299999999999999,Ryan Hawkins,156,Creighton Bluejays,1502.04
+4576060,-0.59,1.02,0.43000000000000005,-0.34,1.18,0.8399999999999999,Ryan Kalkbrenner,156,Creighton Bluejays,1502.04
+4277846,-0.59,1.02,0.43000000000000005,-0.59,1.06,0.4700000000000001,Alex O'Connell,156,Creighton Bluejays,1502.04
+4594075,-0.36,0.78,0.42000000000000004,-0.45,0.81,0.36000000000000004,Jonas James III,2296,Jackson State Tigers,1077.2
+4395701,-0.13,0.55,0.42000000000000004,-0.12,0.61,0.49,Desi Sills,2032,Arkansas State Red Wolves,1102.6000000000001
+4700870,0.47,-0.04,0.43,0.47,0.02,0.49,Zach Anderson,526,Florida Gulf Coast Eagles,508.36
+4067358,0.57,-0.15,0.41999999999999993,0.91,-0.14,0.77,Tavian Dunn-Martin,526,Florida Gulf Coast Eagles,1271.2
+4396688,0.57,-0.15,0.41999999999999993,0.49,-0.17,0.31999999999999995,Caleb Catto,526,Florida Gulf Coast Eagles,1271.2
+4277915,0.57,-0.15,0.41999999999999993,0.61,0.14,0.75,Kevin Samuel,526,Florida Gulf Coast Eagles,1271.2
+4702384,0.03,0.39,0.42000000000000004,-0.03,0.47,0.43999999999999995,Nique Clifford,38,Colorado Buffaloes,1081.72
+4701120,0.8,-0.38,0.42000000000000004,0.88,-0.34,0.54,Phillip Russell,2546,Southeast Missouri State Redhawks,1215.64
+4397619,-0.21,0.63,0.42000000000000004,-0.11,0.74,0.63,Callum McRae,27,UC Riverside Highlanders,1097.08
+4293886,-0.21,0.63,0.42000000000000004,-0.28,0.64,0.36,Flynn Cameron,27,UC Riverside Highlanders,1097.08
+4702357,-0.21,0.63,0.42000000000000004,-0.16,0.59,0.42999999999999994,Wil Tattersall,27,UC Riverside Highlanders,1097.08
+4432815,0.4,0.01,0.41000000000000003,0.56,0.15,0.7100000000000001,Isaiah Mobley,30,USC Trojans,1407.2
+4593896,0.27,0.14,0.41000000000000003,0.26,0.22,0.48,Dou Gueye,309,Louisiana Ragin' Cajuns,757.44
+4703132,-0.03,0.43,0.4,-0.07,0.49,0.42,Simeon Kirkland,2443,New Orleans Privateers,1435.0
+4398325,-0.03,0.43,0.4,0.18,0.53,0.71,Derek St. Hilaire,2443,New Orleans Privateers,1435.0
+4397512,-0.03,0.43,0.4,-0.15,0.41,0.26,Daniel Sackey,2443,New Orleans Privateers,1435.0
+4279181,-0.03,0.43,0.4,0.18,0.61,0.79,Troy Green,2443,New Orleans Privateers,1435.0
+4431818,-0.03,0.43,0.4,-0.03,0.43,0.4,Tyson Jackson,2443,New Orleans Privateers,1435.0
+4397716,0.23,0.18,0.41000000000000003,0.39,0.39,0.78,Theo Akwuba,309,Louisiana Ragin' Cajuns,879.12
+4701221,-0.52,0.92,0.4,-0.51,1.01,0.5,Nick Jourdain,218,Temple Owls,1140.96
+4395685,0.12,0.28,0.4,0.23,0.36,0.59,Tyrece Radford,245,Texas A&M Aggies,1504.32
+4701208,-0.63,1.03,0.4,-0.56,1.13,0.5699999999999998,Moussa Cisse,197,Oklahoma State Cowboys,1070.68
+4279206,1.19,-0.79,0.3999999999999999,1.32,-0.73,0.5900000000000001,Jalen Ray,2275,Hofstra Pride,920.2
+4433069,0.59,-0.2,0.38999999999999996,0.58,-0.16,0.41999999999999993,Demond Robinson,338,Kennesaw State Owls,1073.2
+4280015,0.08,0.3,0.38,0.21,0.3,0.51,Noah Gurley,333,Alabama Crimson Tide,586.4
+4700530,0.4,-0.02,0.38,0.18,-0.14,0.03999999999999998,Davion Bradford,2306,Kansas State Wildcats,822.4
+4701233,0.08,0.3,0.38,0.15,0.5,0.65,Craig Porter Jr.,2724,Wichita State Shockers,943.28
+4702774,-0.33,0.7,0.36999999999999994,0.04,0.89,0.93,Terence Lewis II,2296,Jackson State Tigers,830.08
+4432817,0.24,0.14,0.38,0.37,0.16,0.53,Johnny Juzang,26,UCLA Bruins,1136.08
+4703131,-0.11,0.49,0.38,-0.29,0.46,0.17000000000000004,Byron Joshua,2016,Alcorn State Braves,830.72
+4067394,-0.11,0.49,0.38,0.17,0.75,0.92,Justin Thomas,2016,Alcorn State Braves,830.72
+4702521,0.54,-0.17,0.37,0.52,-0.11,0.41000000000000003,Austin Inge,2426,Navy Midshipmen,591.92
+4592671,-0.08,0.44,0.36,-0.13,0.46,0.33,Brandton Chatfield,2547,Seattle U Redhawks,809.2
+4598389,-0.04,0.4,0.36000000000000004,-0.11,0.42,0.31,Dontavius King,2428,North Carolina Central Eagles,781.68
+4396652,-0.01,0.38,0.37,-0.19,0.31,0.12,Arashma Parks,218,Temple Owls,864.92
+4279561,0.21,0.15,0.36,0.04,0.21,0.25,Jelani Williams,219,Pennsylvania Quakers,839.12
+4593774,1.25,-0.89,0.36,1.3,-0.89,0.41000000000000003,Dru Kuxhausen,2458,Northern Colorado Bears,1495.04
+4592479,0.25,0.11,0.36,0.32,0.31,0.63,Julian Champagnie,2599,St. John's Red Storm,1554.1200000000001
+4897951,-0.09,0.44,0.35,-0.25,0.46,0.21000000000000002,Zaire Williams,2681,Wagner Seahawks,934.6800000000001
+4067151,-0.63,0.99,0.36,-0.67,1.06,0.39,Nick Hopkins,2561,Siena Saints,1220.56
+4397862,-0.59,0.95,0.36,-0.77,0.95,0.17999999999999994,Nigel Hawkins,2617,Stephen F. Austin Lumberjacks,713.84
+4280073,0.22,0.13,0.35,0.26,0.14,0.4,Jacob Grandison,356,Illinois Fighting Illini,1134.0
+4397660,-0.08,0.44,0.36,-0.15,0.35,0.19999999999999998,Trajan Wesley,309,Louisiana Ragin' Cajuns,820.88
+4398197,-0.26,0.61,0.35,0.01,0.9,0.91,Malik Miller,2415,Morgan State Bears,586.92
+4433594,-0.4,0.76,0.36,-0.58,0.67,0.09000000000000008,Efton Reid III,99,LSU Tigers,1385.52
+4397960,-0.09,0.44,0.35,-0.14,0.37,0.22999999999999998,Taurus Samuels,159,Dartmouth Big Green,803.96
+4612161,-0.07,0.42,0.35,-0.01,0.3,0.29,Xavier Bell,2182,Drexel Dragons,1069.64
+4712348,-0.33,0.68,0.35000000000000003,-0.24,0.87,0.63,Fousseyni Traore,252,BYU Cougars,1118.48
+4397659,0.3,0.05,0.35,0.39,0.08,0.47000000000000003,Kobe Julien,309,Louisiana Ragin' Cajuns,1163.64
+4593062,-0.66,1.0,0.33999999999999997,-0.7,1.06,0.3600000000000001,Kane Milling,302,UC Davis Aggies,793.48
+4397962,-0.33,0.67,0.34,-0.5,0.7,0.19999999999999996,Garrison Wade,159,Dartmouth Big Green,935.6
+4279554,-0.33,0.67,0.34,-0.29,0.8,0.51,Aaryn Rai,159,Dartmouth Big Green,935.6
+4066823,-0.33,0.67,0.34,-0.21,0.76,0.55,Brendan Barry,159,Dartmouth Big Green,935.6
+4703670,-0.28,0.62,0.33999999999999997,-0.13,0.8,0.67,Pierce Spencer,2447,Nicholls Colonels,792.2
+4279109,0.01,0.32,0.33,0.32,0.29,0.61,Evan Gilyard II,140,Kansas City Roos,1164.4
+4594100,-0.27,0.61,0.33999999999999997,-0.31,0.78,0.47000000000000003,DeWayne Cox,2504,Prairie View A&M Panthers,1000.96
+4397884,-0.27,0.61,0.33999999999999997,-0.13,0.68,0.55,Jeremiah Gambrell,2504,Prairie View A&M Panthers,1000.96
+4594055,-0.27,0.61,0.33999999999999997,-0.28,0.67,0.39,Markedric Bell,2504,Prairie View A&M Panthers,1000.96
+4431694,-0.41,0.74,0.33,-0.51,0.7,0.18999999999999995,Alonzo Gaffney,9,Arizona State Sun Devils,1235.6
+4280195,0.04,0.3,0.33999999999999997,0.13,0.48,0.61,Marvin Nesbitt Jr.,140,Kansas City Roos,1236.28
+4278362,0.48,-0.15,0.32999999999999996,0.71,0.06,0.77,Greg Calixte,2803,Bryant Bulldogs,621.48
+4897947,-0.05,0.38,0.33,-0.08,0.34,0.26,Michael Carter III,2502,Portland State Vikings,1368.56
+4395670,0.38,-0.05,0.33,0.28,0.01,0.29000000000000004,Trey McGowens,158,Nebraska Cornhuskers,910.4
+4278130,0.06,0.26,0.32,0.28,0.35,0.63,Alex Barcello,252,BYU Cougars,1186.52
+4278422,0.21,0.11,0.32,0.34,-0.03,0.31000000000000005,Lewis Djonkam,2515,Radford Highlanders,591.56
+4592935,0.91,-0.59,0.32000000000000006,0.93,-0.59,0.3400000000000001,Tyler Stephenson-Moore,2619,Stony Brook Seawolves,999.76
+4592605,0.31,0.0,0.31,0.21,-0.03,0.18,Derrick Carter-Hollinger Jr.,149,Montana Grizzlies,1148.24
+4701163,0.38,-0.07,0.31,0.26,-0.03,0.23,Juan Felix Rodriguez,2619,Stony Brook Seawolves,592.9200000000001
+4433179,0.3,0.01,0.31,0.17,-0.0,0.17,Eugene Brown III,194,Ohio State Buckeyes,516.4
+4592251,0.24,0.07,0.31,0.09,0.05,0.14,Qwanzi Samuels,45,George Washington Colonials,815.68
+4433217,0.5,-0.19,0.31,0.43,-0.13,0.3,Tre Coleman,2440,Nevada Wolf Pack,937.6800000000001
+4398119,0.51,-0.2,0.31,0.58,-0.2,0.37999999999999995,Nic Lynch,2329,Lehigh Mountain Hawks,1337.8
+4433019,0.54,-0.23,0.31000000000000005,0.66,-0.09,0.5700000000000001,Marquise Kennedy,2350,Loyola Chicago Ramblers,546.32
+4397243,0.92,-0.62,0.30000000000000004,1.04,-0.59,0.45000000000000007,Eric Hunter Jr.,2509,Purdue Boilermakers,971.6
+4703134,-0.18,0.49,0.31,-0.29,0.52,0.23000000000000004,Terrell Ard Jr.,2506,Presbyterian Blue Hose,880.76
+4592262,0.5,-0.21,0.29000000000000004,0.55,-0.16,0.39,Terrell Burden,338,Kennesaw State Owls,1129.84
+4066911,0.31,-0.02,0.29,0.34,0.03,0.37,Drew Buggs,2737,Winthrop Eagles,883.4
+4897301,0.08,0.2,0.28,0.3,0.4,0.7,Terrion Murdix,357,Texas A&M-Corpus Christi Islanders,943.9200000000001
+3906520,0.6,-0.31,0.29,0.49,-0.25,0.24,Traci Carter,42,Hartford Hawks,1254.28
+4897852,0.65,-0.37,0.28,0.56,-0.38,0.18000000000000005,Ethan Price,331,Eastern Washington Eagles,1548.84
+4398233,0.65,-0.37,0.28,0.65,-0.25,0.4,Angelo Allegri,331,Eastern Washington Eagles,1548.84
+4280143,0.65,-0.37,0.28,0.8,-0.32,0.48000000000000004,Rylan Bergersen,331,Eastern Washington Eagles,1548.84
+4592579,0.65,-0.37,0.28,0.8,-0.33,0.47000000000000003,Steele Venters,331,Eastern Washington Eagles,1548.84
+4710625,-0.17,0.45,0.28,-0.07,0.67,0.6000000000000001,Austin Patterson,2747,Wofford Terriers,577.2
+4395679,0.17,0.11,0.28,0.15,0.14,0.29000000000000004,Francisco Caffaro,258,Virginia Cavaliers,896.16
+4397980,-0.06,0.34,0.28,-0.03,0.43,0.4,Malik Jefferson,116,Mount St. Mary's Mountaineers,762.84
+4610138,-0.23,0.51,0.28,-0.5,0.55,0.050000000000000044,Denham Wojcik,108,Harvard Crimson,822.04
+4067800,0.42,-0.14,0.27999999999999997,0.42,-0.12,0.3,John Pettway,2635,Tennessee Tech Golden Eagles,1114.48
+4592654,0.14,0.13,0.27,0.16,0.21,0.37,Jesus Carralero,2097,Campbell Fighting Camels,1079.0
+4396592,0.26,0.01,0.27,0.5,-0.01,0.49,Jose Placer,2454,North Florida Ospreys,606.2
+4081600,-0.25,0.52,0.27,-0.16,0.62,0.45999999999999996,Dominick Pickett,27,UC Riverside Highlanders,1180.72
+4703377,0.87,-0.59,0.28,1.12,-0.53,0.5900000000000001,Eric Reed Jr.,2546,Southeast Missouri State Redhawks,1231.88
+4433567,-0.05,0.32,0.27,-0.18,0.3,0.12,Dallion Johnson,213,Penn State Nittany Lions,870.56
+4397941,0.14,0.13,0.27,0.34,0.23,0.5700000000000001,Dean Noll,172,Cornell Big Red,932.4399999999999
+4279435,0.75,-0.49,0.26,0.75,-0.42,0.33,Dalonte Brown,193,Miami (OH) Redhawks,1136.8
+4703575,0.0,0.26,0.26,0.13,0.34,0.47000000000000003,Jermaine Marshall,2535,Samford Bulldogs,1103.96
+4396657,0.17,0.08,0.25,0.32,0.17,0.49,Moses Wood,2501,Portland Pilots,1061.68
+4702719,0.26,-0.0,0.26,0.31,0.05,0.36,Micah Parrish,2473,Oakland Golden Grizzlies,1285.6
+4278488,-0.31,0.56,0.25000000000000006,-0.37,0.57,0.19999999999999996,Tydus Verhoeven,2638,UTEP Miners,1152.96
+4897579,-0.16,0.41,0.24999999999999997,-0.01,0.46,0.45,Trae Benham,288,Lipscomb Bisons,753.64
+4432356,-0.01,0.26,0.25,0.22,0.46,0.68,Johnny Davis,275,Wisconsin Badgers,1400.76
+4277993,-0.01,0.26,0.25,0.11,0.29,0.39999999999999997,Brad Davison,275,Wisconsin Badgers,1400.76
+4588201,-0.01,0.26,0.25,0.01,0.21,0.22,Steven Crowl,275,Wisconsin Badgers,1400.76
+4590360,-0.01,0.26,0.25,-0.1,0.27,0.17,Chucky Hepburn,275,Wisconsin Badgers,1400.76
+4593016,0.16,0.09,0.25,0.56,0.26,0.8200000000000001,Quinten Post,103,Boston College Eagles,606.32
+4702956,0.39,-0.15,0.24000000000000002,0.36,-0.11,0.25,Michael Moshkovitz,219,Pennsylvania Quakers,984.84
+4683862,0.37,-0.12,0.25,0.34,-0.13,0.21000000000000002,Tyler Whitney-Sidney,2329,Lehigh Mountain Hawks,1206.48
+4278891,0.07,0.17,0.24000000000000002,0.15,0.3,0.44999999999999996,Jordan Cintron,315,Niagara Purple Eagles,1190.16
+4398132,-0.3,0.54,0.24000000000000005,-0.2,0.62,0.42,Jaylin Andrews,2352,Loyola Maryland Greyhounds,1136.72
+4592657,-0.05,0.29,0.24,0.12,0.38,0.5,Cedric Henderson Jr.,2097,Campbell Fighting Camels,1141.52
+4397332,-0.05,0.29,0.24,0.02,0.37,0.39,Ricky Clemons,2097,Campbell Fighting Camels,1141.52
+4278142,-0.05,0.29,0.24,-0.17,0.3,0.12999999999999998,Austin McCullough,2097,Campbell Fighting Camels,1141.52
+4278681,-0.05,0.29,0.24,-0.0,0.31,0.31,Jordan Whitfield,2097,Campbell Fighting Camels,1141.52
+4431744,0.08,0.16,0.24,0.05,0.18,0.22999999999999998,Armaan Franklin,258,Virginia Cavaliers,1243.72
+4395893,0.55,-0.32,0.23000000000000004,0.44,-0.3,0.14,D.J. Mitchell,42,Hartford Hawks,773.52
+4592184,0.02,0.22,0.24,0.16,0.22,0.38,Chase Hunter,228,Clemson Tigers,993.08
+4397937,0.06,0.17,0.23,-0.11,0.1,-0.009999999999999995,Kobe Dickson,172,Cornell Big Red,1073.44
+4280104,0.06,0.17,0.23,0.12,0.14,0.26,Sarju Patel,172,Cornell Big Red,1073.44
+4704102,-1.21,1.43,0.21999999999999997,-1.04,1.57,0.53,Nathaniel Pollard Jr.,2379,Maryland-Eastern Shore Hawks,725.88
+4897894,0.27,-0.05,0.22000000000000003,0.36,0.03,0.39,Keith Higgins Jr.,2329,Lehigh Mountain Hawks,1269.88
+4398116,0.27,-0.05,0.22000000000000003,0.3,0.02,0.32,Jeameril Wilson,2329,Lehigh Mountain Hawks,1269.88
+4066326,0.15,0.06,0.21,0.23,0.12,0.35,Jacob Young,2483,Oregon Ducks,1467.3600000000001
+4897755,-0.74,0.96,0.21999999999999997,-0.95,0.96,0.010000000000000009,Greg Spurlock,2154,Coppin State Eagles,528.24
+4432200,-0.96,1.17,0.20999999999999996,-0.94,1.1,0.16000000000000014,Bryce Thompson,197,Oklahoma State Cowboys,1145.16
+4593726,0.16,0.05,0.21000000000000002,0.34,0.14,0.48000000000000004,Shakem Johnson,2634,Tennessee State Tigers,835.28
+4278579,-0.31,0.52,0.21000000000000002,-0.32,0.53,0.21000000000000002,Myles Cale,2550,Seton Hall Pirates,1423.84
+4397119,-0.31,0.52,0.21000000000000002,-0.23,0.62,0.39,Jared Rhoden,2550,Seton Hall Pirates,1423.84
+4593716,1.05,-0.84,0.21000000000000008,0.85,-0.8,0.04999999999999993,Sean Conway,2678,VMI Keydets,1244.16
+4593713,1.05,-0.84,0.21000000000000008,1.08,-0.78,0.30000000000000004,Kamdyn Curfman,2678,VMI Keydets,1244.16
+4703868,1.05,-0.84,0.21000000000000008,1.28,-0.74,0.54,Trey Bonham,2678,VMI Keydets,1244.16
+4278522,-0.18,0.39,0.21000000000000002,-0.27,0.5,0.22999999999999998,Daejon Davis,264,Washington Huskies,961.9200000000001
+4593682,-0.11,0.32,0.21000000000000002,0.03,0.41,0.43999999999999995,Bas Leyte,2430,UNC Greensboro Spartans,1000.8
+4712247,-0.13,0.34,0.21000000000000002,0.11,0.44,0.55,Ezekiel Alley,2502,Portland State Vikings,1015.1600000000001
+4592249,0.34,-0.13,0.21000000000000002,0.3,-0.07,0.22999999999999998,Cyrus Largie,526,Florida Gulf Coast Eagles,1208.08
+4397239,-0.38,0.59,0.20999999999999996,-0.32,0.61,0.29,Myles Dread,213,Penn State Nittany Lions,883.16
+4397132,0.82,-0.61,0.20999999999999996,0.98,-0.62,0.36,Jahvon Quinerly,333,Alabama Crimson Tide,958.4
+4897766,-0.06,0.27,0.21000000000000002,-0.0,0.43,0.43,Elijah Hawkins,47,Howard Bison,731.6
+4704043,-0.06,0.27,0.21000000000000002,0.04,0.45,0.49,Steve Settle III,47,Howard Bison,731.6
+4432002,-0.28,0.49,0.20999999999999996,-0.18,0.61,0.43,Lance Jones,79,Southern Illinois Salukis,1063.6
+4431724,1.26,-1.06,0.19999999999999996,1.21,-1.06,0.1499999999999999,Victor Iwuakor,2439,UNLV Rebels,522.12
+4277830,0.56,-0.36,0.20000000000000007,0.63,-0.31,0.32,Vin Baker Jr.,270,Milwaukee Panthers,673.0
+4397909,-0.04,0.24,0.19999999999999998,0.08,0.29,0.37,Patrick Emilien,2597,St. Francis Brooklyn Terriers,1076.32
+4897641,-0.15,0.34,0.19000000000000003,-0.13,0.37,0.24,Marquis Barnett,2506,Presbyterian Blue Hose,949.76
+4702990,0.41,-0.22,0.18999999999999997,0.36,-0.25,0.10999999999999999,Shemar Rathan-Mayes,2754,Youngstown State Penguins,1392.0
+4431703,0.19,-0.0,0.19,0.15,0.03,0.18,De'Vion Harmon,2483,Oregon Ducks,1532.48
+4432996,0.19,-0.0,0.19,0.23,0.01,0.24000000000000002,Quincy Guerrier,2483,Oregon Ducks,1532.48
+4592401,0.19,-0.0,0.19,0.16,0.07,0.23,N'Faly Dante,2483,Oregon Ducks,1532.48
+4397212,0.15,0.04,0.19,0.19,0.23,0.42000000000000004,Marcus Bingham Jr.,127,Michigan State Spartans,1330.6399999999999
+4295180,0.15,0.04,0.19,0.19,0.02,0.21,Joey Hauser,127,Michigan State Spartans,1330.6399999999999
+4701845,-0.82,1.01,0.19000000000000006,-0.73,1.13,0.3999999999999999,Kadary Richmond,2550,Seton Hall Pirates,1129.72
+4278688,0.48,-0.29,0.19,0.51,-0.13,0.38,Phlandrous Fleming Jr.,57,Florida Gators,961.32
+4594103,-0.09,0.27,0.18000000000000002,0.2,0.46,0.66,Jawaun Daniels,2504,Prairie View A&M Panthers,843.56
+4398232,0.08,0.1,0.18,-0.04,0.1,0.060000000000000005,Mohammed Abdulsalam,2430,UNC Greensboro Spartans,1124.44
+4398408,-0.69,0.86,0.17000000000000004,-0.8,0.94,0.1399999999999999,Nikkei Rutty,2405,Monmouth Hawks,1268.4
+4593120,-0.07,0.24,0.16999999999999998,0.27,0.34,0.6100000000000001,Josh Cohen,2598,St. Francis (PA) Red Flash,810.4
+4411057,-0.04,0.21,0.16999999999999998,-0.06,0.3,0.24,Kevin McCullar Jr.,2641,Texas Tech Red Raiders,689.76
+4067629,-0.27,0.44,0.16999999999999998,-0.26,0.4,0.14,Justin Hopkins,2640,Texas Southern Tigers,850.16
+4398246,0.67,-0.5,0.17000000000000004,0.82,-0.39,0.42999999999999994,Logan Dye,2535,Samford Bulldogs,1089.76
+4702992,0.41,-0.25,0.15999999999999998,0.41,-0.2,0.20999999999999996,William Dunn,2754,Youngstown State Penguins,718.56
+4396978,-0.5,0.67,0.17000000000000004,-0.36,0.79,0.43000000000000005,Darius Days,99,LSU Tigers,1320.12
+4702745,0.08,0.08,0.16,0.18,0.34,0.52,Amari Williams,2182,Drexel Dragons,1133.3600000000001
+4594265,-0.01,0.17,0.16,-0.14,0.2,0.06,Jordan McKoy,2771,Merrimack Warriors,1086.68
+4594263,-0.01,0.17,0.16,0.24,0.37,0.61,Jordan Minor,2771,Merrimack Warriors,1086.68
+4594256,-0.01,0.17,0.16,0.02,0.21,0.22999999999999998,Mikey Watkins,2771,Merrimack Warriors,1086.68
+4594264,-0.01,0.17,0.16,0.09,0.23,0.32,Ziggy Reid,2771,Merrimack Warriors,1086.68
+4592938,0.36,-0.2,0.15999999999999998,0.51,-0.09,0.42000000000000004,Keondre Kennedy,2378,UMBC Retrievers,1344.0
+4395719,0.14,0.02,0.16,0.19,0.14,0.33,Tye Fagan,145,Ole Miss Rebels,664.96
+4593277,-0.4,0.56,0.16000000000000003,-0.5,0.58,0.07999999999999996,Allan Jeanne-Rose,2217,Fairfield Stags,592.48
+4397609,-0.09,0.25,0.16,-0.12,0.26,0.14,Aaron Duhart,349,Army Black Knights,1289.04
+4334018,0.02,0.13,0.15,-0.05,0.17,0.12000000000000001,Courtney Ramey,251,Texas Longhorns,1241.84
+4278014,0.02,0.13,0.15,0.08,0.1,0.18,Marcus Carr,251,Texas Longhorns,1241.84
+4397148,0.02,0.13,0.15,0.15,0.21,0.36,Timmy Allen,251,Texas Longhorns,1241.84
+4280046,0.54,-0.39,0.15000000000000002,0.73,-0.39,0.33999999999999997,John Meeks,232,Charleston Cougars,1003.52
+4397236,0.32,-0.17,0.15,0.15,-0.17,-0.020000000000000018,Justin Ahrens,194,Ohio State Buckeyes,654.92
+4432068,-0.01,0.16,0.15,0.23,0.35,0.58,Josh Oduro,2244,George Mason Patriots,946.2
+4431832,-0.11,0.25,0.14,-0.2,0.25,0.04999999999999999,Olivier Nkamhoua,2633,Tennessee Volunteers,698.08
+4593380,-0.89,1.03,0.14,-0.77,1.12,0.3500000000000001,Kevon Voyles,2379,Maryland-Eastern Shore Hawks,646.4
+4277972,-0.7,0.85,0.15000000000000002,-0.69,1.0,0.31000000000000005,Anthony Gaines,2561,Siena Saints,1344.2
+4398136,-0.49,0.63,0.14,-0.45,0.72,0.26999999999999996,Kenneth Jones,2352,Loyola Maryland Greyhounds,1215.8
+4433083,-0.49,0.63,0.14,-0.13,0.85,0.72,Cam Spencer,2352,Loyola Maryland Greyhounds,1215.8
+4066455,-0.03,0.17,0.14,-0.06,0.11,0.05,C.J. Keyser,295,Old Dominion Monarchs,1256.92
+4592875,-0.03,0.17,0.14,-0.03,0.2,0.17,Jaylin Hunter,295,Old Dominion Monarchs,1256.92
+4898266,-0.73,0.86,0.13,-0.8,0.97,0.16999999999999993,Jared Billups,2561,Siena Saints,1079.16
+4593351,0.47,-0.34,0.12999999999999995,0.72,-0.29,0.43,Jordan Dingle,219,Pennsylvania Quakers,981.88
+4897365,1.08,-0.95,0.13000000000000012,1.25,-0.9,0.35,Honor Huff,2678,VMI Keydets,975.76
+4396614,0.0,0.12,0.12,0.22,0.13,0.35,Jayden Gardner,258,Virginia Cavaliers,1305.08
+4395677,0.0,0.12,0.12,0.01,0.16,0.17,Kihei Clark,258,Virginia Cavaliers,1305.08
+4432187,0.0,0.12,0.12,0.08,0.31,0.39,Reece Beekman,258,Virginia Cavaliers,1305.08
+4395669,-0.14,0.26,0.12,-0.01,0.31,0.3,Xavier Johnson,84,Indiana Hoosiers,1457.72
+4396643,0.17,-0.05,0.12000000000000001,0.43,0.01,0.44,Rashun Williams,2515,Radford Highlanders,516.44
+4066833,-0.22,0.34,0.12000000000000002,-0.08,0.43,0.35,De'Monte Buckingham,2430,UNC Greensboro Spartans,995.3199999999999
+4066734,-0.2,0.32,0.12,-0.27,0.27,0.0,Elijah Thomas,2856,California Baptist Lancers,1307.24
+4593806,-0.2,0.32,0.12,-0.17,0.36,0.18999999999999997,Tre Armstrong,2856,California Baptist Lancers,1307.24
+4397989,0.47,-0.36,0.10999999999999999,0.46,-0.36,0.10000000000000003,Dante Treacy,2430,UNC Greensboro Spartans,935.96
+4432982,0.39,-0.27,0.12,0.54,-0.16,0.38,Moses Flowers,42,Hartford Hawks,1050.88
+4592361,-0.27,0.38,0.10999999999999999,-0.23,0.53,0.30000000000000004,Khalid Thomas,2502,Portland State Vikings,1649.72
+4431738,0.24,-0.13,0.10999999999999999,0.21,-0.01,0.19999999999999998,Malcolm Dandridge,235,Memphis Tigers,500.08
+4279310,0.51,-0.4,0.10999999999999999,0.53,-0.3,0.23000000000000004,Jaden Sayles,2619,Stony Brook Seawolves,610.28
+4395665,-0.07,0.18,0.10999999999999999,0.07,0.33,0.4,Nate Laszewski,87,Notre Dame Fighting Irish,910.04
+4593063,0.71,-0.6,0.10999999999999999,1.06,-0.6,0.4600000000000001,Khristion Courseault,2277,Houston Christian Huskies,522.84
+4396789,0.57,-0.47,0.09999999999999998,0.52,-0.38,0.14,Frankie Policelli,2619,Stony Brook Seawolves,1006.96
+4432033,-0.27,0.37,0.09999999999999998,-0.19,0.36,0.16999999999999998,Ezra Manjon,302,UC Davis Aggies,923.5600000000001
+4432077,-0.27,0.37,0.09999999999999998,-0.21,0.5,0.29000000000000004,Elijah Pepper,302,UC Davis Aggies,923.5600000000001
+4397396,-0.27,0.37,0.09999999999999998,-0.2,0.32,0.12,Christian Anigwe,302,UC Davis Aggies,923.5600000000001
+4067418,-0.0,0.11,0.11,0.15,0.22,0.37,Corey Allen,2247,Georgia State Panthers,873.44
+4897296,-0.02,0.12,0.09999999999999999,0.3,0.11,0.41,Trevian Tennyson,357,Texas A&M-Corpus Christi Islanders,648.04
+4397007,-0.25,0.35,0.09999999999999998,0.04,0.49,0.53,Austin Trice,295,Old Dominion Monarchs,1188.64
+4433629,-0.44,0.53,0.09000000000000002,-0.51,0.55,0.040000000000000036,Ryan Nembhard,156,Creighton Bluejays,1110.4
+4278306,0.03,0.07,0.1,0.03,0.24,0.27,David Collins,228,Clemson Tigers,1396.6
+4896850,-0.71,0.8,0.09000000000000008,-0.73,0.8,0.07000000000000006,Taran Armstrong,2856,California Baptist Lancers,789.1600000000001
+4706557,0.25,-0.16,0.09,0.41,-0.13,0.27999999999999997,Chris Youngblood,338,Kennesaw State Owls,1067.92
+4703682,-0.54,0.64,0.09999999999999998,-0.51,0.84,0.32999999999999996,Dylan Robertson,2065,Bethune-Cookman Wildcats,536.72
+4397027,-0.44,0.54,0.10000000000000003,-0.27,0.66,0.39,Jamal Bieniemy,2638,UTEP Miners,1221.04
+4280244,-0.44,0.54,0.10000000000000003,-0.13,0.68,0.55,Souley Boum,2638,UTEP Miners,1221.04
+4585617,0.26,-0.17,0.09,0.36,-0.15,0.21,Brandon Whitney,149,Montana Grizzlies,1409.0
+4432435,0.26,-0.17,0.09,0.33,-0.12,0.21000000000000002,Robby Beasley III,149,Montana Grizzlies,1409.0
+4702058,0.26,-0.17,0.09,0.52,0.01,0.53,Josh Bannan,149,Montana Grizzlies,1409.0
+4592439,0.24,-0.16,0.07999999999999999,0.25,-0.09,0.16,Xavier Johnson,2244,George Mason Patriots,942.84
+4396578,0.53,-0.45,0.08000000000000002,0.68,-0.36,0.32000000000000006,Nick Guadarrama,160,New Hampshire Wildcats,991.36
+4431751,-0.28,0.36,0.07999999999999996,-0.09,0.36,0.27,Rylan Jones,328,Utah State Aggies,521.84
+4702970,-0.18,0.25,0.07,-0.17,0.36,0.18999999999999997,Keller Boothby,172,Cornell Big Red,795.48
+4431930,0.34,-0.26,0.08000000000000002,0.4,-0.11,0.29000000000000004,Tyler Cochran,2050,Ball State Cardinals,1286.36
+4395991,0.27,-0.19,0.08000000000000002,0.5,-0.02,0.48,Kenny Strawbridge Jr.,2011,Alabama State Hornets,955.92
+4703921,0.09,-0.01,0.08,0.16,-0.02,0.14,Dalton Banks,79,Southern Illinois Salukis,564.0
+4705379,0.37,-0.3,0.07,0.35,-0.13,0.21999999999999997,Isaiah Range,2011,Alabama State Hornets,957.56
+4896994,-0.01,0.08,0.07,0.12,0.07,0.19,Reyne Smith,232,Charleston Cougars,1091.8
+4066780,-0.31,0.38,0.07,-0.25,0.46,0.21000000000000002,Ben Coupet Jr.,79,Southern Illinois Salukis,1115.68
+4431943,-0.31,0.38,0.07,-0.03,0.51,0.48,Marcus Domask,79,Southern Illinois Salukis,1115.68
+4432885,-0.14,0.21,0.06999999999999998,0.06,0.26,0.32,Iverson Molinar,344,Mississippi State Bulldogs,1363.16
+4277908,-0.14,0.21,0.06999999999999998,-0.14,0.24,0.09999999999999998,Garrison Brooks,344,Mississippi State Bulldogs,1363.16
+4432056,-0.63,0.69,0.05999999999999994,-0.64,0.71,0.06999999999999995,John McGriff,2066,Binghamton Bearcats,1066.72
+4592827,0.7,-0.64,0.05999999999999994,0.98,-0.62,0.36,Ques Glover,2535,Samford Bulldogs,1229.08
+4702963,-0.4,0.45,0.04999999999999999,-0.11,0.54,0.43000000000000005,Dame Adelekun,159,Dartmouth Big Green,735.6
+4065676,-0.49,0.55,0.06000000000000005,-0.77,0.5,-0.27,Seventh Woods,2415,Morgan State Bears,894.64
+4897890,-0.21,0.26,0.05000000000000002,-0.38,0.25,-0.13,Milos Ilic,2352,Loyola Maryland Greyhounds,971.12
+4432855,-1.19,1.24,0.050000000000000044,-1.11,1.3,0.18999999999999995,Jalen Graham,9,Arizona State Sun Devils,1232.4
+4397449,-0.16,0.2,0.04000000000000001,-0.19,0.31,0.12,EJ Harkless,201,Oklahoma Sooners,726.8
+4397425,-0.05,0.1,0.05,-0.1,0.06,-0.04000000000000001,Coletrane Washington,2182,Drexel Dragons,1072.24
+4594013,-1.24,1.29,0.050000000000000044,-0.93,1.46,0.5299999999999999,Jalen Johnson,2010,Alabama A&M Bulldogs,1092.96
+4593869,-0.45,0.49,0.03999999999999998,-0.53,0.53,0.0,Caleb Fields,2032,Arkansas State Red Wolves,1167.4
+4702134,-0.45,0.49,0.03999999999999998,-0.02,0.8,0.78,Norchad Omier,2032,Arkansas State Red Wolves,1167.4
+4280139,-0.45,0.49,0.03999999999999998,-0.54,0.47,-0.07000000000000006,Marquis Eaton,2032,Arkansas State Red Wolves,1167.4
+4431998,-0.1,0.14,0.04000000000000001,-0.25,0.12,-0.13,Emmanuel Izunabor,2272,High Point Panthers,1148.3600000000001
+4592741,-0.1,0.14,0.04000000000000001,0.12,0.17,0.29000000000000004,John-Michael Wright,2272,High Point Panthers,1148.3600000000001
+4702099,-0.1,0.14,0.04000000000000001,0.03,0.37,0.4,Zack Austin,2272,High Point Panthers,1148.3600000000001
+4592743,-0.1,0.14,0.04000000000000001,-0.14,0.2,0.06,Bryant Randleman,2272,High Point Panthers,1148.3600000000001
+4396676,-0.03,0.07,0.04000000000000001,-0.06,0.09,0.03,Dexter Dennis,2724,Wichita State Shockers,1001.3199999999999
+4396681,-0.03,0.07,0.04000000000000001,-0.04,0.03,-0.010000000000000002,Morris Udeze,2724,Wichita State Shockers,1001.3199999999999
+4897614,-0.32,0.36,0.03999999999999998,-0.18,0.4,0.22000000000000003,Jarius Hicklen,2454,North Florida Ospreys,953.24
+4703615,0.3,-0.27,0.02999999999999997,0.69,-0.01,0.6799999999999999,Darius Lee,2277,Houston Christian Huskies,1242.48
+4703542,0.18,-0.15,0.03,0.14,0.0,0.14,Jonathan Komagum,16,Sacramento State Hornets,1097.8
+4397473,-0.07,0.09,0.01999999999999999,0.09,0.1,0.19,Tyler Bertram,2066,Binghamton Bearcats,611.2
+4703172,-0.11,0.14,0.030000000000000013,-0.26,0.12,-0.14,Marques Watson,2363,Manhattan Jaspers,549.4399999999999
+4433156,0.27,-0.25,0.020000000000000018,0.58,-0.11,0.47,Posh Alexander,2599,St. John's Red Storm,1091.56
+4592181,-0.43,0.45,0.020000000000000018,-0.35,0.49,0.14,Jay Heath,9,Arizona State Sun Devils,1165.32
+4897149,-0.48,0.5,0.020000000000000018,-0.46,0.49,0.02999999999999997,Duke Deen,2653,Troy Trojans,922.08
+4703202,-0.08,0.1,0.020000000000000004,-0.12,0.13,0.010000000000000009,Samkelo Cele,2368,Marist Red Foxes,1203.72
+4279190,0.41,-0.39,0.019999999999999962,0.68,-0.27,0.41000000000000003,Ryan Allen,48,Delaware Blue Hens,610.84
+4279792,-0.29,0.31,0.020000000000000018,0.17,0.42,0.59,Kyle Foster,47,Howard Bison,653.6
+4279470,-0.29,0.31,0.020000000000000018,-0.35,0.28,-0.06999999999999995,Tai Bibbs,47,Howard Bison,653.6
+4279466,-0.29,0.31,0.020000000000000018,-0.07,0.36,0.29,Randall Brumant,47,Howard Bison,653.6
+4592950,-0.11,0.13,0.020000000000000004,-0.17,0.16,-0.010000000000000009,Hunter Woods,2210,Elon Phoenix,648.2800000000001
+4432887,-0.07,0.08,0.009999999999999995,-0.01,0.07,0.060000000000000005,Tyson Etienne,2724,Wichita State Shockers,1067.92
+4702177,0.6,-0.59,0.010000000000000009,0.63,-0.46,0.16999999999999998,Keon Ellis,333,Alabama Crimson Tide,1393.1200000000001
+4897289,0.21,-0.2,0.009999999999999981,0.41,-0.16,0.24999999999999997,Jordan Johnson,2172,Denver Pioneers,836.44
+4702061,-0.39,0.4,0.010000000000000009,-0.18,0.43,0.25,Jacob Falko,2066,Binghamton Bearcats,1192.2
+4594012,-1.02,1.03,0.010000000000000009,-1.0,1.08,0.08000000000000007,Cameron Tucker,2010,Alabama A&M Bulldogs,1022.76
+4897578,-0.34,0.35,0.009999999999999953,-0.4,0.33,-0.07,Jorell Saterfield,2638,UTEP Miners,947.84
+4397099,-0.13,0.13,0.0,-0.06,0.14,0.08000000000000002,Emmitt Matthews Jr.,264,Washington Huskies,1451.28
+4593765,-0.24,0.24,0.0,-0.42,0.26,-0.15999999999999998,Anderson Kopp,140,Kansas City Roos,972.4
+4403467,-0.02,0.02,0.0,-0.12,0.15,0.03,Kaodirichi Akobundu-Ehiogu,250,UT Arlington Mavericks,1080.6
+4397882,-0.39,0.39,0.0,-0.2,0.45,0.25,Tolu Smith,344,Mississippi State Bulldogs,1007.2
+4397250,0.41,-0.42,-0.010000000000000009,0.29,-0.45,-0.16000000000000003,Montez Mathis,2599,St. John's Red Storm,1254.08
+4067221,-0.63,0.63,0.0,-0.74,0.66,-0.07999999999999996,Osinachi Smart,232,Charleston Cougars,1006.6800000000001
+4279488,-0.4,0.39,-0.010000000000000009,-0.17,0.45,0.28,Jesus Cruz,2217,Fairfield Stags,772.32
+4433340,-0.26,0.26,0.0,-0.23,0.27,0.04000000000000001,Myles Stute,238,Vanderbilt Commodores,1170.16
+4593989,0.24,-0.25,-0.010000000000000009,0.3,-0.14,0.15999999999999998,Blondeau Tchoukuiegno,160,New Hampshire Wildcats,1113.88
+4396579,0.24,-0.25,-0.010000000000000009,0.38,-0.24,0.14,Jayden Martinez,160,New Hampshire Wildcats,1113.88
+4702888,0.48,-0.48,0.0,0.27,-0.55,-0.28,Mikal Starks,2502,Portland State Vikings,855.88
+4592982,-0.16,0.15,-0.010000000000000009,-0.26,0.15,-0.11000000000000001,Quirin Emanga,111,Northeastern Huskies,611.64
+4897640,0.09,-0.1,-0.010000000000000009,0.27,0.07,0.34,Marcus Watson,2448,North Carolina A&T Aggies,729.84
+4701551,-0.06,0.05,-0.009999999999999995,0.0,0.01,0.01,Chuck Harris,2086,Butler Bulldogs,987.8
+4278583,-0.04,0.03,-0.010000000000000002,-0.08,-0.0,-0.08,Bryan Trimble Jr.,2006,Akron Zips,745.6
+4277947,-0.42,0.41,-0.010000000000000009,-0.3,0.53,0.23000000000000004,Race Thompson,84,Indiana Hoosiers,1518.44
+4397231,-0.42,0.41,-0.010000000000000009,-0.63,0.36,-0.27,Miller Kopp,84,Indiana Hoosiers,1518.44
+4431684,-0.42,0.41,-0.010000000000000009,-0.12,0.6,0.48,Trayce Jackson-Davis,84,Indiana Hoosiers,1518.44
+4067769,0.15,-0.17,-0.020000000000000018,0.5,0.05,0.55,Patrick Good,2737,Winthrop Eagles,566.6
+4431961,0.1,-0.11,-0.009999999999999995,0.15,-0.02,0.13,Davonte Gaines,2244,George Mason Patriots,1071.44
+4397315,0.72,-0.74,-0.020000000000000018,0.6,-0.74,-0.14,Michael Nuga,2439,UNLV Rebels,965.84
+4280190,0.19,-0.21,-0.01999999999999999,0.21,-0.17,0.03999999999999998,Brandon McKissic,57,Florida Gators,519.72
+4594014,-1.4,1.38,-0.020000000000000018,-1.28,1.56,0.28,Garrett Hicks,2010,Alabama A&M Bulldogs,937.0
+4701222,-0.65,0.63,-0.020000000000000018,-0.57,0.78,0.21000000000000008,Jeremiah Williams,218,Temple Owls,652.6
+4702602,-0.1,0.08,-0.020000000000000004,-0.02,0.08,0.06,CJ Huntley,2026,Appalachian State Mountaineers,956.88
+4902627,0.5,-0.52,-0.020000000000000018,0.8,-0.43,0.37000000000000005,David Shriver,42,Hartford Hawks,746.64
+4279735,0.05,-0.07,-0.020000000000000004,0.19,0.07,0.26,George Papas,2405,Monmouth Hawks,1507.0
+4279736,0.05,-0.07,-0.020000000000000004,-0.07,-0.06,-0.13,Marcus McClary,2405,Monmouth Hawks,1507.0
+4277910,0.05,-0.07,-0.020000000000000004,0.18,0.03,0.21,Walker Miller,2405,Monmouth Hawks,1507.0
+4397045,-1.16,1.14,-0.020000000000000018,-1.23,1.19,-0.040000000000000036,Isaac Likekele,197,Oklahoma State Cowboys,1217.88
+4432851,-1.16,1.14,-0.020000000000000018,-1.2,1.18,-0.020000000000000018,Avery Anderson III,197,Oklahoma State Cowboys,1217.88
+4431804,-0.13,0.1,-0.03,-0.1,0.25,0.15,Mekhi Long,295,Old Dominion Monarchs,1192.92
+4066445,-0.78,0.74,-0.040000000000000036,-0.79,0.76,-0.030000000000000027,Jeremy Sheppard,227,Rhode Island Rams,1081.76
+4397430,0.8,-0.84,-0.039999999999999925,0.66,-0.8,-0.14,Cooper Kaifes,2535,Samford Bulldogs,1157.08
+4431707,0.35,-0.38,-0.030000000000000027,0.29,-0.38,-0.09000000000000002,Juwan Gary,333,Alabama Crimson Tide,660.6800000000001
+4702197,-0.45,0.41,-0.040000000000000036,-0.23,0.5,0.27,Winston Hill,2506,Presbyterian Blue Hose,1017.0
+4396917,-0.34,0.3,-0.040000000000000036,-0.21,0.43,0.22,Brandon Mahan,2116,UCF Knights,745.76
+4397970,-0.57,0.52,-0.04999999999999993,-0.51,0.54,0.030000000000000027,Mason Forbes,108,Harvard Crimson,681.9200000000001
+4592766,0.22,-0.27,-0.05000000000000002,0.43,-0.1,0.32999999999999996,Mysta Goodloe,2908,South Carolina Upstate Spartans,618.16
+4397249,-0.17,0.13,-0.04000000000000001,-0.33,0.3,-0.030000000000000027,Caleb McConnell,164,Rutgers Scarlet Knights,1366.92
+4397251,-0.17,0.13,-0.04000000000000001,0.04,0.2,0.24000000000000002,Ron Harper Jr.,164,Rutgers Scarlet Knights,1366.92
+4433155,-0.17,0.13,-0.04000000000000001,-0.09,0.3,0.21,Clifford Omoruyi,164,Rutgers Scarlet Knights,1366.92
+4432849,-0.17,0.13,-0.04000000000000001,-0.09,0.14,0.05000000000000002,Paul Mulcahy,164,Rutgers Scarlet Knights,1366.92
+4397037,-0.1,0.05,-0.05,-0.1,0.15,0.04999999999999999,Christian Bishop,251,Texas Longhorns,1115.3600000000001
+4433018,-0.36,0.31,-0.04999999999999999,-0.31,0.35,0.03999999999999998,James Keefe,24,Stanford Cardinal,1313.64
+4397711,-0.48,0.43,-0.04999999999999999,-0.36,0.51,0.15000000000000002,Zay Williams,2653,Troy Trojans,735.12
+4700969,-0.52,0.47,-0.050000000000000044,-0.73,0.51,-0.21999999999999997,Anwar Gill,2325,La Salle Explorers,610.6800000000001
+4897485,-0.19,0.14,-0.04999999999999999,-0.33,0.09,-0.24000000000000002,Preston Ruedinger,2674,Valparaiso Beacons,879.52
+4279462,0.23,-0.28,-0.05000000000000002,0.31,-0.07,0.24,Desmond Cambridge Jr.,2440,Nevada Wolf Pack,1239.8
+4593381,-1.25,1.19,-0.06000000000000005,-1.32,1.39,0.06999999999999984,Da'Shawn Phillip,2379,Maryland-Eastern Shore Hawks,791.76
+4278371,0.25,-0.31,-0.06,0.43,-0.23,0.19999999999999998,Fatts Russell,120,Maryland Terrapins,1336.88
+4431984,0.25,-0.31,-0.06,0.35,-0.25,0.09999999999999998,Hakim Hart,120,Maryland Terrapins,1336.88
+4593988,0.36,-0.41,-0.04999999999999999,0.33,-0.38,-0.04999999999999999,Nick Johnson,160,New Hampshire Wildcats,1045.4
+4278317,0.08,-0.14,-0.06000000000000001,0.1,-0.16,-0.06,Larry Owens,2466,Northwestern State Demons,885.92
+4897999,-0.22,0.16,-0.06,-0.13,0.14,0.010000000000000009,Oscar Berry,161,Fairleigh Dickinson Knights,702.6800000000001
+4431785,-0.26,0.2,-0.06,0.09,0.29,0.38,Scotty Pippen Jr.,238,Vanderbilt Commodores,1453.88
+4432920,-0.26,0.2,-0.06,-0.22,0.35,0.12999999999999998,Jordan Wright,238,Vanderbilt Commodores,1453.88
+4592283,-0.03,-0.04,-0.07,0.06,-0.07,-0.010000000000000009,Mervin James,2520,Rider Broncs,1424.92
+4593753,0.36,-0.43,-0.07,0.34,-0.55,-0.21000000000000002,Zach Iyeyemi,2277,Houston Christian Huskies,659.52
+4396810,-0.07,-0.0,-0.07,-0.05,0.05,0.0,Nick Honor,228,Clemson Tigers,913.36
+4067159,0.14,-0.22,-0.07999999999999999,0.11,-0.13,-0.020000000000000004,Monty Scott,2199,Eastern Michigan Eagles,576.0
+4703106,-0.95,0.87,-0.07999999999999996,-0.99,1.01,0.020000000000000018,Dailin Smith,2010,Alabama A&M Bulldogs,1026.36
+4397211,0.04,-0.13,-0.09,0.09,-0.06,0.03,Thomas Kithier,2674,Valparaiso Beacons,661.2
+4398423,-0.45,0.36,-0.09000000000000002,-0.34,0.34,0.0,Ty Rowell,2856,California Baptist Lancers,1367.76
+4279163,-0.45,0.36,-0.09000000000000002,-0.45,0.47,0.019999999999999962,Dan Akin,2856,California Baptist Lancers,1367.76
+4280102,0.48,-0.56,-0.08000000000000007,0.4,-0.49,-0.08999999999999997,Myles Lewis,2377,McNeese Cowboys,1107.12
+4431794,0.04,-0.13,-0.09,0.31,-0.15,0.16,Grant Sherfield,2440,Nevada Wolf Pack,1174.0
+4277851,-0.27,0.18,-0.09000000000000002,-0.38,0.32,-0.06,Ike Obiagu,2550,Seton Hall Pirates,1222.08
+4279483,-0.57,0.48,-0.08999999999999997,-0.55,0.47,-0.08000000000000007,Taj Benning,2217,Fairfield Stags,1363.48
+4703415,-0.18,0.09,-0.09,-0.13,0.1,-0.03,Marcus Fitzgerald Jr.,2634,Tennessee State Tigers,1275.12
+4397155,0.03,-0.12,-0.09,-0.06,-0.07,-0.13,Jamal Bey,264,Washington Huskies,1514.2
+4397158,0.03,-0.12,-0.09,-0.04,-0.14,-0.18000000000000002,Nate Roberts,264,Washington Huskies,1514.2
+4395997,0.03,-0.12,-0.09,0.37,0.02,0.39,Terrell Brown Jr.,264,Washington Huskies,1514.2
+4701218,0.06,-0.16,-0.1,0.16,-0.09,0.07,Gideon George,252,BYU Cougars,624.6800000000001
+4431762,0.44,-0.54,-0.10000000000000003,0.45,-0.54,-0.09000000000000002,Daniel Ramsey,2635,Tennessee Tech Golden Eagles,909.2
+4278219,0.44,-0.54,-0.10000000000000003,0.36,-0.51,-0.15000000000000002,Mamoudou Diarra,2635,Tennessee Tech Golden Eagles,909.2
+4066811,-0.26,0.17,-0.09,-0.29,0.17,-0.11999999999999997,Greg Lee,213,Penn State Nittany Lions,616.32
+4432582,0.08,-0.18,-0.09999999999999999,-0.04,-0.14,-0.18000000000000002,Max Christie,127,Michigan State Spartans,1528.32
+4397210,0.08,-0.18,-0.09999999999999999,0.03,-0.15,-0.12,Gabe Brown,127,Michigan State Spartans,1528.32
+4898186,0.41,-0.51,-0.10000000000000003,0.4,-0.51,-0.10999999999999999,Jace Carter,82,UIC Flames,1124.88
+4593839,-0.37,0.27,-0.09999999999999998,-0.33,0.24,-0.09000000000000002,Darin Green Jr.,2116,UCF Knights,1282.52
+4403417,-0.5,0.39,-0.10999999999999999,-0.19,0.69,0.49999999999999994,Jayveous McKinnis,2296,Jackson State Tigers,891.64
+4702932,0.07,-0.18,-0.10999999999999999,0.25,-0.14,0.10999999999999999,Donovan Newby,270,Milwaukee Panthers,1004.92
+4431831,-0.09,-0.01,-0.09999999999999999,-0.06,-0.0,-0.06,Mika Adams-Woods,2132,Cincinnati Bearcats,1306.68
+4395622,-0.09,-0.01,-0.09999999999999999,-0.11,-0.01,-0.12,John Newman III,2132,Cincinnati Bearcats,1306.68
+4896367,-0.15,0.03,-0.12,-0.14,0.02,-0.12000000000000001,Xzavier Long,2099,Canisius Golden Griffins,1015.4
+4066325,0.23,-0.35,-0.11999999999999997,0.41,-0.3,0.10999999999999999,Andrew Jones,251,Texas Longhorns,721.4
+4278010,0.81,-0.93,-0.12,0.82,-0.86,-0.040000000000000036,D.J. Harvey,2174,Detroit Mercy Titans,828.1600000000001
+4897467,-0.57,0.45,-0.11999999999999994,-0.51,0.42,-0.09000000000000002,Micah Thomas,282,Indiana State Sycamores,572.5600000000001
+4705380,-0.14,0.02,-0.12000000000000001,-0.17,0.1,-0.07,Shamir Bogues,2627,Tarleton Texans,1033.76
+4593929,-0.14,0.02,-0.12000000000000001,-0.16,0.03,-0.13,Tahj Small,2627,Tarleton Texans,1033.76
+4433378,0.29,-0.42,-0.13,0.34,-0.31,0.030000000000000027,Colby Jones,2752,Xavier Musketeers,1373.48
+4278591,0.29,-0.42,-0.13,0.33,-0.38,-0.04999999999999999,Paul Scruggs,2752,Xavier Musketeers,1373.48
+4432869,0.29,-0.42,-0.13,0.25,-0.36,-0.10999999999999999,Zach Freemantle,2752,Xavier Musketeers,1373.48
+4593417,-0.72,0.6,-0.12,-0.65,0.66,0.010000000000000009,Rahsaan Edwards,2569,South Carolina State Bulldogs,572.0799999999999
+4593418,-0.72,0.6,-0.12,-0.69,0.61,-0.07999999999999996,Omer Croskey,2569,South Carolina State Bulldogs,572.0799999999999
+4898328,-0.72,0.6,-0.12,-0.55,0.67,0.12,Jemel Davis,2569,South Carolina State Bulldogs,572.0799999999999
+4286093,-0.72,0.6,-0.12,-0.89,0.62,-0.27,Deaquan Williams,2569,South Carolina State Bulldogs,572.0799999999999
+4898331,-0.72,0.6,-0.12,-0.28,0.73,0.44999999999999996,TJ Madlock,2569,South Carolina State Bulldogs,572.0799999999999
+4581504,-0.38,0.26,-0.12,-0.33,0.25,-0.08000000000000002,Keeshawn Barthelemy,38,Colorado Buffaloes,1220.92
+4066493,0.72,-0.85,-0.13,0.89,-0.85,0.040000000000000036,Kellon Taylor,2377,McNeese Cowboys,1118.48
+4705299,-0.18,0.05,-0.13,0.11,0.08,0.19,Jalen Rucker,349,Army Black Knights,1226.32
+4705305,-0.18,0.05,-0.13,-0.18,0.05,-0.13,Charlie Peterson,349,Army Black Knights,1226.32
+4397607,-0.18,0.05,-0.13,-0.17,0.23,0.06,Josh Caldwell,349,Army Black Knights,1226.32
+4277833,0.25,-0.38,-0.13,0.14,-0.34,-0.2,Clyde Trapp,2429,Charlotte 49ers,1043.1200000000001
+4703420,0.02,-0.15,-0.13,0.17,-0.02,0.15000000000000002,Damaria Franklin,82,UIC Flames,1208.28
+4398397,0.32,-0.45,-0.13,0.53,-0.4,0.13,Matt Balanc,2514,Quinnipiac Bobcats,1224.36
+4396776,-0.28,0.14,-0.14,-0.17,0.23,0.06,Carter Hendricksen,2454,North Florida Ospreys,545.28
+4703126,-0.63,0.49,-0.14,-0.47,0.7,0.22999999999999998,Tyree Corbett,2154,Coppin State Eagles,602.4
+4594079,-0.39,0.25,-0.14,-0.37,0.34,-0.02999999999999997,Ken Evans Jr.,2296,Jackson State Tigers,757.04
+4398029,-0.08,-0.06,-0.14,0.02,0.02,0.04,Dwight Murray Jr.,2520,Rider Broncs,1490.3600000000001
+4702738,-0.05,-0.09,-0.14,-0.1,-0.1,-0.2,Jackson Threadgill,2429,Charlotte 49ers,1124.88
+4703117,0.15,-0.29,-0.13999999999999999,0.31,-0.29,0.020000000000000018,E.J. Clark,2011,Alabama State Hornets,1025.12
+4279331,0.28,-0.43,-0.14999999999999997,0.4,-0.43,-0.02999999999999997,Kevin McAdoo,2174,Detroit Mercy Titans,644.72
+4396689,0.15,-0.3,-0.15,0.21,-0.25,-0.04000000000000001,Zach Scott,2377,McNeese Cowboys,1176.6
+4433599,-1.17,1.02,-0.1499999999999999,-1.21,1.0,-0.20999999999999996,Arthur Kaluma,156,Creighton Bluejays,1138.56
+4431777,-1.07,0.92,-0.15000000000000002,-0.96,1.12,0.16000000000000014,Makhel Mitchell,227,Rhode Island Rams,1018.1600000000001
+4431708,-1.07,0.92,-0.15000000000000002,-0.97,1.19,0.21999999999999997,Makhi Mitchell,227,Rhode Island Rams,1018.1600000000001
+4432753,-0.13,-0.01,-0.14,-0.04,-0.09,-0.13,Gabe Madsen,254,Utah Utes,687.28
+4402692,0.23,-0.38,-0.15,0.22,-0.28,-0.060000000000000026,Kayo Goncalves,6,South Alabama Jaguars,727.04
+4067179,-0.83,0.68,-0.1499999999999999,-0.89,0.7,-0.19000000000000006,Kenny Cooper,2634,Tennessee State Tigers,1147.52
+4278578,0.22,-0.37,-0.15,0.34,-0.41,-0.06999999999999995,Shavar Reynolds,2405,Monmouth Hawks,1298.48
+4703922,-0.74,0.59,-0.15000000000000002,-0.9,0.6,-0.30000000000000004,J.D. Muila,79,Southern Illinois Salukis,932.84
+4433618,-0.12,-0.04,-0.16,-0.12,0.07,-0.04999999999999999,Harrison Ingram,24,Stanford Cardinal,1380.24
+4703234,-0.31,0.16,-0.15,-0.06,0.39,0.33,Devontae Blanton,2198,Eastern Kentucky Colonels,564.2
+4398404,-0.41,0.25,-0.15999999999999998,-0.21,0.29,0.07999999999999999,Marcus Hammond,315,Niagara Purple Eagles,1322.84
+4702329,-1.21,1.05,-0.15999999999999992,-1.3,1.05,-0.25,Abdou Tsimbila,2230,Fordham Rams,1006.48
+4398266,0.27,-0.43,-0.15999999999999998,0.21,-0.45,-0.24000000000000002,Brian White,2466,Northwestern State Demons,1240.52
+4703671,0.27,-0.43,-0.15999999999999998,0.42,-0.16,0.26,Kendal Coleman,2466,Northwestern State Demons,1240.52
+4593828,-0.55,0.39,-0.16000000000000003,-0.56,0.45,-0.11000000000000004,R.J. McGee,2655,Tulane Green Wave,548.32
+4432550,-0.69,0.53,-0.15999999999999992,-0.63,0.58,-0.050000000000000044,Mike Miles Jr.,2628,TCU Horned Frogs,1184.04
+4397697,-0.56,0.39,-0.17000000000000004,-0.45,0.42,-0.030000000000000027,Jackson Stormo,2561,Siena Saints,1344.64
+4398050,0.29,-0.45,-0.16000000000000003,0.07,-0.52,-0.45,Grehlon Easter,2934,Cal State Bakersfield Roadrunners,571.48
+4700953,-0.28,0.11,-0.17000000000000004,-0.19,0.31,0.12,Max Brooks,2349,UMass Lowell River Hawks,1212.96
+4396025,-0.01,-0.16,-0.17,0.03,-0.05,-0.020000000000000004,Justin Edler-Davis,2934,Cal State Bakersfield Roadrunners,801.68
+4431682,-0.07,-0.1,-0.17,-0.14,-0.05,-0.19,D.J. Jeffries,344,Mississippi State Bulldogs,1227.92
+4898227,0.39,-0.57,-0.17999999999999994,0.37,-0.54,-0.17000000000000004,George Smith,219,Pennsylvania Quakers,762.3199999999999
+4278134,-1.3,1.13,-0.17000000000000015,-1.31,1.15,-0.16000000000000014,Kimani Lawrence,9,Arizona State Sun Devils,1370.04
+4397580,-0.15,-0.03,-0.18,-0.1,0.04,-0.060000000000000005,Caleb Fuller,302,UC Davis Aggies,786.28
+4431700,0.01,-0.19,-0.18,0.07,-0.13,-0.06,Max Agbonkpolo,30,USC Trojans,817.96
+4278603,-0.43,0.25,-0.18,-0.38,0.24,-0.14,Tanner Groves,201,Oklahoma Sooners,1240.64
+4279796,0.31,-0.49,-0.18,0.32,-0.46,-0.14,Miryne Thomas,2050,Ball State Cardinals,1279.84
+4433125,-0.12,-0.06,-0.18,-0.2,-0.07,-0.27,Paxson Wojcik,225,Brown Bears,817.6800000000001
+4592912,-0.43,0.25,-0.18,-0.51,0.28,-0.22999999999999998,Kalil Thomas,2349,UMass Lowell River Hawks,1281.88
+4396569,-0.43,0.25,-0.18,-0.29,0.21,-0.07999999999999999,Allin Blunt,2349,UMass Lowell River Hawks,1281.88
+3906672,-0.77,0.58,-0.19000000000000006,-0.89,0.63,-0.26,Grant Weatherford,290,Georgia Southern Eagles,656.6
+4280068,-0.78,0.59,-0.19000000000000006,-0.82,0.6,-0.21999999999999997,Caleb Green,2217,Fairfield Stags,1115.88
+4897654,-0.13,-0.05,-0.18,0.09,-0.01,0.08,Kaleb Higgins,2934,Cal State Bakersfield Roadrunners,564.2
+4278304,-0.1,-0.09,-0.19,0.01,-0.05,-0.04,Kevin Johnson,82,UIC Flames,1196.1599999999999
+4397076,0.09,-0.28,-0.19000000000000003,0.13,-0.21,-0.07999999999999999,Gerald Liddell,2011,Alabama State Hornets,623.0
+4704017,0.02,-0.21,-0.19,0.01,-0.19,-0.18,Keith Littles,50,Florida A&M Rattlers,805.0799999999999
+4897190,-0.28,0.09,-0.19000000000000003,-0.27,0.06,-0.21000000000000002,Chika Nduka,2501,Portland Pilots,1132.92
+4592580,-0.28,0.09,-0.19000000000000003,-0.15,0.23,0.08000000000000002,Tyler Robertson,2501,Portland Pilots,1132.92
+4396811,-0.28,0.09,-0.19000000000000003,-0.27,0.09,-0.18000000000000002,Chris Austin,2501,Portland Pilots,1132.92
+4708218,-0.21,0.01,-0.19999999999999998,-0.19,0.06,-0.13,Hysier Miller,218,Temple Owls,550.6800000000001
+4397685,0.0,-0.2,-0.2,0.03,-0.18,-0.15,Patrick Mwamba,250,UT Arlington Mavericks,1077.84
+4593752,-0.55,0.35,-0.20000000000000007,-0.47,0.32,-0.14999999999999997,Noah Thomasson,315,Niagara Purple Eagles,1384.68
+4278501,0.11,-0.32,-0.21000000000000002,0.31,-0.33,-0.020000000000000018,D'Shawn Schwartz,2244,George Mason Patriots,1143.88
+4279876,0.11,-0.32,-0.21000000000000002,0.1,-0.33,-0.23,DeVon Cooper,2244,George Mason Patriots,1143.88
+4897529,0.91,-1.11,-0.20000000000000007,0.92,-0.99,-0.06999999999999995,Jay Allen-Tovar,167,New Mexico Lobos,955.64
+4397914,-0.27,0.06,-0.21000000000000002,-0.39,0.06,-0.33,David Mitchell,225,Brown Bears,532.24
+4280214,-0.34,0.12,-0.22000000000000003,-0.45,0.12,-0.33,Joey Calcaterra,301,San Diego Toreros,824.36
+4397690,-0.05,-0.16,-0.21000000000000002,-0.16,-0.19,-0.35,Chris Mullins,242,Rice Owls,1120.08
+4593814,-0.14,-0.08,-0.22000000000000003,-0.2,-0.01,-0.21000000000000002,Wilfried Likayi,324,Coastal Carolina Chanticleers,657.16
+4280049,-0.1,-0.12,-0.22,0.01,-0.12,-0.11,David Maynard,2643,The Citadel Bulldogs,988.88
+4279087,-0.39,0.17,-0.22,-0.3,0.17,-0.12999999999999998,Umoja Gibson,201,Oklahoma Sooners,1306.88
+4277845,-0.39,0.17,-0.22,-0.39,0.22,-0.17,Jordan Goldwire,201,Oklahoma Sooners,1306.88
+4592214,-0.39,0.17,-0.22,-0.34,0.22,-0.12000000000000002,Jalen Hill,201,Oklahoma Sooners,1306.88
+4897181,-0.48,0.26,-0.21999999999999997,-0.58,0.39,-0.18999999999999995,James Lee,2885,NJIT Highlanders,662.64
+4593475,0.52,-0.75,-0.22999999999999998,0.42,-0.74,-0.32,Tariq Balogun,2198,Eastern Kentucky Colonels,580.84
+4395886,0.33,-0.55,-0.22000000000000003,0.55,-0.44,0.11000000000000004,Hunter Marks,42,Hartford Hawks,509.84000000000003
+4279172,0.38,-0.6,-0.21999999999999997,0.4,-0.59,-0.18999999999999995,Parker Hazen,288,Lipscomb Bisons,1233.44
+4590356,0.38,-0.6,-0.21999999999999997,0.48,-0.53,-0.050000000000000044,Will Pruitt,288,Lipscomb Bisons,1233.44
+4278445,0.38,-0.6,-0.21999999999999997,0.57,-0.44,0.12999999999999995,Ahsan Asadullah,288,Lipscomb Bisons,1233.44
+4278444,0.38,-0.6,-0.21999999999999997,0.3,-0.59,-0.29,Greg Jones,288,Lipscomb Bisons,1233.44
+4702972,-0.17,-0.05,-0.22000000000000003,-0.11,0.1,-0.009999999999999995,Chris Manon,172,Cornell Big Red,795.64
+4067013,0.95,-1.17,-0.21999999999999997,1.25,-1.01,0.24,Ethan Claycomb,91,Bellarmine Knights,612.6800000000001
+4278286,-0.06,-0.17,-0.23,-0.17,-0.15,-0.32,Victor Enoh,2368,Marist Red Foxes,926.96
+4397987,-0.2,-0.03,-0.23,0.21,0.09,0.3,Eddy Kayouloud,2110,Central Arkansas Bears,798.08
+4703434,0.19,-0.42,-0.22999999999999998,0.14,-0.42,-0.27999999999999997,Tymu Chenery,2514,Quinnipiac Bobcats,1512.24
+4593676,0.25,-0.48,-0.22999999999999998,0.37,-0.32,0.04999999999999999,James Glisson III,2382,Mercer Bears,647.44
+4592448,-0.56,0.32,-0.24000000000000005,-0.41,0.53,0.12000000000000005,Christian Ray,2325,La Salle Explorers,530.48
+4590361,-0.74,0.51,-0.22999999999999998,-0.54,0.62,0.07999999999999996,Dylan Addae-Wusu,2599,St. John's Red Storm,752.6800000000001
+4593075,-0.09,-0.15,-0.24,-0.08,-0.13,-0.21000000000000002,Chris Mann,349,Army Black Knights,1148.48
+4397835,0.48,-0.71,-0.22999999999999998,0.62,-0.6,0.020000000000000018,Bryson Mozone,2908,South Carolina Upstate Spartans,1242.4
+4397838,0.48,-0.71,-0.22999999999999998,0.38,-0.7,-0.31999999999999995,Josh Aldrich,2908,South Carolina Upstate Spartans,1242.4
+4897649,0.48,-0.71,-0.22999999999999998,0.65,-0.63,0.020000000000000018,Jordan Gainey,2908,South Carolina Upstate Spartans,1242.4
+4593101,-0.64,0.4,-0.24,-0.68,0.4,-0.28,Carson Bischoff,250,UT Arlington Mavericks,582.6
+4593678,0.34,-0.58,-0.23999999999999994,0.34,-0.52,-0.18,KJ Hunt,2172,Denver Pioneers,1179.48
+4066288,-0.41,0.17,-0.23999999999999996,-0.59,0.3,-0.29,Abdul Ado,2132,Cincinnati Bearcats,1297.6
+4397340,-0.28,0.04,-0.24000000000000002,-0.03,0.23,0.2,Jordan Brown,309,Louisiana Ragin' Cajuns,1015.8000000000001
+4702739,-0.04,-0.21,-0.25,-0.07,-0.25,-0.32,Aly Khalifa,2429,Charlotte 49ers,1177.6000000000001
+4277852,0.85,-1.09,-0.2400000000000001,0.92,-0.99,-0.06999999999999995,Anthony Polite,52,Florida State Seminoles,941.1999999999999
+4592403,-0.2,-0.05,-0.25,-0.11,0.07,-0.039999999999999994,C.J. Walker,2116,UCF Knights,731.76
+4702606,0.35,-0.6,-0.25,0.47,-0.6,-0.13,Bryce Pope,28,UC San Diego Tritons,1081.2
+4397913,-0.03,-0.22,-0.25,0.07,-0.01,0.060000000000000005,Jaylan Gainey,225,Brown Bears,955.6800000000001
+4279463,-0.03,-0.22,-0.25,0.21,-0.15,0.06,Tamenang Choh,225,Brown Bears,955.6800000000001
+4592315,-1.54,1.29,-0.25,-1.55,1.33,-0.21999999999999997,Kyle Rose,2230,Fordham Rams,1215.68
+4897318,0.01,-0.27,-0.26,0.16,-0.22,-0.06,Cedric Garrett,2466,Northwestern State Demons,653.76
+4397198,0.15,-0.41,-0.26,0.15,-0.4,-0.25,Demarius Jacobs,2050,Ball State Cardinals,1352.16
+4898008,0.15,-0.41,-0.26,0.41,-0.31,0.09999999999999998,Payton Sparks,2050,Ball State Cardinals,1352.16
+4593397,0.15,-0.41,-0.26,0.12,-0.4,-0.28,Luke Bumbalough,2050,Ball State Cardinals,1352.16
+4683952,-0.64,0.38,-0.26,-0.54,0.41,-0.13000000000000006,Erik Reynolds II,2603,Saint Joseph's Hawks,1222.24
+4593442,-0.65,0.4,-0.25,-0.77,0.35,-0.42000000000000004,Sita Conteh,2154,Coppin State Eagles,652.92
+4433133,-0.0,-0.25,-0.25,0.31,-0.1,0.21,Jahmir Young,2429,Charlotte 49ers,1244.28
+4280070,-0.0,-0.25,-0.25,0.11,-0.21,-0.09999999999999999,Austin Butler,2429,Charlotte 49ers,1244.28
+4592898,-0.32,0.07,-0.25,-0.21,0.08,-0.13,Jeremiah Davenport,2132,Cincinnati Bearcats,1368.92
+4397202,-0.32,0.07,-0.25,-0.15,0.08,-0.06999999999999999,David DeJulius,2132,Cincinnati Bearcats,1368.92
+4278107,-0.04,-0.22,-0.26,-0.07,-0.13,-0.2,David Beatty,2448,North Carolina A&T Aggies,592.12
+4896617,-0.74,0.48,-0.26,-0.59,0.55,-0.039999999999999925,Matt Cerruti,399,Albany Great Danes,1034.44
+4593970,-0.82,0.55,-0.2699999999999999,-1.05,0.51,-0.54,Jacob Johnson,140,Kansas City Roos,690.16
+4280187,-0.24,-0.03,-0.27,-0.31,0.09,-0.22,Javon Levi,250,UT Arlington Mavericks,1141.0
+4592583,-0.23,-0.04,-0.27,-0.15,-0.02,-0.16999999999999998,Jacob Groves,201,Oklahoma Sooners,580.08
+4897373,0.16,-0.43,-0.27,0.24,-0.39,-0.15000000000000002,Jason Roche,2643,The Citadel Bulldogs,1278.24
+4397767,0.07,-0.34,-0.27,-0.04,-0.34,-0.38,Jamie Ahale,82,UIC Flames,765.56
+4067132,-0.87,0.6,-0.27,-0.99,0.63,-0.36,Chuck Champion,399,Albany Great Danes,1233.64
+4700941,-0.87,0.6,-0.27,-0.65,0.66,0.010000000000000009,Jamel Horton Jr.,399,Albany Great Danes,1233.64
+4279195,-0.87,0.6,-0.27,-0.95,0.62,-0.32999999999999996,Jarvis Doles,399,Albany Great Danes,1233.64
+4593730,0.29,-0.57,-0.27999999999999997,0.35,-0.57,-0.21999999999999997,Keishawn Davidson,2635,Tennessee Tech Golden Eagles,1257.68
+4395706,0.14,-0.42,-0.27999999999999997,0.04,-0.42,-0.38,Ethan Henderson,245,Texas A&M Aggies,752.5600000000001
+4684809,-0.18,-0.1,-0.28,-0.11,-0.03,-0.14,Darius Johnson,2116,UCF Knights,807.48
+4396948,-0.83,0.54,-0.2899999999999999,-0.55,0.67,0.12,Jermaine Couisnard,2579,South Carolina Gamecocks,649.5600000000001
+4397850,0.43,-0.72,-0.29,0.55,-0.67,-0.12,Mekhi Lairy,193,Miami (OH) Redhawks,1283.84
+4433127,0.61,-0.9,-0.29000000000000004,0.54,-0.95,-0.4099999999999999,Julien Wooden,256,James Madison Dukes,910.76
+4280270,-0.26,-0.03,-0.29000000000000004,0.05,0.03,0.08,David Azore,250,UT Arlington Mavericks,1087.32
+4278481,0.01,-0.3,-0.29,0.02,-0.35,-0.32999999999999996,Collin Smith,2448,North Carolina A&T Aggies,787.64
+4898188,0.55,-0.84,-0.2899999999999999,0.47,-0.84,-0.37,Filip Skobalj,82,UIC Flames,1192.12
+4397564,-0.29,-0.01,-0.3,-0.21,0.07,-0.13999999999999999,Kalu Ezikpe,295,Old Dominion Monarchs,1117.64
+4279625,0.6,-0.9,-0.30000000000000004,0.76,-0.82,-0.05999999999999994,Jahlil Jenkins,2619,Stony Brook Seawolves,662.08
+4897018,0.28,-0.58,-0.29999999999999993,0.47,-0.5,-0.030000000000000027,Camren Hunter,2110,Central Arkansas Bears,1171.68
+4431739,0.36,-0.66,-0.30000000000000004,0.23,-0.67,-0.44000000000000006,Qudus Wahab,120,Maryland Terrapins,1335.3600000000001
+4433168,-0.84,0.54,-0.29999999999999993,-0.96,0.64,-0.31999999999999995,Jamari Sibley,2638,UTEP Miners,1090.32
+4705372,0.02,-0.32,-0.3,0.22,-0.24,-0.01999999999999999,Montre' Gipson,2627,Tarleton Texans,1107.32
+4702104,-0.33,0.03,-0.30000000000000004,-0.18,0.02,-0.16,Jaden House,2272,High Point Panthers,807.0400000000001
+4702288,0.03,-0.34,-0.31000000000000005,0.21,-0.29,-0.07999999999999999,Ty Berry,77,Northwestern Wildcats,502.52
+4277878,-0.43,0.13,-0.3,-0.38,0.19,-0.19,Darius Perry,2116,UCF Knights,1281.52
+4594071,-0.63,0.32,-0.31,-0.39,0.45,0.06,Tra'Michael Moton,2755,Grambling Tigers,682.8
+4279645,0.51,-0.82,-0.30999999999999994,0.38,-0.85,-0.47,Alex Watson,2529,Sacred Heart Pioneers,1100.76
+4700856,-0.87,0.56,-0.30999999999999994,-0.85,0.66,-0.18999999999999995,Jadyn Parker,2454,North Florida Ospreys,1081.2
+4396774,-0.87,0.56,-0.30999999999999994,-0.97,0.64,-0.32999999999999996,Dorian James,2454,North Florida Ospreys,1081.2
+4396951,-0.5,0.2,-0.3,-0.56,0.21,-0.3500000000000001,Keyshawn Bryant,2579,South Carolina Gamecocks,1134.64
+4701255,-0.79,0.49,-0.30000000000000004,-0.88,0.44,-0.44,Isaiah Pope,3101,Utah Tech Trailblazers,1015.36
+4280251,-0.85,0.54,-0.30999999999999994,-0.97,0.55,-0.41999999999999993,Shaquille Walters,111,Northeastern Huskies,903.72
+4279008,-0.04,-0.27,-0.31,-0.1,-0.27,-0.37,Anthony Duruji,57,Florida Gators,980.52
+4592754,-0.33,0.02,-0.31,-0.27,0.1,-0.17,Jamon Battle,2427,UNC Asheville Bulldogs,681.16
+4683635,-0.36,0.04,-0.32,-0.42,0.07,-0.35,Michael O'Connell,24,Stanford Cardinal,1319.96
+4398106,-0.65,0.33,-0.32,-0.64,0.48,-0.16000000000000003,Christian Hinckson,2066,Binghamton Bearcats,1329.24
+4397167,-0.29,-0.02,-0.31,-0.23,0.11,-0.12000000000000001,Aljaz Kunc,66,Iowa State Cyclones,522.76
+4431946,-1.03,0.71,-0.32000000000000006,-0.91,0.69,-0.22000000000000008,Damian Dunn,218,Temple Owls,989.96
+4397204,0.19,-0.5,-0.31,0.51,-0.3,0.21000000000000002,Colin Castleton,57,Florida Gators,920.12
+4593353,0.2,-0.51,-0.31,0.26,-0.5,-0.24,Max Martz,219,Pennsylvania Quakers,981.56
+4593261,0.39,-0.71,-0.31999999999999995,0.45,-0.72,-0.26999999999999996,Michael Green III,2523,Robert Morris Colonials,1315.56
+4412211,-0.95,0.63,-0.31999999999999995,-0.85,0.7,-0.15000000000000002,Caleb Mills,52,Florida State Seminoles,887.56
+4702463,-0.33,0.01,-0.32,-0.25,0.22,-0.03,Efe Abogidi,265,Washington State Cougars,1116.28
+4898285,-0.42,0.1,-0.31999999999999995,-0.61,0.07,-0.54,Nicolas Pavrette,2117,Central Michigan Chippewas,680.28
+4593744,-0.81,0.49,-0.32000000000000006,-0.93,0.4,-0.53,Trevin Knell,252,BYU Cougars,713.6800000000001
+4278638,-0.59,0.27,-0.31999999999999995,-0.14,0.3,0.15999999999999998,Cameron Christon,2755,Grambling Tigers,614.28
+4432433,0.79,-1.13,-0.33999999999999986,0.74,-1.09,-0.3500000000000001,Jaden Seymour,2193,East Tennessee State Buccaneers,1192.12
+4279897,0.79,-1.13,-0.33999999999999986,0.91,-1.03,-0.12,Ledarrius Brewer,2193,East Tennessee State Buccaneers,1192.12
+4592212,0.79,-1.13,-0.33999999999999986,0.95,-0.98,-0.030000000000000027,David Sloan,2193,East Tennessee State Buccaneers,1192.12
+4594149,0.79,-1.13,-0.33999999999999986,0.87,-0.94,-0.06999999999999995,Ty Brewer,2193,East Tennessee State Buccaneers,1192.12
+4593372,0.79,-1.13,-0.33999999999999986,1.01,-1.07,-0.06000000000000005,Jordan King,2193,East Tennessee State Buccaneers,1192.12
+4592889,-0.77,0.43,-0.34,-0.8,0.53,-0.27,Lucas Stieber,2739,Green Bay Phoenix,921.96
+4897901,0.15,-0.49,-0.33999999999999997,0.13,-0.39,-0.26,CJ Fulton,322,Lafayette Leopards,1165.32
+4065840,0.14,-0.48,-0.33999999999999997,0.45,-0.34,0.10999999999999999,Dylan Painter,48,Delaware Blue Hens,672.32
+4431775,-0.32,-0.03,-0.35,-0.36,0.07,-0.29,Seth Lundy,213,Penn State Nittany Lions,1377.3600000000001
+4279482,-0.38,0.04,-0.34,-0.45,-0.01,-0.46,Scott Hitchon,2099,Canisius Golden Griffins,940.04
+4597991,-0.53,0.18,-0.35000000000000003,-0.6,0.16,-0.43999999999999995,Trevon Reddish-Rhone,2506,Presbyterian Blue Hose,1152.48
+4702195,-0.53,0.18,-0.35000000000000003,-0.43,0.24,-0.19,Rayshon Harrison,2506,Presbyterian Blue Hose,1152.48
+4278308,-0.55,0.2,-0.35000000000000003,-0.19,0.51,0.32,Alexis Yetna,2550,Seton Hall Pirates,501.76
+4898208,-0.18,-0.17,-0.35,0.04,-0.12,-0.07999999999999999,Kino Lilly Jr.,225,Brown Bears,551.32
+4067347,-0.24,-0.11,-0.35,-0.2,0.11,-0.09000000000000001,Dimencio Vaughn,2520,Rider Broncs,1560.56
+4593364,-0.24,-0.11,-0.35,-0.19,-0.1,-0.29000000000000004,Allen Powell,2520,Rider Broncs,1560.56
+4406151,-0.24,-0.11,-0.35,-0.2,-0.07,-0.27,Ajiri Ogemuno-Johnson,2520,Rider Broncs,1560.56
+4592182,-0.04,-0.32,-0.36,0.15,-0.26,-0.11000000000000001,Kamari Williams,193,Miami (OH) Redhawks,616.52
+4433249,0.48,-0.84,-0.36,0.47,-0.81,-0.3400000000000001,Moussa Diabate,130,Michigan Wolverines,1254.04
+4066877,0.13,-0.5,-0.37,0.17,-0.32,-0.15,Kevin Marfo,2514,Quinnipiac Bobcats,1579.92
+4279743,0.13,-0.5,-0.37,0.09,-0.48,-0.39,Jacob Rigoni,2514,Quinnipiac Bobcats,1579.92
+4593919,-0.21,-0.15,-0.36,0.03,0.07,0.1,Nicolas Elame,250,UT Arlington Mavericks,555.96
+4432447,1.09,-1.46,-0.3699999999999999,1.0,-1.52,-0.52,Ebenezer Dowuona,152,NC State Wolfpack,1137.16
+4398113,0.57,-0.94,-0.37,0.52,-0.92,-0.4,Brendan Medley-Bacon,2377,McNeese Cowboys,1199.36
+4397093,-0.32,-0.05,-0.37,-0.19,-0.01,-0.2,Warren Washington,2440,Nevada Wolf Pack,691.3199999999999
+4278951,-0.42,0.05,-0.37,-0.42,0.1,-0.31999999999999995,Cheikh Mbacke Diong,2116,UCF Knights,1350.44
+4703924,-0.58,0.2,-0.37999999999999995,-0.64,0.22,-0.42000000000000004,Steven Verplancken Jr.,79,Southern Illinois Salukis,722.6800000000001
+4705894,-0.01,-0.37,-0.38,0.3,-0.3,0.0,Terry Collins,2400,Mississippi Valley State Delta Devils,517.88
+4898180,-0.08,-0.31,-0.39,-0.12,-0.25,-0.37,Matt Mayers,2523,Robert Morris Colonials,1390.28
+4431766,-0.65,0.27,-0.38,-0.66,0.35,-0.31000000000000005,Damion Baugh,2628,TCU Horned Frogs,1316.8400000000001
+4278533,-0.65,0.27,-0.38,-0.73,0.29,-0.44,Chuck O'Bannon Jr.,2628,TCU Horned Frogs,1316.8400000000001
+4432872,-0.65,0.27,-0.38,-0.62,0.27,-0.35,Emanuel Miller,2628,TCU Horned Frogs,1316.8400000000001
+4396989,-0.6,0.22,-0.38,-0.64,0.2,-0.44,George Conditt IV,66,Iowa State Cyclones,987.32
+4066476,-0.24,-0.14,-0.38,-0.37,0.0,-0.37,DJ Jones,50,Florida A&M Rattlers,1066.12
+4398142,-0.24,-0.14,-0.38,0.04,0.04,0.08,MJ Randolph,50,Florida A&M Rattlers,1066.12
+4279780,-0.24,-0.14,-0.38,-0.05,-0.1,-0.15000000000000002,Bryce Moragne,50,Florida A&M Rattlers,1066.12
+4396988,0.3,-0.69,-0.38999999999999996,0.66,-0.59,0.07000000000000006,Zion Griffin,82,UIC Flames,765.64
+4701228,-0.59,0.2,-0.38999999999999996,-0.03,0.34,0.31000000000000005,Christian Shumate,2377,McNeese Cowboys,575.8
+4592901,0.2,-0.59,-0.38999999999999996,0.19,-0.58,-0.38999999999999996,Sam Hofman,2277,Houston Christian Huskies,1175.56
+4397944,-1.37,0.98,-0.3900000000000001,-1.39,1.06,-0.32999999999999985,Kyle Cardaci,2154,Coppin State Eagles,1182.32
+4704077,-1.37,0.98,-0.3900000000000001,-1.27,1.25,-0.020000000000000018,Nendah Tarke,2154,Coppin State Eagles,1182.32
+4593736,0.1,-0.49,-0.39,0.14,-0.48,-0.33999999999999997,Brady Danielson,155,North Dakota Fighting Hawks,829.24
+4432638,-0.41,0.02,-0.38999999999999996,-0.39,0.12,-0.27,Daeshun Ruffin,145,Ole Miss Rebels,592.16
+4280025,-0.46,0.07,-0.39,-0.41,0.21,-0.19999999999999998,Stacy Beckton Jr.,44,American University Eagles,1143.8
+4397238,0.28,-0.68,-0.4,0.35,-0.58,-0.22999999999999998,Myreon Jones,57,Florida Gators,669.6800000000001
+4703400,-1.03,0.63,-0.4,-1.25,0.62,-0.63,Marcus Williams,245,Texas A&M Aggies,835.72
+4586322,0.25,-0.65,-0.4,0.24,-0.61,-0.37,Brycen Long,2277,Houston Christian Huskies,1385.8
+4397811,0.06,-0.46,-0.4,-0.04,-0.41,-0.44999999999999996,Jarron Coleman,142,Missouri Tigers,1189.4
+4067444,0.08,-0.48,-0.39999999999999997,0.13,-0.47,-0.33999999999999997,Mason Faulkner,97,Louisville Cardinals,585.76
+4278018,-0.42,0.01,-0.41,-0.36,0.16,-0.19999999999999998,Terrell Brown-Soares,301,San Diego Toreros,820.24
+4592594,-0.04,-0.37,-0.41,0.22,-0.24,-0.01999999999999999,Malik Porter,304,Idaho State Bengals,636.32
+4896949,-0.12,-0.28,-0.4,-0.28,-0.35,-0.63,Noah McDavid,2627,Tarleton Texans,1170.1200000000001
+4705373,-0.12,-0.28,-0.4,0.09,-0.27,-0.18000000000000002,Freddy Hicks,2627,Tarleton Texans,1170.1200000000001
+4398054,-0.52,0.11,-0.41000000000000003,-0.42,0.04,-0.38,Marlon Hargis,2598,St. Francis (PA) Red Flash,675.72
+4593280,-0.3,-0.11,-0.41,-0.24,0.02,-0.22,Kassim Nicholson,2634,Tennessee State Tigers,1348.92
+4702949,-0.67,0.26,-0.41000000000000003,-0.67,0.35,-0.32000000000000006,Ahamadou Fofana,2099,Canisius Golden Griffins,1287.8
+4431779,-0.11,-0.3,-0.41,-0.16,-0.19,-0.35,Andre Gordon,245,Texas A&M Aggies,828.6800000000001
+4432021,-0.22,-0.2,-0.42000000000000004,-0.07,-0.15,-0.22,Kuany Kuany,25,California Golden Bears,509.64
+4702759,-0.22,-0.19,-0.41000000000000003,-0.06,-0.06,-0.12,Darius Burford,2210,Elon Phoenix,1162.76
+4432846,0.31,-0.73,-0.42,0.37,-0.71,-0.33999999999999997,Jaden Shackelford,333,Alabama Crimson Tide,1318.0
+4702944,0.11,-0.53,-0.42000000000000004,0.23,-0.43,-0.19999999999999998,Demetric Horton,2448,North Carolina A&T Aggies,1062.48
+4277895,0.41,-0.84,-0.43,0.5,-0.75,-0.25,Mike McGuirl,2306,Kansas State Wildcats,766.04
+4702216,-0.42,-0.01,-0.43,-0.54,-0.0,-0.54,Bryan Hart,2515,Radford Highlanders,1088.76
+4397819,-0.42,-0.01,-0.43,-0.39,0.03,-0.36,Josiah Jeffers,2515,Radford Highlanders,1088.76
+4702620,-0.0,-0.43,-0.43,0.01,-0.39,-0.38,Colton Sandage,2710,Western Illinois Leathernecks,1383.2
+4702623,-0.0,-0.43,-0.43,-0.03,-0.48,-0.51,Will Carius,2710,Western Illinois Leathernecks,1383.2
+4593286,-0.0,-0.43,-0.43,0.04,-0.42,-0.38,Luka Barisic,2710,Western Illinois Leathernecks,1383.2
+4594126,-0.0,-0.43,-0.43,0.2,-0.19,0.010000000000000009,Trenton Massner,2710,Western Illinois Leathernecks,1383.2
+4433026,-0.12,-0.32,-0.44,-0.02,-0.1,-0.12000000000000001,Kobe Langley,2430,UNC Greensboro Spartans,871.9599999999999
+4395713,-0.01,-0.43,-0.44,0.05,-0.4,-0.35000000000000003,Noah Locke,97,Louisville Cardinals,983.84
+4397727,0.11,-0.55,-0.44000000000000006,0.13,-0.52,-0.39,Tamell Pearson,2710,Western Illinois Leathernecks,1311.8400000000001
+4432150,-0.5,0.06,-0.44,-0.53,0.1,-0.43000000000000005,Alec Woodard,2046,Austin Peay Governors,837.08
+4280043,-0.55,0.11,-0.44000000000000006,-0.53,0.18,-0.35000000000000003,Paul Newman,399,Albany Great Danes,850.96
+4397633,-0.51,0.06,-0.45,-0.62,0.04,-0.58,Jack Hemphill,2597,St. Francis Brooklyn Terriers,1215.48
+4397968,-0.49,0.04,-0.45,-0.22,0.12,-0.1,Noah Kirkwood,108,Harvard Crimson,959.24
+4593336,-0.49,0.04,-0.45,-0.48,0.08,-0.39999999999999997,Luka Sakota,108,Harvard Crimson,959.24
+4397971,-0.49,0.04,-0.45,-0.52,0.03,-0.49,Kale Catchings,108,Harvard Crimson,959.24
+4278203,-0.55,0.09,-0.4600000000000001,-0.48,0.1,-0.38,Cameron Healy,2117,Central Michigan Chippewas,1076.52
+4397790,-0.83,0.37,-0.45999999999999996,-0.63,0.47,-0.16000000000000003,Darius Quisenberry,2230,Fordham Rams,806.48
+4398390,-0.55,0.09,-0.4600000000000001,-0.37,0.21,-0.16,Jalen Pickett,213,Penn State Nittany Lions,1439.52
+4277980,-0.55,0.09,-0.4600000000000001,-0.35,0.16,-0.18999999999999997,John Harrar,213,Penn State Nittany Lions,1439.52
+4067443,-0.59,0.13,-0.45999999999999996,-0.74,0.1,-0.64,Tre Cobbs,290,Georgia Southern Eagles,934.4
+4397995,0.17,-0.63,-0.45999999999999996,0.35,-0.67,-0.32000000000000006,Aaron Clarke,2529,Sacred Heart Pioneers,1110.76
+4290822,-1.03,0.56,-0.47,-0.97,0.87,-0.09999999999999998,Corey Walker Jr.,58,South Florida Bulls,664.8000000000001
+4593126,0.53,-0.99,-0.45999999999999996,0.56,-0.96,-0.3999999999999999,Tyler Thomas,2529,Sacred Heart Pioneers,1172.92
+4703180,0.53,-0.99,-0.45999999999999996,0.46,-0.85,-0.38999999999999996,Bryce Johnson,2529,Sacred Heart Pioneers,1172.92
+4703183,0.27,-0.74,-0.47,0.46,-0.63,-0.16999999999999998,Nico Galette,2529,Sacred Heart Pioneers,1104.08
+4397554,-0.23,-0.24,-0.47,-0.16,-0.13,-0.29000000000000004,Markquis Nowell,2306,Kansas State Wildcats,1023.48
+4397832,0.65,-1.12,-0.4700000000000001,0.72,-1.11,-0.3900000000000001,Dalvin White,2908,South Carolina Upstate Spartans,1174.24
+4278395,-0.61,0.14,-0.47,-0.51,0.19,-0.32,Taylor Funk,2603,Saint Joseph's Hawks,1161.84
+4593425,-0.71,0.24,-0.47,-0.69,0.31,-0.37999999999999995,Darion Spottsville,2199,Eastern Michigan Eagles,1037.64
+4433187,-0.25,-0.23,-0.48,-0.41,-0.2,-0.61,Selton Miguel,2306,Kansas State Wildcats,644.56
+4398412,-0.34,-0.14,-0.48000000000000004,-0.2,-0.05,-0.25,Michael Cubbage,2597,St. Francis Brooklyn Terriers,1089.44
+4593122,-0.55,0.06,-0.49000000000000005,-0.57,0.1,-0.47,Golden Dike,2352,Loyola Maryland Greyhounds,1152.6
+4592686,-0.07,-0.42,-0.49,0.14,-0.37,-0.22999999999999998,Antonio Reeves,2287,Illinois State Redbirds,1362.96
+4593851,-0.07,-0.42,-0.49,-0.09,-0.32,-0.41000000000000003,Kendall Lewis,2287,Illinois State Redbirds,1362.96
+4897563,0.28,-0.77,-0.49,0.39,-0.73,-0.33999999999999997,Mike Marsh,294,Jacksonville Dolphins,855.6
+4897154,-0.45,-0.04,-0.49,-0.5,-0.03,-0.53,Nikita Konstantynovskyi,202,Tulsa Golden Hurricane,608.56
+4897379,0.1,-0.6,-0.5,0.09,-0.59,-0.5,Shawn Walker Jr.,2382,Mercer Bears,717.28
+4592921,-0.42,-0.08,-0.5,-0.31,-0.07,-0.38,Colby Rogers,2561,Siena Saints,1270.44
+4397545,0.44,-0.93,-0.49000000000000005,0.39,-0.81,-0.42000000000000004,Mikel Beyers,276,Marshall Thundering Herd,1136.24
+4431787,-0.91,0.41,-0.5,-1.01,0.42,-0.5900000000000001,Joel Brown,25,California Golden Bears,916.88
+4433038,-0.18,-0.34,-0.52,0.0,-0.27,-0.27,Liam McChesney,2287,Illinois State Redbirds,550.4399999999999
+4703613,-0.46,-0.05,-0.51,-0.57,-0.08,-0.6499999999999999,Jade Tse,2277,Houston Christian Huskies,862.96
+4592427,-0.37,-0.14,-0.51,-0.2,-0.13,-0.33,Spencer Jones,24,Stanford Cardinal,1444.08
+4597988,-0.52,0.0,-0.52,-0.44,-0.1,-0.54,Xavier Johnson,292,UT Rio Grande Valley Vaqueros,868.8
+4397191,-0.8,0.28,-0.52,-0.82,0.3,-0.52,Jake Wojcik,2217,Fairfield Stags,1233.88
+4592476,-0.81,0.3,-0.51,-0.83,0.38,-0.44999999999999996,Cameron Brown,2603,Saint Joseph's Hawks,1296.12
+4278125,-0.81,0.3,-0.51,-0.77,0.31,-0.46,Ejike Obinna,2603,Saint Joseph's Hawks,1296.12
+4277880,0.13,-0.65,-0.52,0.14,-0.48,-0.33999999999999997,Malik Williams,97,Louisville Cardinals,1099.1200000000001
+4279701,-0.26,-0.26,-0.52,-0.14,-0.25,-0.39,Warren Williams,2363,Manhattan Jaspers,756.12
+4703423,0.03,-0.56,-0.53,0.02,-0.44,-0.42,Kenny White Jr.,2635,Tennessee Tech Golden Eagles,1184.04
+4703214,-0.63,0.1,-0.53,-0.56,0.22,-0.3400000000000001,Elton Walker,2046,Austin Peay Governors,901.76
+4704950,0.03,-0.56,-0.53,-0.01,-0.44,-0.45,Kyle Jenkins,322,Lafayette Leopards,1101.52
+4896985,0.44,-0.98,-0.54,0.46,-0.84,-0.37999999999999995,Claudell Harris Jr.,2127,Charleston Southern Buccaneers,785.44
+4592996,-0.43,-0.11,-0.54,-0.17,-0.15,-0.32,Joe French,2065,Bethune-Cookman Wildcats,1009.44
+4897237,-0.37,-0.18,-0.55,-0.41,-0.11,-0.52,Drew Calderon,2046,Austin Peay Governors,634.64
+4278368,0.36,-0.91,-0.55,0.52,-0.83,-0.30999999999999994,Carl Pierre,242,Rice Owls,1323.48
+4431964,0.36,-0.91,-0.55,0.43,-0.79,-0.36000000000000004,Max Fiedler,242,Rice Owls,1323.48
+4897653,-0.02,-0.53,-0.55,-0.03,-0.53,-0.56,Dalph Panopio,2934,Cal State Bakersfield Roadrunners,503.03999999999996
+4897330,-0.4,-0.15,-0.55,-0.41,-0.08,-0.49,Mikel Henderson,2630,UT Martin Skyhawks,767.0
+4702495,0.5,-1.05,-0.55,0.48,-1.08,-0.6000000000000001,Alex Merkviladze,2351,Loyola Marymount Lions,671.72
+4592846,-0.19,-0.36,-0.55,-0.29,-0.31,-0.6,Kenan Blackshear,2440,Nevada Wolf Pack,1362.12
+4897375,0.24,-0.8,-0.56,0.69,-0.44,0.24999999999999994,Jaden Campbell,2535,Samford Bulldogs,526.24
+4592970,-0.27,-0.28,-0.55,-0.32,-0.16,-0.48,Ludgy Debaut,151,East Carolina Pirates,527.56
+4593100,-0.09,-0.47,-0.5599999999999999,0.23,-0.29,-0.05999999999999997,Neal Quinn,322,Lafayette Leopards,1168.72
+4897338,0.51,-1.07,-0.56,0.44,-1.0,-0.56,Johnathan Massie,2377,McNeese Cowboys,1038.76
+4397123,-0.02,-0.54,-0.56,0.05,-0.5,-0.45,Greg Williams Jr.,309,Louisiana Ragin' Cajuns,538.52
+4279176,-0.51,-0.05,-0.56,-0.45,-0.05,-0.5,Mileek McMillan,2711,Western Michigan Broncos,712.8
+4277948,0.18,-0.74,-0.56,0.56,-0.58,-0.019999999999999907,Jack Nunge,2752,Xavier Musketeers,901.52
+4593712,0.42,-0.99,-0.5700000000000001,0.48,-0.99,-0.51,Travis Evee,242,Rice Owls,1252.72
+4702611,0.26,-0.83,-0.57,0.16,-0.76,-0.6,Jace Roquemore,28,UC San Diego Tritons,1154.56
+4066807,0.26,-0.83,-0.57,0.23,-0.8,-0.5700000000000001,Jake Killingsworth,28,UC San Diego Tritons,1154.56
+4897287,0.2,-0.78,-0.5800000000000001,0.33,-0.71,-0.37999999999999995,Tevin Smith,2172,Denver Pioneers,955.12
+4431993,-1.52,0.94,-0.5800000000000001,-1.5,0.91,-0.59,DJ Horne,9,Arizona State Sun Devils,1374.4
+4594058,0.09,-0.67,-0.5800000000000001,-0.08,-0.75,-0.83,Alvin Stredic,2029,Arkansas-Pine Bluff Golden Lions,555.28
+4279101,-0.38,-0.2,-0.5800000000000001,-0.47,-0.15,-0.62,LaDavius Draine,202,Tulsa Golden Hurricane,891.4
+4606837,-1.21,0.63,-0.58,-1.3,0.55,-0.75,Ishmael Leggett,227,Rhode Island Rams,1298.72
+4279313,-1.21,0.63,-0.58,-1.35,0.55,-0.8,Ishmael El-Amin,227,Rhode Island Rams,1298.72
+4683949,-0.68,0.09,-0.5900000000000001,-0.78,0.16,-0.62,Julian Roper II,77,Northwestern Wildcats,1027.76
+4703600,-0.45,-0.13,-0.5800000000000001,-0.08,0.04,-0.04,Cameron Steele,2000,Abilene Christian Wildcats,558.48
+4703899,-0.19,-0.4,-0.5900000000000001,-0.28,-0.36,-0.64,Howard Fleming Jr.,2287,Illinois State Redbirds,1090.4
+4703252,0.04,-0.64,-0.6,0.02,-0.59,-0.57,Saquan Singleton,167,New Mexico Lobos,510.0
+4279060,0.68,-1.28,-0.6,0.64,-1.21,-0.57,Charles Falden,256,James Madison Dukes,994.36
+4592948,-0.43,-0.18,-0.61,-0.35,-0.15,-0.5,Hunter McIntosh,2210,Elon Phoenix,1231.24
+4702761,-0.43,-0.18,-0.61,-0.29,-0.04,-0.32999999999999996,Michael Graham,2210,Elon Phoenix,1231.24
+4592972,-0.66,0.05,-0.61,-0.8,0.0,-0.8,Miles James,2463,Cal State Northridge Matadors,718.6800000000001
+4602029,-0.71,0.1,-0.61,-0.31,0.18,-0.13,Keshawn Williams,2459,Northern Illinois Huskies,940.68
+4592893,-0.67,0.05,-0.62,-0.7,0.16,-0.5399999999999999,Dan Petcash,2066,Binghamton Bearcats,787.0
+4397244,-0.45,-0.17,-0.62,-0.68,-0.26,-0.9400000000000001,Emmanuel Dowuona,2634,Tennessee State Tigers,513.64
+4279819,-0.51,-0.12,-0.63,-0.37,0.09,-0.28,Kameron Langley,2448,North Carolina A&T Aggies,600.2
+4066923,0.27,-0.91,-0.64,0.19,-0.94,-0.75,Michael Henn,2172,Denver Pioneers,1163.12
+4279474,0.31,-0.94,-0.6299999999999999,0.31,-0.86,-0.55,Terrance McBride,242,Rice Owls,528.8
+4703672,0.19,-0.83,-0.6399999999999999,0.2,-0.86,-0.6599999999999999,Carvell Teasett,2466,Northwestern State Demons,1311.28
+4433191,-0.8,0.15,-0.65,-0.75,0.19,-0.56,Eddie Lampkin Jr.,2628,TCU Horned Frogs,1248.8400000000001
+4897632,-0.34,-0.31,-0.65,-0.33,-0.38,-0.71,Mario Haskett Jr,2261,Hampton Pirates,565.28
+4593444,-0.02,-0.63,-0.65,0.18,-0.56,-0.38000000000000006,Dae Dae Grant,193,Miami (OH) Redhawks,1471.32
+4067388,-0.02,-0.63,-0.65,-0.0,-0.57,-0.57,Precious Ayah,193,Miami (OH) Redhawks,1471.32
+4280299,0.07,-0.72,-0.6499999999999999,0.14,-0.71,-0.57,Tyree Appleby,57,Florida Gators,989.9200000000001
+4702387,-0.73,0.07,-0.6599999999999999,-0.77,0.04,-0.73,Jalen Terry,305,DePaul Blue Demons,1244.2
+4067640,0.01,-0.66,-0.65,0.14,-0.55,-0.41000000000000003,Jared Chatham,2110,Central Arkansas Bears,1244.96
+4431932,0.01,-0.66,-0.65,-0.03,-0.7,-0.73,Collin Cooper,2110,Central Arkansas Bears,1244.96
+4431691,-0.38,-0.27,-0.65,-0.29,-0.27,-0.56,Will Baker,2440,Nevada Wolf Pack,1087.6
+4592190,0.08,-0.73,-0.65,0.12,-0.61,-0.49,RayQuan Evans,52,Florida State Seminoles,1223.3999999999999
+4897374,-0.25,-0.4,-0.65,-0.33,-0.33,-0.66,Wesley Cardet Jr.,2535,Samford Bulldogs,984.28
+4279332,-0.95,0.3,-0.6499999999999999,-0.91,0.27,-0.64,Tariq Silver,2046,Austin Peay Governors,618.72
+4278249,-0.22,-0.43,-0.65,-0.37,-0.49,-0.86,Justin Whatley,2448,North Carolina A&T Aggies,1127.4
+4701579,0.17,-0.82,-0.6499999999999999,0.15,-0.76,-0.61,Liam Sorensen,304,Idaho State Bengals,1060.56
+4708167,-0.39,-0.26,-0.65,-0.4,-0.3,-0.7,Lazar Stefanovic,254,Utah Utes,1081.52
+4703258,-0.57,-0.09,-0.6599999999999999,-0.33,-0.03,-0.36,Marcus Garrett,2065,Bethune-Cookman Wildcats,1078.36
+4899526,-0.57,-0.09,-0.6599999999999999,-0.32,0.03,-0.29000000000000004,Kevin Davis,2065,Bethune-Cookman Wildcats,1078.36
+4592639,-0.57,-0.09,-0.6599999999999999,-0.8,0.05,-0.75,Damani McEntire,2065,Bethune-Cookman Wildcats,1078.36
+4395898,0.07,-0.73,-0.6599999999999999,0.04,-0.53,-0.49000000000000005,Stephane Ingo,311,Maine Black Bears,846.24
+4432880,-0.42,-0.24,-0.6599999999999999,-0.4,-0.05,-0.45,Joe Toussaint,2294,Iowa Hawkeyes,699.8
+4593104,-0.5,-0.17,-0.67,-0.41,-0.11,-0.52,Rob Higgins,2597,St. Francis Brooklyn Terriers,1277.96
+4897958,-0.5,-0.17,-0.67,-0.53,-0.05,-0.5800000000000001,Tedrick Wilcox Jr.,2597,St. Francis Brooklyn Terriers,1277.96
+4398046,-0.85,0.18,-0.6699999999999999,-0.78,0.22,-0.56,Jordan Henderson,2099,Canisius Golden Griffins,1360.04
+4593149,-0.85,0.18,-0.6699999999999999,-0.87,0.28,-0.59,Armon Harried,2099,Canisius Golden Griffins,1360.04
+4397994,-0.43,-0.24,-0.6699999999999999,-0.47,-0.14,-0.61,Cameron Wilbon,16,Sacramento State Hornets,1290.96
+4897867,0.59,-1.26,-0.67,0.93,-1.18,-0.2499999999999999,Shawn Williams,2029,Arkansas-Pine Bluff Golden Lions,792.4399999999999
+4592634,-0.37,-0.3,-0.6699999999999999,-0.38,-0.35,-0.73,William FitzPatrick,16,Sacramento State Hornets,1349.3600000000001
+4896858,-0.13,-0.55,-0.68,-0.14,-0.48,-0.62,Dominique Alexander,2130,Chicago State Cougars,527.76
+4433010,-0.42,-0.26,-0.6799999999999999,-0.42,-0.27,-0.69,Rodney Howard,59,Georgia Tech Yellow Jackets,955.6
+4702946,-0.89,0.21,-0.68,-0.83,0.34,-0.48999999999999994,Supreme Cook,2217,Fairfield Stags,1304.2
+4433108,0.49,-1.18,-0.69,0.58,-1.1,-0.5200000000000001,T.J. Weeks Jr.,113,UMass Minutemen,1165.52
+4066856,-1.83,1.14,-0.6900000000000002,-1.69,1.37,-0.31999999999999984,Chuba Ohams,2230,Fordham Rams,1215.2
+4397511,0.24,-0.93,-0.6900000000000001,0.56,-0.82,-0.2599999999999999,Javon Freeman-Liberty,305,DePaul Blue Demons,985.52
+4397112,-0.89,0.2,-0.69,-0.93,0.22,-0.7100000000000001,Jaiden Delaire,24,Stanford Cardinal,1311.4
+4397395,-0.2,-0.49,-0.69,-0.18,-0.48,-0.6599999999999999,Zach Chappell,16,Sacramento State Hornets,1353.0
+4397851,-0.3,-0.4,-0.7,-0.55,-0.46,-1.01,Myja White,193,Miami (OH) Redhawks,979.72
+4897877,-0.05,-0.65,-0.7000000000000001,-0.13,-0.65,-0.78,Yusef Salih,70,Idaho Vandals,990.48
+4565203,0.08,-0.78,-0.7000000000000001,0.1,-0.73,-0.63,Charles Bediako,333,Alabama Crimson Tide,1176.76
+4397456,-0.34,-0.36,-0.7,-0.4,-0.43,-0.8300000000000001,Chuck Hannah,2210,Elon Phoenix,911.9200000000001
+4703155,-0.09,-0.61,-0.7,0.15,-0.49,-0.33999999999999997,Malik Edmead,2771,Merrimack Warriors,557.0
+4279781,-0.42,-0.28,-0.7,-0.39,-0.32,-0.71,Kamron Reaves,50,Florida A&M Rattlers,861.48
+4896867,0.05,-0.75,-0.7,0.04,-0.68,-0.64,Favour Chukwukelu,2130,Chicago State Cougars,520.24
+4592887,-0.59,-0.12,-0.71,-0.56,-0.05,-0.6100000000000001,Japannah Kellogg III,2739,Green Bay Phoenix,772.4399999999999
+4593757,-0.45,-0.26,-0.71,-0.22,-0.14,-0.36,Drew Lutz,2916,Incarnate Word Cardinals,530.92
+4703403,-0.08,-0.64,-0.72,-0.16,-0.63,-0.79,Jaron Williams,2523,Robert Morris Colonials,983.4
+4702764,-0.0,-0.72,-0.72,0.05,-0.68,-0.63,Vukasin Masic,311,Maine Black Bears,911.96
+4397051,-0.24,-0.49,-0.73,-0.1,-0.41,-0.51,Andre Kelly,25,California Golden Bears,639.2
+4897621,-0.24,-0.5,-0.74,-0.31,-0.38,-0.69,Alvin Tumblin,56,Stetson Hatters,976.8
+4396611,-0.77,0.04,-0.73,-0.71,0.12,-0.59,Prince Toyambi,290,Georgia Southern Eagles,993.84
+4398103,-0.25,-0.48,-0.73,-0.42,-0.47,-0.8899999999999999,Elijah Buchanan,2363,Manhattan Jaspers,1258.24
+4278732,-0.15,-0.58,-0.73,-0.07,-0.58,-0.6499999999999999,Justin McCall,2934,Cal State Bakersfield Roadrunners,1067.24
+4594131,-0.15,-0.58,-0.73,-0.17,-0.65,-0.8200000000000001,Shawn Stith,2934,Cal State Bakersfield Roadrunners,1067.24
+4397471,-0.63,-0.11,-0.74,-0.59,-0.08,-0.6699999999999999,Dravon Mangum,2515,Radford Highlanders,902.16
+4896537,-0.48,-0.26,-0.74,-0.41,-0.15,-0.5599999999999999,Andre Snoddy,2115,Central Connecticut Blue Devils,1101.24
+4702028,0.46,-1.2,-0.74,0.53,-1.1,-0.5700000000000001,Rashad Smith,70,Idaho Vandals,1204.52
+4280014,-0.24,-0.51,-0.75,0.05,-0.32,-0.27,Hayden Brown,2643,The Citadel Bulldogs,1271.16
+4701031,-0.93,0.19,-0.74,-0.85,0.28,-0.57,Jordan Hall,2603,Saint Joseph's Hawks,1230.72
+4702666,-0.59,-0.16,-0.75,-0.73,-0.01,-0.74,Tyree Ihenacho,256,James Madison Dukes,538.44
+4898228,-0.33,-0.42,-0.75,-0.48,-0.45,-0.9299999999999999,Rob Brown III,315,Niagara Purple Eagles,658.8
+4898242,-0.15,-0.6,-0.75,-0.04,-0.55,-0.5900000000000001,Dezi Jones,2514,Quinnipiac Bobcats,1506.24
+4398146,-0.11,-0.65,-0.76,-0.1,-0.6,-0.7,Josiah Strong,2287,Illinois State Redbirds,1287.3600000000001
+4397926,-0.49,-0.27,-0.76,-0.41,-0.2,-0.61,Ike Nweke,171,Columbia Lions,503.4
+4897996,-0.28,-0.48,-0.76,-0.41,-0.45,-0.86,Sebastien Lamaute,161,Fairleigh Dickinson Knights,786.72
+4613126,-0.11,-0.65,-0.76,0.01,-0.64,-0.63,Brayon Freeman,45,George Washington Colonials,1029.76
+4592316,-1.82,1.05,-0.77,-1.75,1.06,-0.69,Josh Colon-Navarro,2230,Fordham Rams,1072.36
+4593285,-0.68,-0.09,-0.77,-0.65,-0.16,-0.81,Erik Czumbel,2636,UTSA Roadrunners,910.64
+4897015,-0.33,-0.44,-0.77,-0.52,-0.39,-0.91,Ibbe Klintman,2110,Central Arkansas Bears,1044.48
+4593335,-0.17,-0.6,-0.77,-0.14,-0.64,-0.78,Zion Tordoff,2277,Houston Christian Huskies,869.6
+4278576,-0.55,-0.23,-0.78,-0.5,-0.09,-0.59,Dajour Dickens,2261,Hampton Pirates,837.04
+4592865,-0.12,-0.66,-0.78,-0.28,-0.69,-0.97,Goran Miladinovic,276,Marshall Thundering Herd,1271.76
+4897468,-1.18,0.4,-0.7799999999999999,-1.33,0.43,-0.9000000000000001,Simon Wilbar,282,Indiana State Sycamores,912.48
+4398043,-1.2,0.42,-0.78,-1.18,0.46,-0.72,Antwuan Butler,2885,NJIT Highlanders,848.44
+4278256,0.59,-1.38,-0.7899999999999999,0.55,-1.38,-0.8299999999999998,Mike Adewunmi,292,UT Rio Grande Valley Vaqueros,1065.4
+4897470,-0.64,-0.14,-0.78,-0.64,-0.1,-0.74,Zach Hobbs,282,Indiana State Sycamores,719.9200000000001
+4702975,-0.31,-0.48,-0.79,-0.38,-0.4,-0.78,Liam Murphy,171,Columbia Lions,575.68
+4397863,-0.54,-0.25,-0.79,-0.61,-0.18,-0.79,Jordan Lathon,270,Milwaukee Panthers,1269.52
+4593256,-0.82,0.03,-0.7899999999999999,-0.76,0.16,-0.6,Brian Taylor,2117,Central Michigan Chippewas,1144.12
+4576062,-0.05,-0.74,-0.79,0.21,-0.65,-0.44000000000000006,Nijel Pack,2306,Kansas State Wildcats,1279.52
+4277939,-0.05,-0.74,-0.79,0.08,-0.66,-0.5800000000000001,Mark Smith,2306,Kansas State Wildcats,1279.52
+4398070,-0.3,-0.49,-0.79,-0.21,-0.45,-0.66,Ty Perry,322,Lafayette Leopards,1110.52
+4896875,-1.17,0.37,-0.7999999999999999,-1.12,0.44,-0.6800000000000002,Dancell Leter,3101,Utah Tech Trailblazers,1297.56
+4701244,-1.17,0.37,-0.7999999999999999,-1.24,0.41,-0.8300000000000001,Cameron Gooden,3101,Utah Tech Trailblazers,1297.56
+4701245,-1.17,0.37,-0.7999999999999999,-1.21,0.43,-0.78,Frank Staine,3101,Utah Tech Trailblazers,1297.56
+4701250,-1.17,0.37,-0.7999999999999999,-1.05,0.4,-0.65,Hunter Schofield,3101,Utah Tech Trailblazers,1297.56
+4339478,-0.59,-0.21,-0.7999999999999999,-0.69,-0.23,-0.9199999999999999,Mike Meadows,2501,Portland Pilots,710.32
+4066216,0.04,-0.84,-0.7999999999999999,0.44,-0.63,-0.19,Jalen Johnson,2382,Mercer Bears,580.04
+4593691,-1.02,0.22,-0.8,-1.14,0.25,-0.8899999999999999,Lamar Wright,2565,SIU Edwardsville Cougars,1036.52
+4431791,0.42,-1.22,-0.8,0.51,-1.2,-0.69,Noah Fernandes,113,UMass Minutemen,1253.24
+4431730,-0.45,-0.35,-0.8,-0.32,-0.25,-0.5700000000000001,Al-Amir Dawes,228,Clemson Tigers,931.36
+4593474,0.03,-0.83,-0.7999999999999999,-0.0,-0.72,-0.72,Curt Lewis,2198,Eastern Kentucky Colonels,1022.72
+4432065,-0.22,-0.58,-0.7999999999999999,-0.27,-0.65,-0.92,Leo O'Boyle,322,Lafayette Leopards,1233.48
+4279247,-0.74,-0.07,-0.81,-0.78,0.07,-0.71,Ralph Bissainthe,2117,Central Michigan Chippewas,1226.16
+4899805,0.07,-0.88,-0.81,0.26,-0.69,-0.42999999999999994,Gary Grant,2400,Mississippi Valley State Delta Devils,659.88
+4897155,-0.62,-0.19,-0.81,-0.75,-0.18,-0.9299999999999999,Anthony Pritchard,202,Tulsa Golden Hurricane,759.72
+4066390,-0.75,-0.06,-0.81,-0.59,0.08,-0.51,Jeriah Horne,202,Tulsa Golden Hurricane,1283.64
+4397373,-0.32,-0.5,-0.8200000000000001,-0.09,-0.53,-0.62,Rey Idowu,202,Tulsa Golden Hurricane,671.88
+4712412,0.01,-0.83,-0.82,0.14,-0.69,-0.5499999999999999,Charlie Yoder,2916,Incarnate Word Cardinals,607.92
+3948762,0.23,-1.05,-0.8200000000000001,0.32,-1.07,-0.75,Tyler Moffe,2643,The Citadel Bulldogs,1273.4
+4703253,-0.69,-0.13,-0.82,-0.76,-0.24,-1.0,Nolan Dorsey,107,Holy Cross Crusaders,536.36
+4396679,-1.1,0.27,-0.8300000000000001,-1.03,0.3,-0.73,Erik Stevenson,2579,South Carolina Gamecocks,1350.76
+4279322,-1.1,0.27,-0.8300000000000001,-1.06,0.27,-0.79,James Reese V,2579,South Carolina Gamecocks,1350.76
+4431734,-0.85,0.02,-0.83,-0.95,0.09,-0.86,Tristan Enaruna,66,Iowa State Cyclones,741.96
+4397991,-0.82,-0.01,-0.83,-0.95,-0.12,-1.0699999999999998,Philmon Gebrewhit,305,DePaul Blue Demons,614.32
+4702939,-0.89,0.06,-0.8300000000000001,-0.95,0.14,-0.8099999999999999,Joey St. Pierre,270,Milwaukee Panthers,1398.0
+4278606,-0.19,-0.65,-0.8400000000000001,-0.23,-0.6,-0.83,Jared Rodriguez,304,Idaho State Bengals,1129.76
+4700860,-0.53,-0.31,-0.8400000000000001,-0.53,-0.31,-0.8400000000000001,Stephan Swenson,56,Stetson Hatters,1166.96
+4612709,-0.53,-0.31,-0.8400000000000001,-0.4,-0.27,-0.67,Chase Johnston,56,Stetson Hatters,1166.96
+4278470,-0.53,-0.31,-0.8400000000000001,-0.47,-0.21,-0.6799999999999999,Christiaan Jones,56,Stetson Hatters,1166.96
+4897085,-1.65,0.8,-0.8499999999999999,-1.73,0.91,-0.82,Antrell Charlton,2230,Fordham Rams,1215.72
+4397384,-0.12,-0.72,-0.84,0.41,-0.51,-0.10000000000000003,Isaih Moore,2572,Southern Miss Golden Eagles,561.36
+4398164,-0.6,-0.25,-0.85,-0.66,-0.21,-0.87,Ogheneyole Akuwovo,2066,Binghamton Bearcats,664.84
+4896378,-0.39,-0.46,-0.8500000000000001,-0.1,-0.43,-0.53,Jao Ituka,2368,Marist Red Foxes,1064.64
+4278050,0.11,-0.96,-0.85,0.17,-0.81,-0.64,Darious Hall,2110,Central Arkansas Bears,650.48
+4592967,-1.02,0.16,-0.86,-1.27,0.08,-1.19,J.J. Miles,151,East Carolina Pirates,616.68
+4279741,0.44,-1.29,-0.8500000000000001,0.54,-1.33,-0.79,Rich Kelly,113,UMass Minutemen,1383.04
+4277981,0.44,-1.29,-0.8500000000000001,0.43,-1.18,-0.75,Trent Buttrick,113,UMass Minutemen,1383.04
+4432875,-0.87,0.01,-0.86,-0.88,0.08,-0.8,Mahamadou Diawara,56,Stetson Hatters,661.24
+4592435,0.02,-0.87,-0.85,0.07,-0.8,-0.73,Branden Carlson,254,Utah Utes,1032.92
+4703382,-0.97,0.1,-0.87,-0.89,0.27,-0.62,Courtney Carter,2565,SIU Edwardsville Cougars,969.28
+4397691,-0.52,-0.36,-0.88,-0.54,-0.3,-0.8400000000000001,Quentin Millora-Brown,238,Vanderbilt Commodores,1238.72
+4575108,-1.15,0.28,-0.8699999999999999,-1.07,0.26,-0.81,Matt Rogers,44,American University Eagles,1088.24
+4703143,-0.26,-0.61,-0.87,-0.35,-0.42,-0.77,Tre Mitchell,2115,Central Connecticut Blue Devils,830.6800000000001
+4897528,-0.43,-0.45,-0.88,-0.6,-0.58,-1.18,Sebastian Forsling,167,New Mexico Lobos,687.48
+4593473,-0.09,-0.79,-0.88,-0.19,-0.84,-1.03,Russhard Cruickshank,2198,Eastern Kentucky Colonels,1068.92
+4278568,-1.14,0.25,-0.8899999999999999,-1.31,0.34,-0.97,Chris Sodom,2169,Delaware State Hornets,722.64
+4397602,-0.64,-0.24,-0.88,-0.73,-0.15,-0.88,Chase Audige,77,Northwestern Wildcats,1530.28
+4592778,-1.0,0.11,-0.89,-0.97,0.24,-0.73,T.J. Bickerstaff,103,Boston College Eagles,794.96
+4713010,0.16,-1.06,-0.9,0.21,-0.84,-0.63,David Jones,305,DePaul Blue Demons,1237.56
+4432137,-0.23,-0.66,-0.89,-0.36,-0.6,-0.96,B. Artis White,2711,Western Michigan Broncos,1094.2
+4397122,-0.4,-0.5,-0.9,-0.08,-0.31,-0.39,Josh Roberts,2363,Manhattan Jaspers,777.0799999999999
+4278663,-0.54,-0.37,-0.91,-0.19,-0.25,-0.44,Bryce Fowler,16,Sacramento State Hornets,1417.28
+4709320,-0.18,-0.74,-0.9199999999999999,-0.1,-0.65,-0.75,Anquan Hill,161,Fairleigh Dickinson Knights,1067.3600000000001
+4432852,-0.17,-0.75,-0.92,-0.09,-0.69,-0.7799999999999999,Donta Scott,120,Maryland Terrapins,1334.72
+4702766,-0.73,-0.19,-0.9199999999999999,-0.45,-0.01,-0.46,Terrence Edwards,256,James Madison Dukes,754.32
+4431760,-0.83,-0.09,-0.9199999999999999,-0.87,-0.05,-0.92,Nick Ongenda,305,DePaul Blue Demons,1164.32
+4702997,-0.27,-0.65,-0.92,-0.07,-0.48,-0.55,Kahliel Spear,2523,Robert Morris Colonials,1521.8400000000001
+4703000,-0.27,-0.65,-0.92,-0.26,-0.54,-0.8,Enoch Cheeks,2523,Robert Morris Colonials,1521.8400000000001
+4593469,-0.04,-0.88,-0.92,-0.02,-0.67,-0.6900000000000001,Stephen Clark,2643,The Citadel Bulldogs,1344.52
+4397972,0.33,-1.26,-0.9299999999999999,0.48,-1.27,-0.79,Vado Morse,256,James Madison Dukes,1255.44
+4702765,0.33,-1.26,-0.9299999999999999,0.4,-1.25,-0.85,Justin Amadi,256,James Madison Dukes,1255.44
+4593273,-0.31,-0.63,-0.94,-0.41,-0.53,-0.94,Hunter Dean,45,George Washington Colonials,1169.96
+4431770,-0.31,-0.63,-0.94,-0.17,-0.63,-0.8,James Bishop IV,45,George Washington Colonials,1169.96
+4432537,-0.31,-0.63,-0.94,-0.1,-0.55,-0.65,Joe Bamisile,45,George Washington Colonials,1169.96
+4397537,-0.17,-0.76,-0.93,0.09,-0.73,-0.64,Taevion Kinsey,276,Marshall Thundering Herd,1273.72
+4431763,0.3,-1.23,-0.9299999999999999,0.48,-1.07,-0.5900000000000001,Jaelen House,167,New Mexico Lobos,1250.0
+4683803,0.3,-1.23,-0.9299999999999999,0.21,-1.2,-0.99,Javonte Johnson,167,New Mexico Lobos,1250.0
+4432408,0.3,-1.23,-0.9299999999999999,0.42,-1.24,-0.8200000000000001,Jamal Mashburn Jr.,167,New Mexico Lobos,1250.0
+4432169,-0.6,-0.34,-0.94,-0.68,-0.31,-0.99,Jaemyn Brakefield,145,Ole Miss Rebels,1125.08
+4433099,-1.16,0.21,-0.95,-1.14,0.26,-0.8799999999999999,Lars Thiemann,25,California Golden Bears,710.36
+4897331,-0.5,-0.45,-0.95,-0.52,-0.42,-0.94,Chris Nix,2630,UT Martin Skyhawks,1033.56
+4433245,-0.8,-0.16,-0.9600000000000001,-0.74,-0.14,-0.88,Colin Smalls,44,American University Eagles,1209.64
+4897907,-0.86,-0.1,-0.96,-0.93,-0.04,-0.9700000000000001,Caleb Kenney,107,Holy Cross Crusaders,996.08
+4278574,-0.76,-0.2,-0.96,-0.76,-0.13,-0.89,Makai Ashton-Langford,103,Boston College Eagles,1547.84
+4896615,-0.76,-0.2,-0.96,-0.76,-0.12,-0.88,Jaeden Zackery,103,Boston College Eagles,1547.84
+4280080,-0.76,-0.2,-0.96,-0.67,-0.21,-0.88,James Karnik,103,Boston College Eagles,1547.84
+4397184,-0.03,-0.93,-0.9600000000000001,0.03,-0.87,-0.84,Eric Ayala,120,Maryland Terrapins,1204.44
+4397401,-0.82,-0.14,-0.96,-0.76,-0.02,-0.78,Ithiel Horton,221,Pittsburgh Panthers,516.64
+4397951,-0.63,-0.34,-0.97,-0.68,-0.4,-1.08,Ian Krishnan,2115,Central Connecticut Blue Devils,1226.48
+4433055,-1.13,0.15,-0.9799999999999999,-1.17,0.14,-1.0299999999999998,Carlos Paez,2046,Austin Peay Governors,1118.08
+4398016,-1.21,0.23,-0.98,-1.26,0.39,-0.87,Ramiir Dixon-Conover,2598,St. Francis (PA) Red Flash,1016.72
+4431805,-1.08,0.11,-0.9700000000000001,-1.19,0.15,-1.04,Wildens Leveque,2579,South Carolina Gamecocks,1278.52
+4397393,0.11,-1.09,-0.9800000000000001,0.07,-1.07,-1.0,Michael Steadman,113,UMass Minutemen,966.24
+4593268,-0.7,-0.28,-0.98,-0.78,-0.22,-1.0,Denijay Harris,2572,Southern Miss Golden Eagles,614.64
+4702785,-0.9,-0.08,-0.98,-0.85,-0.06,-0.9099999999999999,Jahmyl Telfort,111,Northeastern Huskies,1245.28
+4702509,-0.74,-0.25,-0.99,-0.79,-0.29,-1.08,Bo Montgomery,107,Holy Cross Crusaders,1206.76
+4396763,-1.23,0.24,-0.99,-1.17,0.27,-0.8999999999999999,Jamari Blackmon,2453,North Alabama Lions,912.36
+4397233,-0.55,-0.44,-0.99,-0.39,-0.37,-0.76,Pete Nance,77,Northwestern Wildcats,1463.8
+4703525,-0.69,-0.31,-1.0,-0.74,-0.41,-1.15,Adong Makuoi,2459,Northern Illinois Huskies,1157.44
+4403367,-0.91,-0.1,-1.01,-0.83,-0.06,-0.8899999999999999,Shaun Doss Jr.,2565,SIU Edwardsville Cougars,1248.08
+4433129,-0.91,-0.1,-1.01,-0.88,-0.09,-0.97,Shamar Wright,2565,SIU Edwardsville Cougars,1248.08
+4897293,-0.91,-0.1,-1.01,-0.87,-0.06,-0.9299999999999999,DeeJuan Pruitt,2565,SIU Edwardsville Cougars,1248.08
+4703831,-0.43,-0.59,-1.02,-0.38,-0.59,-0.97,Ricardo Wright,2368,Marist Red Foxes,1277.52
+4396816,-0.36,-0.67,-1.03,-0.24,-0.62,-0.86,Onyi Eyisi,2463,Cal State Northridge Matadors,913.16
+4701225,-0.52,-0.5,-1.02,-0.37,-0.42,-0.79,PJ Hall,228,Clemson Tigers,1202.12
+4592852,-0.27,-0.76,-1.03,-0.02,-0.75,-0.77,Tevin Brewer,2229,Florida International Panthers,1082.92
+4593454,-0.47,-0.56,-1.03,-0.42,-0.54,-0.96,Titus Wright,2711,Western Michigan Broncos,592.6
+4397752,-0.49,-0.54,-1.03,-0.6,-0.54,-1.1400000000000001,Ezekiel Richards,2464,Northern Arizona Lumberjacks,1012.04
+4277992,-0.43,-0.61,-1.04,-0.37,-0.51,-0.88,Kobe King,2674,Valparaiso Beacons,1275.44
+4397710,-0.82,-0.23,-1.05,-0.65,-0.09,-0.74,KJ Simon,2630,UT Martin Skyhawks,1167.88
+4623861,-0.82,-0.23,-1.05,-0.93,-0.2,-1.1300000000000001,Koby Jeffries,2630,UT Martin Skyhawks,1167.88
+4592307,-0.14,-0.91,-1.05,-0.06,-0.84,-0.8999999999999999,Taz Sherman,277,West Virginia Mountaineers,1237.32
+4398127,-0.2,-0.85,-1.05,-0.04,-0.65,-0.6900000000000001,Warith Alatishe,204,Oregon State Beavers,678.28
+4066966,-0.95,-0.11,-1.06,-0.94,-0.08,-1.02,Najee Garvin,2261,Hampton Pirates,1113.0
+4592665,-0.95,-0.11,-1.06,-0.83,-0.04,-0.87,Russell Dean,2261,Hampton Pirates,1113.0
+4897686,-0.04,-1.02,-1.06,0.11,-0.99,-0.88,Francis Nwaokorie,28,UC San Diego Tritons,1220.48
+4702610,-0.04,-1.02,-1.06,0.07,-0.93,-0.8600000000000001,Toni Rocak,28,UC San Diego Tritons,1220.48
+4278110,-0.1,-0.96,-1.06,0.49,-0.69,-0.19999999999999996,Felipe Haase,2382,Mercer Bears,649.88
+4067818,-0.31,-0.76,-1.07,-0.16,-0.66,-0.8200000000000001,Andre Jones,2433,UL Monroe Warhawks,1168.76
+4397996,-0.31,-0.76,-1.07,-0.33,-0.73,-1.06,Koreem Ozier,2433,UL Monroe Warhawks,1168.76
+4066434,-0.55,-0.51,-1.06,-0.15,-0.37,-0.52,Harrison Henderson,2117,Central Michigan Chippewas,608.4
+4431811,0.47,-1.54,-1.07,0.7,-1.43,-0.73,Dereon Seabron,152,NC State Wolfpack,1404.48
+4395661,0.47,-1.54,-1.07,0.51,-1.49,-0.98,Jericole Hellems,152,NC State Wolfpack,1404.48
+4683940,0.47,-1.54,-1.07,0.65,-1.43,-0.7799999999999999,Terquavion Smith,152,NC State Wolfpack,1404.48
+4431810,0.23,-1.3,-1.07,0.69,-1.09,-0.40000000000000013,Michael Moreno,2198,Eastern Kentucky Colonels,662.6800000000001
+4897292,-0.24,-0.83,-1.0699999999999998,-0.23,-0.79,-1.02,Touko Tainamo,2172,Denver Pioneers,1168.6
+4703906,-0.52,-0.55,-1.07,-0.29,-0.38,-0.6699999999999999,Kailex Stephens,282,Indiana State Sycamores,762.9200000000001
+4395631,-1.11,0.03,-1.08,-0.93,0.18,-0.75,Michael Devoe,59,Georgia Tech Yellow Jackets,1373.48
+4278532,-1.11,0.03,-1.08,-0.92,0.17,-0.75,Jordan Usher,59,Georgia Tech Yellow Jackets,1373.48
+4397469,-0.25,-0.84,-1.0899999999999999,-0.26,-0.8,-1.06,Cooper Robb,2198,Eastern Kentucky Colonels,1160.4
+4593240,0.06,-1.15,-1.0899999999999999,0.18,-1.13,-0.95,Brandon Rush,161,Fairleigh Dickinson Knights,1001.0
+4397161,-0.18,-0.92,-1.1,-0.19,-0.76,-0.95,Samba Diallo,2363,Manhattan Jaspers,683.68
+4592712,-0.63,-0.46,-1.09,-0.46,-0.45,-0.91,Boo Buie,77,Northwestern Wildcats,1459.04
+4431737,-0.63,-0.46,-1.09,-0.7,-0.42,-1.1199999999999999,Robbie Beran,77,Northwestern Wildcats,1459.04
+4592891,0.17,-1.27,-1.1,0.02,-1.29,-1.27,Brenton Mills,189,Bowling Green Falcons,1242.0
+4897146,-0.56,-0.54,-1.1,-0.22,-0.52,-0.74,Sydney Curry,97,Louisville Cardinals,711.16
+4594333,-1.73,0.62,-1.1099999999999999,-1.86,0.64,-1.2200000000000002,Emmanuel Adedoyin,2454,North Florida Ospreys,932.16
+4395632,-1.1,-0.02,-1.12,-1.23,0.03,-1.2,Khalid Moore,59,Georgia Tech Yellow Jackets,1307.64
+4896865,-0.92,-0.2,-1.12,-1.09,-0.11,-1.2000000000000002,Teddy Bayi Ba Mandeng,2130,Chicago State Cougars,695.76
+4277945,-0.86,-0.26,-1.12,-0.67,-0.11,-0.78,Clifton Moore,2325,La Salle Explorers,1359.92
+4397026,-0.77,-0.36,-1.13,-0.76,-0.39,-1.15,Bryce Golden,2086,Butler Bulldogs,1439.4
+4278552,-0.77,-0.36,-1.13,-0.76,-0.33,-1.09,Aaron Thompson,2086,Butler Bulldogs,1439.4
+4592209,-0.77,-0.37,-1.1400000000000001,-0.68,-0.4,-1.08,Nate Jenkins,2739,Green Bay Phoenix,658.96
+4279318,0.36,-1.5,-1.1400000000000001,0.51,-1.37,-0.8600000000000001,Daeqwon Plowden,189,Bowling Green Falcons,1472.36
+4431792,0.36,-1.5,-1.1400000000000001,0.37,-1.46,-1.0899999999999999,Samari Curtis,189,Bowling Green Falcons,1472.36
+4593401,0.36,-1.5,-1.1400000000000001,0.36,-1.46,-1.1,Trey Diggs,189,Bowling Green Falcons,1472.36
+4397118,-0.63,-0.5,-1.13,-0.64,-0.41,-1.05,Ant Nelson,2363,Manhattan Jaspers,1040.84
+4897215,-0.77,-0.36,-1.13,-0.81,-0.36,-1.17,D.J. Smith,2031,Little Rock Trojans,658.56
+4397304,-0.37,-0.77,-1.1400000000000001,-0.45,-0.81,-1.26,Keith Haymon,2464,Northern Arizona Lumberjacks,1186.52
+4897007,-0.64,-0.5,-1.1400000000000001,-0.18,-0.33,-0.51,Matthew Cleveland,52,Florida State Seminoles,542.92
+4278412,-1.14,-0.0,-1.14,-0.91,0.1,-0.81,Izaiah Brockington,66,Iowa State Cyclones,1264.72
+4397214,-1.14,-0.0,-1.14,-1.3,-0.1,-1.4000000000000001,Gabe Kalscheur,66,Iowa State Cyclones,1264.72
+4683751,-1.14,-0.0,-1.14,-1.12,0.12,-1.0,Tyrese Hunter,66,Iowa State Cyclones,1264.72
+4701318,-0.25,-0.9,-1.15,-0.25,-0.86,-1.1099999999999999,Dre Davis,97,Louisville Cardinals,856.76
+4396950,-1.05,-0.1,-1.1500000000000001,-1.02,-0.14,-1.1600000000000001,Alanzo Frink,151,East Carolina Pirates,566.8399999999999
+4592859,-0.09,-1.07,-1.1600000000000001,0.04,-1.01,-0.97,Andrew Taylor,276,Marshall Thundering Herd,1415.16
+4432441,-0.09,-1.07,-1.1600000000000001,-0.08,-0.95,-1.03,Obinna Anochili-Killen,276,Marshall Thundering Herd,1415.16
+4700970,-0.64,-0.52,-1.1600000000000001,-0.61,-0.55,-1.1600000000000001,Jhamir Brickus,2325,La Salle Explorers,951.96
+4589480,-0.51,-0.65,-1.1600000000000001,-0.45,-0.62,-1.07,Coleman Stucke,111,Northeastern Huskies,631.8
+4702353,-0.68,-0.48,-1.1600000000000001,-0.67,-0.37,-1.04,Brantly Stevenson,13,Cal Poly Mustangs,911.9200000000001
+4397152,-0.97,-0.19,-1.16,-0.89,-0.09,-0.98,Jack Clark,2325,La Salle Explorers,1287.04
+4070682,-0.07,-1.09,-1.1600000000000001,0.09,-1.04,-0.9500000000000001,Mikey Dixon,70,Idaho Vandals,1482.44
+4701576,-0.07,-1.09,-1.1600000000000001,-0.12,-1.08,-1.2000000000000002,Tanner Christensen,70,Idaho Vandals,1482.44
+4397741,-0.07,-1.09,-1.1600000000000001,-0.03,-1.05,-1.08,Trevante Anderson,70,Idaho Vandals,1482.44
+4897488,-0.44,-0.72,-1.16,-0.35,-0.66,-1.01,Kevion Taylor,2674,Valparaiso Beacons,1279.24
+4592733,-0.42,-0.75,-1.17,-0.25,-0.69,-0.94,Ben Krikke,2674,Valparaiso Beacons,1338.28
+4397303,-0.78,-0.39,-1.17,-0.67,-0.33,-1.0,Bernie Andre,2630,UT Martin Skyhawks,1095.52
+4067439,-1.04,-0.13,-1.17,-0.99,-0.02,-1.01,Bryce Nze,2086,Butler Bulldogs,1379.16
+4432203,-0.4,-0.77,-1.17,-0.27,-0.75,-1.02,Noah Farrakhan,2199,Eastern Michigan Eagles,1125.96
+4897361,-0.59,-0.59,-1.18,-0.71,-0.51,-1.22,Marcus Banks,2717,Western Carolina Catamounts,1098.04
+4067410,-0.8,-0.38,-1.1800000000000002,-0.85,-0.35,-1.2,Brandon Johnson,305,DePaul Blue Demons,1446.44
+4397854,-0.81,-0.37,-1.1800000000000002,-0.76,-0.26,-1.02,Trendon Hankerson,2459,Northern Illinois Huskies,1368.96
+4397550,-0.81,-0.37,-1.1800000000000002,-0.94,-0.32,-1.26,Anthony Crump,2459,Northern Illinois Huskies,1368.96
+4279756,-0.78,-0.4,-1.1800000000000002,-0.91,-0.36,-1.27,Kedrian Johnson,277,West Virginia Mountaineers,1160.72
+4702092,0.0,-1.19,-1.19,-0.06,-1.27,-1.33,Thomas Howell,2433,UL Monroe Warhawks,1229.04
+4397339,-1.28,0.09,-1.19,-1.34,0.15,-1.1900000000000002,Isaac Chatman,2453,North Alabama Lions,828.04
+4594088,-0.59,-0.6,-1.19,-0.53,-0.53,-1.06,Caleb Hunter,2400,Mississippi Valley State Delta Devils,818.72
+4279077,-0.68,-0.51,-1.19,-0.68,-0.45,-1.1300000000000001,Jarrod West,97,Louisville Cardinals,1043.44
+4396803,-0.65,-0.55,-1.2000000000000002,-0.28,-0.48,-0.76,Lamar Norman Jr.,2711,Western Michigan Broncos,1171.16
+4433161,-1.32,0.12,-1.2000000000000002,-1.23,0.13,-1.1,Elijah Hutchins-Everett,2046,Austin Peay Governors,1253.3600000000001
+4409403,-0.63,-0.57,-1.2,-0.77,-0.53,-1.3,Onyebuchi Ezeakudo,221,Pittsburgh Panthers,620.76
+4066388,-1.02,-0.18,-1.2,-1.1,-0.09,-1.1900000000000002,Eric Curry,135,Minnesota Golden Gophers,1043.56
+4703236,-0.34,-0.86,-1.2,-0.34,-0.74,-1.08,Cheikh Faye,2127,Charleston Southern Buccaneers,862.24
+4278713,-0.13,-1.07,-1.2000000000000002,-0.04,-1.0,-1.04,Noah Baumann,61,Georgia Bulldogs,913.4000000000001
+4592284,-0.93,-0.28,-1.21,-0.9,-0.22,-1.12,C.J. Brim,2453,North Alabama Lions,964.96
+4433165,-0.69,-0.53,-1.22,-0.62,-0.41,-1.03,DeMarr Langford Jr.,103,Boston College Eagles,1356.64
+4702089,-0.78,-0.44,-1.22,-0.8,-0.33,-1.1300000000000001,Elijah Gonzales,2433,UL Monroe Warhawks,895.72
+4897202,-0.97,-0.25,-1.22,-1.02,-0.25,-1.27,Wayne McKinney III,301,San Diego Toreros,1090.68
+4613134,-0.53,-0.7,-1.23,-0.4,-0.59,-0.99,Will Soucie,2453,North Alabama Lions,636.4
+4903271,-0.61,-0.62,-1.23,-0.75,-0.55,-1.3,Lucas Moerman,2005,Air Force Falcons,762.44
+4432845,-0.31,-0.92,-1.23,-0.2,-0.97,-1.17,Josh Nickelberry,2325,La Salle Explorers,760.96
+4897145,-1.18,-0.05,-1.23,-0.93,-0.05,-0.9800000000000001,El Ellis,97,Louisville Cardinals,593.72
+4897139,-0.91,-0.32,-1.23,-0.87,-0.26,-1.13,Elijah Stephens,44,American University Eagles,846.24
+4432897,-0.69,-0.55,-1.24,-0.49,-0.46,-0.95,John Hugley IV,221,Pittsburgh Panthers,1269.68
+4277988,-0.32,-0.92,-1.24,-0.49,-0.96,-1.45,Mamadou Doucoure,2325,La Salle Explorers,900.6800000000001
+4397446,-1.44,0.2,-1.24,-1.44,0.21,-1.23,Trevon Taylor,13,Cal Poly Mustangs,1056.4
+4700996,-0.85,-0.39,-1.24,-0.95,-0.34,-1.29,Adefolarin Adetogun,311,Maine Black Bears,531.28
+4897904,-0.86,-0.38,-1.24,-0.84,-0.3,-1.14,Kyrell Luc,107,Holy Cross Crusaders,1271.36
+4398092,-0.86,-0.38,-1.24,-0.58,-0.21,-0.7899999999999999,Gerrale Gates,107,Holy Cross Crusaders,1271.36
+4278145,-1.42,0.18,-1.24,-1.51,0.26,-1.25,Grant Anticevich,25,California Golden Bears,1153.44
+4702481,-0.99,-0.25,-1.24,-1.09,-0.11,-1.2000000000000002,Johnny O'Neil,44,American University Eagles,1213.08
+4703124,-1.03,-0.22,-1.25,-1.06,-0.15,-1.21,Lachlan Bofinger,2636,UTSA Roadrunners,557.12
+4432994,-0.77,-0.48,-1.25,-0.63,-0.38,-1.01,Sam Griffin,202,Tulsa Golden Hurricane,786.3199999999999
+4433073,-1.4,0.14,-1.2599999999999998,-1.26,0.21,-1.05,Andrei Savrasov,290,Georgia Southern Eagles,934.8000000000001
+4431698,-0.22,-1.03,-1.25,-0.04,-1.01,-1.05,Jalen Cone,2464,Northern Arizona Lumberjacks,1313.8
+4702934,-1.03,-0.22,-1.25,-0.99,-0.2,-1.19,DeAndre Gholston,270,Milwaukee Panthers,1400.6399999999999
+4396020,-0.88,-0.38,-1.26,-1.11,-0.48,-1.59,Noah Bigirumwami,2130,Chicago State Cougars,654.36
+4896536,-0.66,-0.6,-1.26,-0.78,-0.61,-1.3900000000000001,Jayden Brown,2115,Central Connecticut Blue Devils,966.28
+4897557,-0.54,-0.73,-1.27,-0.29,-0.64,-0.9299999999999999,Walyn Napper,2572,Southern Miss Golden Eagles,675.04
+4703512,-0.78,-0.5,-1.28,-0.83,-0.5,-1.33,Colin Golson Jr.,2199,Eastern Michigan Eagles,759.64
+4395666,-0.92,-0.37,-1.29,-0.75,-0.3,-1.05,Chris Doherty,111,Northeastern Huskies,1232.68
+4897723,-1.24,-0.05,-1.29,-1.23,-0.01,-1.24,Kamari McGee,2739,Green Bay Phoenix,1237.6
+4431772,-0.38,-0.91,-1.29,-0.35,-0.85,-1.2,Myron Gardner,2031,Little Rock Trojans,926.64
+4703110,-0.38,-0.93,-1.31,-0.22,-0.86,-1.08,Justin Johnson,292,UT Rio Grande Valley Vaqueros,1211.92
+4703146,-0.28,-1.02,-1.3,-0.2,-0.92,-1.12,John Mikey Square,161,Fairleigh Dickinson Knights,984.88
+4701839,-0.74,-0.56,-1.3,-0.74,-0.56,-1.3,Femi Odukale,221,Pittsburgh Panthers,1207.52
+4703521,-0.64,-0.67,-1.31,-0.62,-0.63,-1.25,Kaleb Thornton,2459,Northern Illinois Huskies,1303.8
+4432891,-0.69,-0.62,-1.31,-0.77,-0.69,-1.46,DaJuan Gordon,142,Missouri Tigers,1326.84
+4431752,-0.69,-0.62,-1.31,-0.56,-0.55,-1.11,Kobe Brown,142,Missouri Tigers,1326.84
+4698719,-0.69,-0.62,-1.31,-0.73,-0.46,-1.19,Trevon Brazile,142,Missouri Tigers,1326.84
+4431877,-0.22,-1.09,-1.31,-0.36,-1.14,-1.5,Dexter Akanno,204,Oregon State Beavers,869.0
+4702351,-1.43,0.11,-1.3199999999999998,-1.4,0.09,-1.3099999999999998,Camren Pierce,13,Cal Poly Mustangs,964.32
+4397305,0.07,-1.39,-1.3199999999999998,0.02,-1.39,-1.3699999999999999,Cam Shelton,2351,Loyola Marymount Lions,1019.2
+4431774,-1.02,-0.31,-1.33,-1.04,-0.27,-1.31,Kyle Sturdivant,59,Georgia Tech Yellow Jackets,1377.8
+4066245,-0.46,-0.87,-1.33,-0.26,-0.77,-1.03,RJ Glasper,2916,Incarnate Word Cardinals,1072.24
+4699582,-0.25,-1.09,-1.34,-0.25,-0.94,-1.19,Carson Basham,2492,Pepperdine Waves,563.84
+4396954,-0.96,-0.37,-1.33,-0.81,-0.36,-1.17,Javon Pickett,142,Missouri Tigers,1143.48
+4279122,-0.5,-0.84,-1.3399999999999999,-0.39,-0.77,-1.1600000000000001,Marek Nelson,292,UT Rio Grande Valley Vaqueros,993.88
+4433582,-1.2,-0.14,-1.3399999999999999,-1.21,-0.08,-1.29,Maxwell Land,2598,St. Francis (PA) Red Flash,1294.92
+4592968,-1.3,-0.05,-1.35,-1.37,0.01,-1.36,Tremont Robinson-White,151,East Carolina Pirates,1028.68
+4701158,-1.49,0.14,-1.35,-1.6,0.09,-1.51,Dylan O'Hearn,2885,NJIT Highlanders,976.5600000000001
+4899806,-0.69,-0.66,-1.35,-0.82,-0.65,-1.47,Elijah Davis,2400,Mississippi Valley State Delta Devils,614.48
+4066442,-0.84,-0.52,-1.3599999999999999,-0.78,-0.48,-1.26,Vance Jackson,151,East Carolina Pirates,1238.24
+4592965,-0.84,-0.52,-1.3599999999999999,-0.62,-0.43,-1.05,Tristen Newton,151,East Carolina Pirates,1238.24
+4592306,-0.57,-0.79,-1.3599999999999999,-0.51,-0.77,-1.28,Sean McNeil,277,West Virginia Mountaineers,1370.4
+4432946,-0.57,-0.79,-1.3599999999999999,-0.48,-0.75,-1.23,Jalen Bridges,277,West Virginia Mountaineers,1370.4
+4702096,-0.57,-0.8,-1.37,-0.47,-0.73,-1.2,Russell Harrison,2433,UL Monroe Warhawks,1297.12
+4066485,-0.36,-1.0,-1.3599999999999999,-0.29,-0.88,-1.17,Nysier Brooks,145,Ole Miss Rebels,1259.8
+4597989,-1.51,0.14,-1.37,-1.56,0.16,-1.4000000000000001,DeAngelo Epps,2261,Hampton Pirates,749.96
+4432201,-0.41,-0.98,-1.39,-0.54,-0.94,-1.48,Isaiah Cottrell,277,West Virginia Mountaineers,1021.76
+4065704,-0.91,-0.47,-1.38,-0.85,-0.4,-1.25,Nikola Djogo,111,Northeastern Huskies,1307.28
+4702499,0.29,-1.67,-1.38,0.44,-1.6,-1.1600000000000001,Andre Screen,2083,Bucknell Bison,1222.3600000000001
+4280074,-0.41,-0.98,-1.39,-0.41,-0.97,-1.38,E.J. Stephens,135,Minnesota Golden Gophers,1239.6
+4898283,-0.98,-0.41,-1.39,-0.83,-0.35,-1.18,Kevin Miller,2117,Central Michigan Chippewas,1288.68
+4702113,-1.55,0.16,-1.3900000000000001,-1.52,0.21,-1.31,Kamari Brown,290,Georgia Southern Eagles,867.6800000000001
+4897244,0.37,-1.77,-1.4,0.51,-1.76,-1.25,Riley Miller,2900,St. Thomas - Minnesota Tommies,1202.72
+4897248,0.37,-1.77,-1.4,0.25,-1.77,-1.52,Ryan Lindberg,2900,St. Thomas - Minnesota Tommies,1202.72
+4897246,0.37,-1.77,-1.4,0.27,-1.79,-1.52,Burt Hedstrom,2900,St. Thomas - Minnesota Tommies,1202.72
+4431704,0.16,-1.55,-1.3900000000000001,0.1,-1.45,-1.3499999999999999,Casey Morsell,152,NC State Wolfpack,878.76
+4701240,0.22,-1.62,-1.4000000000000001,0.18,-1.63,-1.45,Tanor Ngom,52,Florida State Seminoles,815.76
+4066322,-0.95,-0.45,-1.4,-1.02,-0.45,-1.47,Josh Parrish,301,San Diego Toreros,1018.88
+4288068,-0.78,-0.63,-1.4100000000000001,-0.77,-0.57,-1.3399999999999999,Cooper Neese,282,Indiana State Sycamores,1038.76
+4278408,-0.55,-0.86,-1.4100000000000001,-0.47,-0.89,-1.3599999999999999,Darien Jackson,202,Tulsa Golden Hurricane,1211.24
+4594054,-0.29,-1.13,-1.42,-0.2,-1.05,-1.25,Kshun Stokes,2029,Arkansas-Pine Bluff Golden Lions,668.04
+4594059,-0.19,-1.23,-1.42,0.05,-1.09,-1.04,Dequan Morris,2029,Arkansas-Pine Bluff Golden Lions,1013.12
+4703621,-0.17,-1.25,-1.42,-0.13,-1.28,-1.4100000000000001,Josh Morgan,2916,Incarnate Word Cardinals,1001.6
+4280256,-1.74,0.32,-1.42,-1.74,0.36,-1.38,Mark Flagg,2598,St. Francis (PA) Red Flash,963.72
+4702352,-1.54,0.12,-1.42,-1.6,0.07,-1.53,Kobe Sanders,13,Cal Poly Mustangs,927.8
+4396969,0.13,-1.56,-1.4300000000000002,0.18,-1.37,-1.1900000000000002,Luis Rodriguez,145,Ole Miss Rebels,665.76
+4593362,-0.55,-0.88,-1.4300000000000002,-0.68,-0.87,-1.55,Seth Pinkney,2229,Florida International Panthers,1222.32
+4278975,-0.55,-0.88,-1.4300000000000002,-0.62,-0.91,-1.53,Isaiah Banks,2229,Florida International Panthers,1222.32
+4066229,-0.55,-0.88,-1.4300000000000002,-0.58,-0.79,-1.37,Clevon Brown,2229,Florida International Panthers,1222.32
+4703010,-0.13,-1.3,-1.4300000000000002,0.04,-1.26,-1.22,Tahlik Chavez,2127,Charleston Southern Buccaneers,985.12
+4700873,-0.72,-0.71,-1.43,-0.76,-0.58,-1.3399999999999999,Toby Okani,2184,Duquesne Dukes,543.56
+4402802,-0.39,-1.04,-1.4300000000000002,-0.25,-0.98,-1.23,Donald Carey,46,Georgetown Hoyas,1184.3200000000002
+4897348,-0.56,-0.88,-1.44,-0.66,-0.86,-1.52,Benjamin Griscti,2916,Incarnate Word Cardinals,867.28
+4702930,-1.21,-0.23,-1.44,-1.2,-0.15,-1.3499999999999999,Emmanuel Ansong,2739,Green Bay Phoenix,1235.92
+4595437,-1.07,-0.38,-1.4500000000000002,-0.94,-0.25,-1.19,Nate Scott,2199,Eastern Michigan Eagles,823.84
+4279227,-0.31,-1.15,-1.46,-0.38,-1.21,-1.5899999999999999,Luke Loewe,135,Minnesota Golden Gophers,1352.88
+4897088,-1.28,-0.18,-1.46,-1.07,-0.11,-1.1800000000000002,Jackie Johnson III,2184,Duquesne Dukes,597.9200000000001
+4397413,-1.12,-0.35,-1.4700000000000002,-1.11,-0.34,-1.4500000000000002,Darius Bowser,2127,Charleston Southern Buccaneers,792.36
+4278034,-0.47,-1.0,-1.47,-0.4,-0.91,-1.31,Marco Anthony,254,Utah Utes,1288.72
+4897608,-1.02,-0.46,-1.48,-1.13,-0.43,-1.5599999999999998,Damian Forrest,2453,North Alabama Lions,980.36
+4397274,-0.5,-0.98,-1.48,-0.58,-0.96,-1.54,Christian Gray,2463,Cal State Northridge Matadors,846.76
+4897277,-0.55,-0.94,-1.49,-0.51,-0.93,-1.44,Matt Norman,155,North Dakota Fighting Hawks,1106.96
+4701995,-0.61,-0.88,-1.49,-0.69,-0.81,-1.5,Rollie Worster,254,Utah Utes,1358.8
+4702710,-1.57,0.09,-1.48,-1.68,0.04,-1.64,Bakari LaStrap,85,IUPUI Jaguars,629.12
+4703996,-1.59,0.1,-1.49,-1.71,0.16,-1.55,Martaz Robinson,2169,Delaware State Hornets,785.16
+4703142,-0.82,-0.67,-1.49,-0.6,-0.61,-1.21,Nigel Scantlebury,2115,Central Connecticut Blue Devils,1091.52
+4397149,-0.35,-1.14,-1.4899999999999998,-0.48,-1.19,-1.67,Riley Battin,254,Utah Utes,737.2
+4703907,-1.31,-0.18,-1.49,-1.38,-0.14,-1.52,Julian Larry,282,Indiana State Sycamores,1337.3600000000001
+4398037,-0.55,-0.95,-1.5,-0.53,-0.89,-1.42,Brandon Swaby,2916,Incarnate Word Cardinals,873.9200000000001
+4280029,-0.99,-0.52,-1.51,-0.98,-0.33,-1.31,Sam Iorio,315,Niagara Purple Eagles,1062.56
+4703544,-0.84,-0.67,-1.51,-1.0,-0.74,-1.74,Josiah Freeman,2711,Western Michigan Broncos,1237.68
+4897469,-1.19,-0.32,-1.51,-1.11,-0.3,-1.4100000000000001,Cameron Henry,282,Indiana State Sycamores,1128.96
+4432588,-1.13,-0.39,-1.52,-1.25,-0.35,-1.6,John Butler Jr.,52,Florida State Seminoles,1352.4
+4898293,-0.91,-0.62,-1.53,-0.98,-0.58,-1.56,Mo Njie,2199,Eastern Michigan Eagles,1102.72
+4592922,-1.65,0.13,-1.52,-1.56,0.24,-1.32,Alimamy Koroma,13,Cal Poly Mustangs,992.32
+4278684,-0.01,-1.52,-1.53,-0.07,-1.46,-1.53,Deontaye Buskey,2127,Charleston Southern Buccaneers,1069.16
+4897454,-0.74,-0.8,-1.54,-0.64,-0.84,-1.48,Blaise Beauchamp,339,Evansville Purple Aces,659.28
+4592851,-0.82,-0.73,-1.5499999999999998,-0.83,-0.66,-1.49,Eric Lovett,2229,Florida International Panthers,1156.76
+4431834,-0.73,-0.81,-1.54,-0.69,-0.74,-1.43,Isaiah Palermo,2031,Little Rock Trojans,799.52
+4897282,-0.36,-1.19,-1.5499999999999998,-0.17,-1.08,-1.25,Paul Bruns,155,North Dakota Fighting Hawks,1175.68
+4897280,-0.36,-1.19,-1.5499999999999998,-0.38,-1.19,-1.5699999999999998,Tsotne Tsartsidze,155,North Dakota Fighting Hawks,1175.68
+4398189,-0.36,-1.19,-1.5499999999999998,-0.44,-1.18,-1.6199999999999999,Bentiu Panoam,155,North Dakota Fighting Hawks,1175.68
+4397124,-1.11,-0.45,-1.56,-1.0,-0.38,-1.38,Marcellus Earlington,301,San Diego Toreros,1007.28
+4897604,-1.34,-0.22,-1.56,-1.17,-0.08,-1.25,Daniel Ortiz,2453,North Alabama Lions,1114.84
+4703077,-0.79,-0.77,-1.56,-0.62,-0.76,-1.38,Bryce McBride,2199,Eastern Michigan Eagles,560.88
+4431893,-0.6,-0.97,-1.5699999999999998,-0.44,-0.89,-1.33,Jamison Battle,135,Minnesota Golden Gophers,1298.1200000000001
+4593725,-0.45,-1.12,-1.57,-0.26,-1.05,-1.31,Carlos Marshall Jr.,2634,Tennessee State Tigers,937.64
+4280072,-1.17,-0.4,-1.5699999999999998,-1.06,-0.28,-1.34,Matt Faw,2885,NJIT Highlanders,642.52
+4897911,-0.07,-1.51,-1.58,-0.25,-1.42,-1.67,Elvin Edmonds IV,2083,Bucknell Bison,1351.8
+4397650,-0.07,-1.51,-1.58,0.11,-1.45,-1.3399999999999999,Andrew Funk,2083,Bucknell Bison,1351.8
+4593081,-0.07,-1.51,-1.58,-0.2,-1.49,-1.69,Jake van der Heijden,2083,Bucknell Bison,1351.8
+4593080,-0.07,-1.51,-1.58,0.1,-1.48,-1.38,Xander Rice,2083,Bucknell Bison,1351.8
+4279319,-0.39,-1.2,-1.5899999999999999,-0.31,-1.23,-1.54,Matiss Kulackovskis,189,Bowling Green Falcons,880.6
+4897724,-1.3,-0.29,-1.59,-1.25,-0.26,-1.51,Cade Meyer,2739,Green Bay Phoenix,1366.8
+4592358,-0.16,-1.44,-1.5999999999999999,-0.01,-1.34,-1.35,Alonzo Verge Jr.,158,Nebraska Cornhuskers,1408.44
+4397671,-0.8,-0.8,-1.6,-0.72,-0.7,-1.42,Jeremiah Bailey,279,Pacific Tigers,839.64
+4432031,-0.37,-1.23,-1.6,-0.43,-1.23,-1.66,Keli Leaupepe,2351,Loyola Marymount Lions,876.44
+4278360,-1.78,0.18,-1.6,-1.9,0.29,-1.6099999999999999,Javon Greene,58,South Florida Bulls,1128.24
+4397528,-0.73,-0.88,-1.6099999999999999,-0.42,-0.84,-1.26,Jose Perez,2363,Manhattan Jaspers,1393.04
+4278113,-0.47,-1.14,-1.6099999999999999,-0.4,-1.12,-1.52,Derrick Walker,158,Nebraska Cornhuskers,1481.2
+4277914,-0.47,-1.14,-1.6099999999999999,-0.59,-1.15,-1.7399999999999998,Lat Mayen,158,Nebraska Cornhuskers,1481.2
+4702687,-1.3,-0.32,-1.62,-1.41,-0.25,-1.66,Sam Hines Jr.,58,South Florida Bulls,660.2
+4899810,-0.37,-1.25,-1.62,-0.49,-1.21,-1.7,Daniel Umoh,2400,Mississippi Valley State Delta Devils,808.4
+4431925,-1.6,-0.03,-1.6300000000000001,-1.44,-0.03,-1.47,Jamir Chaplin,58,South Florida Bulls,801.56
+4897242,0.12,-1.75,-1.63,0.21,-1.66,-1.45,Anders Nelson,2900,St. Thomas - Minnesota Tommies,1137.04
+4897243,-0.11,-1.52,-1.6300000000000001,-0.03,-1.46,-1.49,Parker Bjorklund,2900,St. Thomas - Minnesota Tommies,1078.4
+4702120,-0.89,-0.75,-1.6400000000000001,-0.85,-0.7,-1.5499999999999998,Carson Towt,2464,Northern Arizona Lumberjacks,1387.4
+4278643,-0.89,-0.75,-1.6400000000000001,-0.84,-0.64,-1.48,Nik Mains,2464,Northern Arizona Lumberjacks,1387.4
+4278139,-1.32,-0.32,-1.6400000000000001,-1.35,-0.24,-1.59,Darius McNeill,2636,UTSA Roadrunners,1043.3600000000001
+4599907,-1.06,-0.58,-1.6400000000000001,-0.99,-0.47,-1.46,John Stansbury,2169,Delaware State Hornets,504.92
+4897164,-0.66,-1.0,-1.6600000000000001,-0.56,-0.96,-1.52,Maks Klanjscek,311,Maine Black Bears,1049.24
+4897717,-1.5,-0.16,-1.66,-1.57,-0.13,-1.7000000000000002,Julian Lewis,2729,William & Mary Tribe,1336.04
+4897718,-1.5,-0.16,-1.66,-1.58,-0.15,-1.73,Tyler Rice,2729,William & Mary Tribe,1336.04
+4433119,-1.5,-0.16,-1.66,-1.31,-0.17,-1.48,Ben Wight,2729,William & Mary Tribe,1336.04
+4585606,-1.5,-0.16,-1.66,-1.51,-0.05,-1.56,Connor Kochera,2729,William & Mary Tribe,1336.04
+4431991,-0.52,-1.15,-1.67,-0.67,-1.12,-1.79,Timothy Ighoefe,46,Georgetown Hoyas,1035.44
+4066308,-1.4,-0.28,-1.68,-1.27,-0.2,-1.47,Jordan Shepherd,25,California Golden Bears,1349.56
+4702442,-0.68,-1.02,-1.7000000000000002,-0.5,-1.01,-1.51,Matthew Murrell,145,Ole Miss Rebels,1194.96
+4396677,-0.87,-0.82,-1.69,-0.74,-0.78,-1.52,Jamarius Burton,221,Pittsburgh Panthers,1323.6399999999999
+4592933,-0.87,-0.82,-1.69,-0.79,-0.65,-1.44,Mouhamadou Gueye,221,Pittsburgh Panthers,1323.6399999999999
+4897169,-1.32,-0.38,-1.7000000000000002,-1.47,-0.46,-1.93,Khaleb Wilson-Rouse,279,Pacific Tigers,836.12
+4431820,-0.37,-1.33,-1.7000000000000002,-0.43,-1.23,-1.66,Akol Arop,2437,Omaha Mavericks,1296.16
+4702679,-0.37,-1.33,-1.7000000000000002,-0.46,-1.33,-1.79,Dylan Brougham,2437,Omaha Mavericks,1296.16
+4897263,-0.37,-1.33,-1.7000000000000002,-0.13,-1.29,-1.42,Frankie Fidler,2437,Omaha Mavericks,1296.16
+4592260,-0.6,-1.1,-1.7000000000000002,-0.75,-1.15,-1.9,Mo Arnold,2572,Southern Miss Golden Eagles,680.44
+4280202,-1.13,-0.59,-1.7199999999999998,-1.28,-0.61,-1.8900000000000001,Jade' Smith,2492,Pepperdine Waves,790.08
+4397156,-0.85,-0.88,-1.73,-0.83,-0.8,-1.63,Elijah Hardy,2463,Cal State Northridge Matadors,1177.8
+4278672,-0.48,-1.26,-1.74,-0.65,-1.3,-1.9500000000000002,Ricky Nelson,292,UT Rio Grande Valley Vaqueros,1207.56
+4280158,-0.14,-1.6,-1.7400000000000002,0.13,-1.52,-1.3900000000000001,Eli Scott,2351,Loyola Marymount Lions,1147.0
+4280163,-0.14,-1.6,-1.7400000000000002,-0.12,-1.57,-1.69,Joe Quintana,2351,Loyola Marymount Lions,1147.0
+4897456,-1.54,-0.2,-1.74,-1.63,-0.13,-1.7599999999999998,Preston Phillips,339,Evansville Purple Aces,841.6800000000001
+4606831,-0.8,-0.94,-1.74,-0.81,-0.92,-1.73,Tyson Acuff,2184,Duquesne Dukes,746.16
+4397025,-0.91,-0.83,-1.74,-0.84,-0.65,-1.49,Markeese Hastings,2711,Western Michigan Broncos,1169.96
+4397043,-0.18,-1.57,-1.75,-0.21,-1.52,-1.73,Maurice Calloo,204,Oregon State Beavers,755.44
+4576086,-0.64,-1.11,-1.75,-0.5,-1.05,-1.55,Bryce McGowens,158,Nebraska Cornhuskers,1415.04
+4067526,-1.22,-0.56,-1.78,-1.16,-0.34,-1.5,Brandon Carroll,2729,William & Mary Tribe,1263.2
+4833075,-0.12,-1.67,-1.79,0.02,-1.59,-1.57,Glenn Taylor Jr.,204,Oregon State Beavers,824.96
+4589483,-0.85,-0.96,-1.81,-0.7,-0.87,-1.5699999999999998,Jayden Taylor,2086,Butler Bulldogs,585.08
+4708045,-1.31,-0.51,-1.82,-1.33,-0.46,-1.79,Joseph Octave,2005,Air Force Falcons,822.88
+4279797,-0.86,-0.97,-1.83,-0.83,-0.92,-1.75,Cam Bacote,2717,Western Carolina Catamounts,936.08
+4896966,-0.37,-1.46,-1.83,-0.42,-1.37,-1.79,RayQuan Taylor,292,UT Rio Grande Valley Vaqueros,1007.5600000000001
+4593296,-0.97,-0.89,-1.8599999999999999,-0.84,-0.86,-1.7,Cameron Shockley-Okeke,171,Columbia Lions,635.04
+4067353,-1.65,-0.22,-1.8699999999999999,-1.69,-0.31,-2.0,Sammy Friday IV,2197,Eastern Illinois Panthers,974.32
+4398076,-0.21,-1.68,-1.89,-0.21,-1.66,-1.8699999999999999,Felix Lemetti,2437,Omaha Mavericks,1356.2
+4280189,-0.21,-1.68,-1.89,-0.24,-1.61,-1.85,Marco Smith,2437,Omaha Mavericks,1356.2
+4592593,-1.52,-0.38,-1.9,-1.37,-0.31,-1.6800000000000002,Tarik Cool,304,Idaho State Bengals,995.32
+4066230,-0.67,-1.24,-1.9100000000000001,-0.41,-1.08,-1.49,Payton Willis,135,Minnesota Golden Gophers,1225.24
+4432151,-0.88,-1.05,-1.9300000000000002,-0.86,-1.03,-1.8900000000000001,Ja'Shonte Wright-Mcleish,311,Maine Black Bears,1188.56
+4897433,-0.85,-1.09,-1.94,-0.9,-1.05,-1.9500000000000002,Keisei Tominaga,158,Nebraska Cornhuskers,570.8
+4397354,-1.3,-0.68,-1.98,-1.24,-0.63,-1.87,Jawaun Newton,339,Evansville Purple Aces,620.96
+4898119,0.01,-2.0,-1.99,0.19,-1.93,-1.74,Dashawn Davis,204,Oregon State Beavers,1044.68
+4898213,-1.15,-0.85,-2.0,-1.13,-0.77,-1.9,Geronimo Rubio De La Rosa,171,Columbia Lions,930.48
+4592211,-0.85,-1.15,-2.0,-0.84,-1.11,-1.9500000000000002,Joe Petrakis,2717,Western Carolina Catamounts,1093.2
+4897214,-0.9,-1.1,-2.0,-0.94,-1.07,-2.01,Jordan Jefferson,2031,Little Rock Trojans,922.24
+4278644,-1.08,-0.92,-2.0,-1.07,-0.91,-1.98,Luke Avdalovic,279,Pacific Tigers,756.4
+4701160,-1.4,-0.62,-2.02,-1.32,-0.48,-1.8,Mekhi Gray,2885,NJIT Highlanders,640.84
+4702491,-1.15,-0.87,-2.02,-1.06,-0.89,-1.9500000000000002,Atin Wright,2463,Cal State Northridge Matadors,1237.84
+4702019,-0.76,-1.26,-2.02,-0.75,-1.24,-1.99,C.J. Roberts,2320,Lamar Cardinals,940.04
+4398159,-1.57,-0.46,-2.0300000000000002,-1.54,-0.19,-1.73,Kevin Easley Jr.,2184,Duquesne Dukes,925.2
+4432962,-1.17,-0.88,-2.05,-1.25,-0.91,-2.16,Pierre Crockrell II,279,Pacific Tigers,973.96
+4066575,-1.17,-0.88,-2.05,-1.07,-0.79,-1.86,Alphonso Anderson,279,Pacific Tigers,973.96
+4593792,-0.94,-1.12,-2.06,-0.83,-1.09,-1.92,Jan Zidek,2492,Pepperdine Waves,1028.64
+4903265,-1.36,-0.7,-2.06,-1.4,-0.67,-2.07,Ethan Taylor,2005,Air Force Falcons,1060.2
+4896463,-0.13,-1.94,-2.07,0.03,-1.83,-1.8,Kario Oquendo,61,Georgia Bulldogs,1250.64
+4284101,-1.85,-0.23,-2.08,-1.47,-0.06,-1.53,Myles Carter,2169,Delaware State Hornets,933.36
+4433271,-1.45,-0.64,-2.09,-1.41,-0.54,-1.95,Chuks Isitua,85,IUPUI Jaguars,697.16
+4896860,-0.86,-1.24,-2.1,-0.79,-1.22,-2.01,Jahsean Corbett,2130,Chicago State Cougars,1109.2
+4432965,-1.99,-0.11,-2.1,-1.87,-0.03,-1.9000000000000001,Mike DePersia,85,IUPUI Jaguars,814.76
+4592597,-0.9,-1.27,-2.17,-0.85,-1.17,-2.02,Coreyoun Rushin,2130,Chicago State Cougars,942.16
+4593721,-1.05,-1.14,-2.19,-1.09,-1.08,-2.17,Tyler Harris,2717,Western Carolina Catamounts,1233.32
+4898073,-1.51,-0.7,-2.21,-1.8,-0.63,-2.43,Boston Stanton III,85,IUPUI Jaguars,561.68
+4432877,-1.57,-0.66,-2.23,-1.37,-0.55,-1.9200000000000002,Jacob Germany,2636,UTSA Roadrunners,1182.72
+4896861,-1.07,-1.18,-2.25,-1.01,-1.18,-2.19,Brandon Betson,2130,Chicago State Cougars,1243.04
+4702977,-1.55,-0.71,-2.26,-1.56,-0.69,-2.25,Patrick Harding,171,Columbia Lions,931.04
+4397255,-1.32,-0.94,-2.26,-1.28,-1.0,-2.2800000000000002,A.J. Walker,2005,Air Force Falcons,1073.1200000000001
+4703630,-1.27,-1.0,-2.27,-1.2,-0.94,-2.1399999999999997,Lincoln Smith,2320,Lamar Cardinals,1005.0799999999999
+4596531,-0.7,-1.57,-2.27,-0.74,-1.52,-2.26,Dante Harris,46,Georgetown Hoyas,1331.8000000000002
+4066509,-1.39,-0.9,-2.29,-1.23,-0.71,-1.94,Nicholas Robinson,2717,Western Carolina Catamounts,1116.04
+4903264,-1.29,-0.99,-2.2800000000000002,-1.14,-1.01,-2.15,Jake Heidbreder,2005,Air Force Falcons,1131.76
+4592600,-1.93,-0.39,-2.32,-1.88,-0.39,-2.27,Brayden Parker,304,Idaho State Bengals,882.4
+4397289,-1.7,-0.67,-2.37,-1.77,-0.66,-2.43,Austin Smellie,304,Idaho State Bengals,1272.92
+4567587,-2.33,-0.04,-2.37,-2.34,-0.06,-2.4,Caleb Murphy,58,South Florida Bulls,1261.88
+4432888,-2.33,-0.04,-2.37,-2.28,-0.04,-2.32,Russel Tchewa,58,South Florida Bulls,1261.88
+4593259,-0.29,-2.08,-2.37,-0.12,-2.05,-2.17,Braelen Bridges,61,Georgia Bulldogs,1318.56
+4067063,-0.29,-2.08,-2.37,-0.33,-2.01,-2.34,Aaron Cook,61,Georgia Bulldogs,1318.56
+4594269,-0.29,-2.08,-2.37,-0.4,-2.07,-2.4699999999999998,Jaxon Etter,61,Georgia Bulldogs,1318.56
+4897264,-1.79,-0.59,-2.38,-1.84,-0.58,-2.42,Kejuan Clements,2197,Eastern Illinois Panthers,1045.88
+4396754,-1.13,-1.27,-2.4,-1.12,-1.28,-2.4000000000000004,Souleymane Diakite,2885,NJIT Highlanders,1052.76
+4598611,-1.26,-1.14,-2.4,-1.23,-1.11,-2.34,Jalen Celestine,25,California Golden Bears,975.88
+4684465,-1.87,-0.54,-2.41,-2.03,-0.63,-2.6599999999999997,Deiman Reyes,2320,Lamar Cardinals,953.64
+4432147,-1.97,-0.47,-2.44,-1.96,-0.39,-2.35,Tre Williams,2184,Duquesne Dukes,914.12
+4398310,-1.68,-0.77,-2.45,-1.69,-0.71,-2.4,Kashawn Charles,2197,Eastern Illinois Panthers,922.76
+4897090,-1.5,-0.97,-2.4699999999999998,-1.38,-0.95,-2.33,Primo Spears,2184,Duquesne Dukes,1086.28
+4701159,-1.75,-0.72,-2.4699999999999998,-1.63,-0.64,-2.27,Miles Coleman,2885,NJIT Highlanders,1174.24
+4701559,-1.08,-1.41,-2.49,-1.11,-1.46,-2.5700000000000003,Collin Holloway,46,Georgetown Hoyas,1323.8000000000002
+4709141,-1.31,-1.23,-2.54,-1.14,-1.25,-2.3899999999999997,Houston Mallette,2492,Pepperdine Waves,1148.48
+4433252,-0.96,-1.59,-2.55,-0.87,-1.47,-2.34,Aminu Mohammed,46,Georgetown Hoyas,1398.3600000000001
+4397707,-0.88,-1.75,-2.63,-0.69,-1.61,-2.3,Tyler Stevenson,2572,Southern Miss Golden Eagles,946.6400000000001
+4397400,-0.93,-1.72,-2.65,-1.09,-1.76,-2.85,Trey Smith,23,San José State Spartans,634.72
+4897176,-1.3,-1.44,-2.74,-1.29,-1.38,-2.67,Mike Mitchell Jr.,2492,Pepperdine Waves,1221.12
+4397353,-1.68,-1.06,-2.74,-1.53,-0.98,-2.51,Shamar Givance,339,Evansville Purple Aces,1148.3200000000002
+4593007,-1.25,-1.5,-2.75,-1.26,-1.62,-2.88,Trey Anderson,23,San José State Spartans,1104.48
+4431765,-0.39,-2.42,-2.81,-0.3,-2.42,-2.7199999999999998,Jarod Lucas,204,Oregon State Beavers,1433.72
+4592414,-0.39,-2.42,-2.81,-0.35,-2.41,-2.7600000000000002,Roman Silva,204,Oregon State Beavers,1433.72
+4702371,-1.39,-1.44,-2.83,-1.57,-1.45,-3.02,Tibet Gorener,23,San José State Spartans,1099.88
+4897535,-1.55,-1.31,-2.8600000000000003,-1.64,-1.36,-3.0,Alvaro Cardenas,23,San José State Spartans,1034.72
+4896925,-2.06,-0.84,-2.9,-2.06,-0.85,-2.91,Brock McClure,2320,Lamar Cardinals,1084.32
+4897265,-1.94,-1.0,-2.94,-1.95,-0.89,-2.84,Paul Bizimana,2197,Eastern Illinois Panthers,1049.0
+4897558,-1.14,-1.83,-2.9699999999999998,-1.34,-1.85,-3.1900000000000004,Rashad Bolden,2572,Southern Miss Golden Eagles,1355.48
+4703112,-1.14,-1.83,-2.9699999999999998,-1.08,-1.83,-2.91,DeAndre Pinckney,2572,Southern Miss Golden Eagles,1355.48
+4279133,-1.86,-1.27,-3.13,-1.94,-1.2,-3.1399999999999997,Noah Frederking,339,Evansville Purple Aces,1214.28
+4279131,-1.86,-1.27,-3.13,-1.93,-1.18,-3.11,Evan Kuhlman,339,Evansville Purple Aces,1214.28
+4707008,-2.21,-0.94,-3.15,-2.24,-0.95,-3.1900000000000004,Dan Luers,2197,Eastern Illinois Panthers,1115.1200000000001
+3922057,-2.69,-0.56,-3.25,-2.56,-0.46,-3.02,B.J. Maxwell,85,IUPUI Jaguars,1071.76
+4593095,-1.57,-1.76,-3.33,-1.46,-1.64,-3.0999999999999996,Omari Moore,23,San José State Spartans,1227.76
+4397701,-2.5,-0.88,-3.38,-2.53,-0.8,-3.33,Nathan McClure,85,IUPUI Jaguars,1073.28
