@@ -303,6 +303,16 @@
       </div>
     </div>
 
+    <!-- RAPM gets its own full-width, two-column block so the Box/Advanced
+         columns above stay balanced. Hidden when the player has no RAPM data. -->
+    <div id="pc-rapm-section" style="border-top:1px solid var(--line); padding:18px 28px 4px; display:none">
+      <div class="pc-col-hdr" style="margin-bottom:8px">RAPM / 100 possessions</div>
+      <div class="pc-stats" style="padding:0 0 18px">
+        <div class="pc-stat-col" id="pc-rapm-left"></div>
+        <div class="pc-stat-col" id="pc-rapm-right"></div>
+      </div>
+    </div>
+
     <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
       <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
       <div id="pc-charts" style="display:none">
@@ -889,17 +899,23 @@ async function openModal(p) {
     });
   }
 
-  // Cross-load impact data and append RAPM sub-section to right column
-  const impactScope = curScope === "conf" ? "player-impact-conf.json" : "player-impact.json";
-  const impactKey   = `${SEASON}-${curScope}`;
-  if (!IMPACT_MODAL_CACHE[impactKey]) {
-    const impData = await loadJSON(`data/${SEASON}/${impactScope}`);
-    if (impData?.players) IMPACT_MODAL_CACHE[impactKey] = impData.players;
-  }
-  const impactRow = IMPACT_MODAL_CACHE[impactKey]?.find(ip => ip.id === p.id);
-  if (impactRow) {
-    document.getElementById("pc-adv").innerHTML =
-      advStats.map(statRow).join("") + RAPM_DIVIDER + _rapmRows(impactRow, statRow);
+  // RAPM block — balanced two columns (RAPM | Box-Prior) from the merged row.
+  const rapmSection = document.getElementById("pc-rapm-section");
+  if (p.rapm != null || p.rapm_bp != null) {
+    const sg = (val) => val == null ? "—" : (val >= 0 ? "+" : "−") + Math.abs(val).toFixed(2);
+    const sc = (val) => val == null ? "" : val > 0 ? "good" : val < 0 ? "bad" : "";
+    const rRow = (lbl, val, bold) =>
+      `<div class="pc-stat-row"><span class="pc-stat-lbl">${lbl}</span>
+       <span class="pc-stat-val ${sc(val)}" ${bold ? 'style="font-weight:900"' : ""}>${sg(val)}</span></div>`;
+    document.getElementById("pc-rapm-left").innerHTML =
+      `<div class="pc-col-hdr">RAPM</div>` +
+      rRow("Offense", p.orapm) + rRow("Defense", p.drapm) + rRow("Total", p.rapm, true);
+    document.getElementById("pc-rapm-right").innerHTML =
+      `<div class="pc-col-hdr">Box-Prior</div>` +
+      rRow("Offense", p.orapm_bp) + rRow("Defense", p.drapm_bp) + rRow("Total", p.rapm_bp, true);
+    rapmSection.style.display = "block";
+  } else {
+    rapmSection.style.display = "none";
   }
 }
 
