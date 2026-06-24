@@ -66,7 +66,6 @@
   <a href="index.html"        data-page="index.html">Home</a>
   <a href="prediction.html"   data-page="prediction.html">Predictor</a>
   <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
-  <a href="impact.html"       data-page="impact.html">Impact</a>
   <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
@@ -362,8 +361,9 @@ async function tGenerate() {
   if (!td) { alert("No shot data for " + teamName); return; }
 
   if (tSubTab === "season") {
-    const precomp  = SD.team_zones[teamName];
-    const zoneData = precomp ? precomp.z : computeZoneStats(td.shots, () => true);
+    // Compute zones from raw shots (14-zone scheme) so it matches the player
+    // cards and the per-game view, rather than stale precomputed data.
+    const zoneData = computeZoneStats(td.shots, () => true);
     const sub      = splitSubtitle(`${teamName} · ${SEASON} season`, zoneData);
     renderZone(ensureZoneEl("t-zone-wrap"), zoneData, teamName, sub);
     const {mx,my,hx,hy} = getXY(td.shots, () => true);
@@ -408,10 +408,8 @@ async function pGenerate() {
   const pi = td.players.indexOf(playerName);
 
   if (pSubTab === "season") {
-    const key      = `${playerName}|${teamName}`;
-    const precomp  = SD.player_zones[key];
     const filterFn = (_g, p) => p === pi;
-    const zoneData = precomp ? precomp.z : computeZoneStats(td.shots, filterFn);
+    const zoneData = computeZoneStats(td.shots, filterFn);
     renderZone(ensureZoneEl("p-zone-wrap"), zoneData, playerName,
       splitSubtitle(`${teamName} · ${SEASON} season`, zoneData));
     const {mx,my,hx,hy} = getXY(td.shots, filterFn);
@@ -499,8 +497,12 @@ async function init() {
     return;
   }
 
-  ZONES          = SD.zones;
-  ZONE_BASELINES = SD.zone_baselines || null;
+  // Zone names + NCAA baselines come from zone-baselines.json (the current
+  // 14-zone scheme), the same source the player-card charts use. shots-meta's
+  // own zone fields can be stale, so we don't rely on them here.
+  const zoneBaselineData = await loadJSON("data/zone-baselines.json");
+  ZONES          = zoneBaselineData?.zones || SD.zones;
+  ZONE_BASELINES = zoneBaselineData?.baselines || null;
   SEASON         = SD.meta?.season ?? "2026";
 
   function populateTeamSelectors() {

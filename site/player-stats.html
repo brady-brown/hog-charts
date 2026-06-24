@@ -166,7 +166,6 @@
   <a href="index.html"        data-page="index.html">Home</a>
   <a href="prediction.html"   data-page="prediction.html">Predictor</a>
   <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
-  <a href="impact.html"       data-page="impact.html">Impact</a>
   <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
@@ -196,6 +195,10 @@
       <select id="conf-sel"><option value="">All conferences</option></select>
     </div>
     <div class="form-group">
+      <label for="team-sel">Team</label>
+      <select id="team-sel"><option value="">All teams</option></select>
+    </div>
+    <div class="form-group">
       <label for="pos-sel">Position</label>
       <select id="pos-sel">
         <option value="">All positions</option>
@@ -204,13 +207,41 @@
         <option value="C">Center</option>
       </select>
     </div>
+    <div class="form-group">
+      <label for="class-sel">Class</label>
+      <select id="class-sel"><option value="">All classes</option></select>
+    </div>
     <div class="form-group narrow">
       <label for="min-gp">Min games</label>
-      <input type="number" id="min-gp" value="15" min="1" max="40" step="1">
+      <input type="number" id="min-gp" value="15" min="0" max="40" step="1">
     </div>
     <div class="form-group narrow">
       <label for="min-mpg">Min MPG</label>
-      <input type="number" id="min-mpg" value="15" min="1" max="40" step="1">
+      <input type="number" id="min-mpg" value="15" min="0" max="40" step="1">
+    </div>
+    <div class="form-group narrow">
+      <label for="min-poss">Min poss</label>
+      <input type="number" id="min-poss" value="0" min="0" max="3000" step="100">
+    </div>
+    <div class="form-group">
+      <label for="stat-sel">Stat minimum</label>
+      <div style="display:flex;gap:6px">
+        <select id="stat-sel" style="flex:1">
+          <option value="">— none —</option>
+          <option value="ppg">PPG</option>
+          <option value="rpg">RPG</option>
+          <option value="apg">APG</option>
+          <option value="spg">SPG</option>
+          <option value="bpg">BPG</option>
+          <option value="ts">TS%</option>
+          <option value="efg">eFG%</option>
+          <option value="fg3">3P%</option>
+          <option value="usg">USG%</option>
+          <option value="rapm">RAPM</option>
+          <option value="rapm_bp">Box RAPM</option>
+        </select>
+        <input type="number" id="stat-min" placeholder="min" style="width:64px" step="0.1">
+      </div>
     </div>
   </div>
 
@@ -218,6 +249,7 @@
     <div class="col-toggle" style="margin-bottom:0">
       <button class="active" onclick="setGroup('box')">Box Score</button>
       <button onclick="setGroup('advanced')">Advanced</button>
+      <button onclick="setGroup('rapm')">RAPM</button>
     </div>
     <div class="col-toggle" style="margin-bottom:0">
       <button class="active" id="ps-btn-all"  onclick="setScope('all')">All games</button>
@@ -307,8 +339,19 @@ const COL_GROUPS = {
     { key:"par3",  label:"3PAr",  dir:"desc", tip:"Three-point attempt rate: 3PA / FGA", pct:true },
     { key:"ftr",   label:"FTr",   dir:"desc", tip:"Free throw rate: FTA / FGA", pct:true },
     { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
-    { key:"bpm",   label:"BPM",   dir:"desc", tip:"Box Plus/Minus (estimate): box-score production per 100 possessions vs. an average player. Box-only proxy, not a regressed BPM." },
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
+  ],
+  // RAPM columns are merged in from player-impact.json (same model as the old
+  // Impact page). 2-decimal, sign-aware. "Box" variants shrink toward a
+  // Hollinger box-score prior instead of zero (steadier in small samples).
+  rapm: [
+    { key:"rapm",     label:"RAPM",     dir:"desc", signed:true, tip:"Regularized Adjusted Plus-Minus: net points/100 vs an average player, adjusting for teammates and opponents." },
+    { key:"orapm",    label:"Off RAPM", dir:"desc", signed:true, tip:"Offensive RAPM" },
+    { key:"drapm",    label:"Def RAPM", dir:"desc", signed:true, tip:"Defensive RAPM (positive = better defense)" },
+    { key:"rapm_bp",  label:"Box RAPM", dir:"desc", signed:true, tip:"Box-prior RAPM: same model shrunk toward a Hollinger Game Score expectation." },
+    { key:"orapm_bp", label:"Off Box",  dir:"desc", signed:true, tip:"Offensive box-prior RAPM" },
+    { key:"drapm_bp", label:"Def Box",  dir:"desc", signed:true, tip:"Defensive box-prior RAPM" },
+    { key:"poss",     label:"Poss",     dir:"desc", tip:"Total possessions in the RAPM sample" },
   ],
 };
 
@@ -333,6 +376,41 @@ function activeCols() {
   let cols = COL_GROUPS[colGroup];
   if (colGroup === "advanced" && !HAS_ONOFF) cols = cols.filter(c => c.key !== "on_off");
   return cols;
+}
+
+// RAPM fields merged from player-impact.json so the RAPM tab + filters work on
+// the same unified player rows as Box Score / Advanced.
+const IMPACT_FIELDS = ["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp","poss"];
+
+async function loadScopeData(scope) {
+  const statsFile  = scope === "conf" ? "player-stats-conf.json" : "player-stats.json";
+  const impactFile = scope === "conf" ? "player-impact-conf.json" : "player-impact.json";
+  const [stats, impact] = await Promise.all([
+    loadJSON(`data/${SEASON}/${statsFile}`),
+    loadJSON(`data/${SEASON}/${impactFile}`),
+  ]);
+  if (!stats?.players) return null;
+  const players = stats.players;
+  const byId = new Map((impact?.players || []).map(ip => [ip.id, ip]));
+  players.forEach(p => {
+    const ip = byId.get(p.id);
+    IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
+  });
+  return players;
+}
+
+// (Re)build the conference / team / class dropdowns from the current rows.
+function populateFilterDropdowns() {
+  const fill = (id, values, allLabel) => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${allLabel}</option>` +
+      values.map(v => `<option value="${v}">${v}</option>`).join("");
+    if (values.includes(cur)) sel.value = cur;
+  };
+  fill("conf-sel",  [...new Set(allPlayers.map(p => p.conf).filter(Boolean))].sort(), "All conferences");
+  fill("team-sel",  [...new Set(allPlayers.map(p => p.t).filter(Boolean))].sort(),    "All teams");
+  fill("class-sel", [...new Set(allPlayers.map(p => p.exp).filter(Boolean))].sort(),  "All classes");
 }
 
 async function init() {
@@ -361,36 +439,27 @@ async function reload() {
   curScope = "all";
   document.getElementById("ps-btn-all").classList.add("active");
   document.getElementById("ps-btn-conf").classList.remove("active");
-  const data = await loadJSON(`data/${SEASON}/player-stats.json`);
-  if (!data?.players) {
+  document.getElementById("count-label").textContent = "Loading…";
+
+  PS_ALL = await loadScopeData("all");
+  if (!PS_ALL) {
     document.getElementById("count-label").textContent =
       "Data not found — run build_site.py first.";
     return;
   }
-
-  PS_ALL     = data.players;
   allPlayers = PS_ALL;
 
   // On/Off is only computed for some seasons — drop the column when absent.
   HAS_ONOFF = PS_ALL.some(p => p.on_off != null);
 
-  // Conference dropdown — reset first so switching seasons doesn't append
-  // duplicate conference options each time.
-  const confs = [...new Set(allPlayers.map(p => p.conf).filter(Boolean))].sort();
-  const cSel  = document.getElementById("conf-sel");
-  cSel.innerHTML = '<option value="">All conferences</option>';
-  confs.forEach(c => {
-    const o = document.createElement("option");
-    o.value = o.textContent = c;
-    cSel.appendChild(o);
-  });
-
+  populateFilterDropdowns();
   buildHead();
 
   // Bind filter listeners once; reload() runs on every season switch and would
   // otherwise stack duplicate listeners.
   if (!handlersBound) {
-    ["search","conf-sel","pos-sel","min-gp","min-mpg"].forEach(id =>
+    ["search","conf-sel","team-sel","pos-sel","class-sel",
+     "min-gp","min-mpg","min-poss","stat-sel","stat-min"].forEach(id =>
       document.getElementById(id).addEventListener("input", render)
     );
     handlersBound = true;
@@ -405,7 +474,7 @@ function setGroup(g) {
   sortDir  = COL_GROUPS[g][0].dir;
   // only toggle within the first col-toggle group
   document.querySelectorAll(".col-toggle")[0].querySelectorAll("button")
-    .forEach((b,i) => b.classList.toggle("active", ["box","advanced"][i] === g));
+    .forEach((b,i) => b.classList.toggle("active", ["box","advanced","rapm"][i] === g));
   buildHead();
   render();
 }
@@ -417,19 +486,19 @@ async function setScope(scope) {
 
   if (scope === "conf" && !PS_CONF) {
     document.getElementById("count-label").textContent = "Loading conference data…";
-    const data = await loadJSON(`data/${SEASON}/player-stats-conf.json`);
-    if (!data?.players) {
+    PS_CONF = await loadScopeData("conf");
+    if (!PS_CONF) {
       document.getElementById("count-label").textContent = "Conference data not found.";
       curScope = "all";
       document.getElementById("ps-btn-all").classList.add("active");
       document.getElementById("ps-btn-conf").classList.remove("active");
       return;
     }
-    PS_CONF = data.players;
   }
 
   allPlayers = activeScope();
   HAS_ONOFF  = allPlayers.some(p => p.on_off != null);
+  populateFilterDropdowns();
   // reset sort to first col of current group so we don't sort on a null column
   sortCol = COL_GROUPS[colGroup][0].key;
   sortDir = COL_GROUPS[colGroup][0].dir;
@@ -464,19 +533,39 @@ function buildHead() {
   });
 }
 
+// Stats stored as 0-1 fractions; a stat-minimum of "55" should mean 55%.
+const PCT_STATS = new Set(["ts","efg","fg","fg3","ft"]);
+
 function filtered() {
-  const q    = document.getElementById("search").value.toLowerCase().trim();
-  const conf = document.getElementById("conf-sel").value;
-  const pos  = document.getElementById("pos-sel").value;
-  const minG = parseFloat(document.getElementById("min-gp").value)  || 0;
-  const minM = parseFloat(document.getElementById("min-mpg").value) || 0;
-  return allPlayers.filter(p =>
-    (!q    || p.n?.toLowerCase().includes(q) || p.t?.toLowerCase().includes(q)) &&
-    (!conf || p.conf === conf) &&
-    (!pos  || posGroup(p.pos) === pos) &&
-    (p.gp  == null || p.gp  >= minG) &&
-    (p.mpg == null || p.mpg >= minM)
-  );
+  const q     = document.getElementById("search").value.toLowerCase().trim();
+  const conf  = document.getElementById("conf-sel").value;
+  const team  = document.getElementById("team-sel").value;
+  const pos   = document.getElementById("pos-sel").value;
+  const klass = document.getElementById("class-sel").value;
+  const minG  = parseFloat(document.getElementById("min-gp").value)   || 0;
+  const minM  = parseFloat(document.getElementById("min-mpg").value)  || 0;
+  const minP  = parseFloat(document.getElementById("min-poss").value) || 0;
+  const statKey = document.getElementById("stat-sel").value;
+  const statMinRaw = parseFloat(document.getElementById("stat-min").value);
+  const hasStatMin = statKey && !isNaN(statMinRaw);
+
+  return allPlayers.filter(p => {
+    if (q    && !(p.n?.toLowerCase().includes(q) || p.t?.toLowerCase().includes(q))) return false;
+    if (conf && p.conf !== conf) return false;
+    if (team && p.t    !== team) return false;
+    if (pos  && posGroup(p.pos) !== pos) return false;
+    if (klass && p.exp !== klass) return false;
+    if (p.gp  != null && p.gp  < minG) return false;
+    if (p.mpg != null && p.mpg < minM) return false;
+    if (minP > 0 && (p.poss == null || p.poss < minP)) return false;
+    if (hasStatMin) {
+      const val = p[statKey];
+      if (val == null) return false;
+      const cmp = PCT_STATS.has(statKey) ? val * 100 : val;
+      if (cmp < statMinRaw) return false;
+    }
+    return true;
+  });
 }
 
 function posGroup(pos) {
@@ -525,10 +614,11 @@ function rowHTML(p, idx) {
   const posG = posGroup(p.pos);
   const posLbl = p.pos ?? "—";
   const cells = cols.map(c => {
-    const signed = c.key === "on_off" || c.key === "bpm";
+    const signed = c.signed || c.key === "on_off";
     const cls  = signed ? onOffClass(p[c.key]) : "";
     const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
-    return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct)}</td>`;
+    const dec  = c.key === "poss" ? 0 : (c.signed ? 2 : 1);
+    return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct, dec)}</td>`;
   }).join("");
   return `<tr onclick="openModal(_currentRows[${idx}])" title="View player card">
     <td class="rk num">${idx + 1}</td>
@@ -753,10 +843,6 @@ async function openModal(p) {
     { lbl:"3P%",   val: p.fg3  != null ? (p.fg3*100).toFixed(1)+"%" : "—" },
     { lbl:"FT%",   val: p.ft   != null ? (p.ft*100).toFixed(1)+"%"  : "—" },
     { lbl:"USG%",  val: p.usg?.toFixed(1) ?? "—" },
-    { lbl:"BPM",   val: p.bpm != null
-        ? (p.bpm > 0 ? "+" : "") + p.bpm.toFixed(1)
-        : "—",
-      cls: p.bpm == null ? "" : p.bpm > 0 ? "good" : "bad" },
   ];
   if (HAS_ONOFF) {
     advStats.push({ lbl:"On/Off", val: p.on_off != null
