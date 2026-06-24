@@ -332,16 +332,27 @@ async function init() {
   const seasons = await loadJSON("data/seasons.json").catch(() => null);
   const sSel = document.getElementById("season-sel");
   if (seasons?.length) {
-    seasons.forEach(s => {
+    CUR_SEASON = seasons[0];   // newest season overall (only it has shot data)
+    // Gate the dropdown to seasons that actually have an impact file — RAPM isn't
+    // computed for every season (e.g. 2019), so we probe in parallel and only
+    // list seasons whose player-impact.json exists, avoiding dead-end selections.
+    const haveImpact = await Promise.all(seasons.map(s =>
+      fetch(`data/${s}/player-impact.json`, { method: "HEAD" })
+        .then(r => r.ok).catch(() => false)
+    ));
+    const impactSeasons = seasons.filter((s, i) => haveImpact[i]);
+    (impactSeasons.length ? impactSeasons : seasons).forEach(s => {
       const o = document.createElement("option");
       o.value = s; o.textContent = seasonLabel(s);
       sSel.appendChild(o);
     });
-    SEASON = seasons[0];
-    CUR_SEASON = seasons[0];
+    SEASON = parseInt(sSel.options[0]?.value) || seasons[0];
   } else {
     SEASON = new Date().getFullYear();
     CUR_SEASON = SEASON;
+    const o = document.createElement("option");
+    o.value = SEASON; o.textContent = seasonLabel(SEASON);
+    sSel.appendChild(o);
   }
   sSel.value = SEASON;
   sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
