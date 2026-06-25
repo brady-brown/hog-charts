@@ -70,8 +70,8 @@
     /* stackable stat-minimum filters */
     .stat-filter-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
     .stat-filter-row .sf-stat { flex: 1; min-width: 0; }
-    .stat-filter-row .sf-ge   { color: var(--muted); font-weight: 700; }
-    .stat-filter-row .sf-min  { width: 80px; flex: 0 0 80px; }
+    .stat-filter-row .sf-op   { flex: 0 0 60px; padding-left: 10px; padding-right: 6px; }
+    .stat-filter-row .sf-val  { width: 80px; flex: 0 0 80px; }
     .stat-filter-row .sf-remove {
       flex: 0 0 auto; background: var(--card2); border: 1px solid var(--line);
       color: var(--muted); border-radius: 8px; width: 34px; height: 38px;
@@ -606,19 +606,21 @@ const STAT_FILTER_OPTIONS_HTML =
     `</optgroup>`
   ).join("");
 
-function addStatFilterRow(key = "", min = "") {
+function addStatFilterRow(key = "", op = "ge", val = "") {
   const row = document.createElement("div");
   row.className = "stat-filter-row";
   row.innerHTML =
     `<select class="sf-stat">${STAT_FILTER_OPTIONS_HTML}</select>
-     <span class="sf-ge">≥</span>
-     <input type="number" class="sf-min" placeholder="min" step="0.1">
+     <select class="sf-op"><option value="ge">≥</option><option value="le">≤</option></select>
+     <input type="number" class="sf-val" placeholder="value" step="0.1">
      <button type="button" class="sf-remove" title="Remove">✕</button>`;
   document.getElementById("stat-filters").appendChild(row);
   row.querySelector(".sf-stat").value = key;
-  row.querySelector(".sf-min").value  = min;
+  row.querySelector(".sf-op").value   = op;
+  row.querySelector(".sf-val").value  = val;
   row.querySelector(".sf-stat").addEventListener("change", render);
-  row.querySelector(".sf-min").addEventListener("input", render);
+  row.querySelector(".sf-op").addEventListener("change", render);
+  row.querySelector(".sf-val").addEventListener("input", render);
   row.querySelector(".sf-remove").addEventListener("click", () => {
     row.remove();
     ensureStatFilterRow();   // always keep at least one visible row
@@ -631,12 +633,13 @@ function ensureStatFilterRow() {
   if (!document.querySelector(".stat-filter-row")) addStatFilterRow();
 }
 
-// Active (fully specified) filters: {key, min}. Ignores blank rows.
+// Active (fully specified) filters: {key, op, val}. Ignores blank rows.
 function activeStatFilters() {
   return [...document.querySelectorAll(".stat-filter-row")].map(r => ({
     key: r.querySelector(".sf-stat").value,
-    min: parseFloat(r.querySelector(".sf-min").value),
-  })).filter(s => s.key && !isNaN(s.min));
+    op:  r.querySelector(".sf-op").value,
+    val: parseFloat(r.querySelector(".sf-val").value),
+  })).filter(s => s.key && !isNaN(s.val));
 }
 
 function filtered() {
@@ -663,7 +666,7 @@ function filtered() {
       const val = p[s.key];
       if (val == null) return false;
       const cmp = PCT_STATS.has(s.key) ? val * 100 : val;
-      if (cmp < s.min) return false;
+      if (s.op === "le" ? cmp > s.val : cmp < s.val) return false;
     }
     return true;
   });
