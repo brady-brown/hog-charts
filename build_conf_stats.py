@@ -1,45 +1,98 @@
 """
-Run locally to regenerate player_stats_conf.csv:
+build_conf_stats.py — Build player_stats_conf_{SEASON}.csv for conference-only stats.
+
+WHY THIS FILE EXISTS
+--------------------
+build_player_stats.py already writes a conference CSV using game IDs from the
+live schedule, but this standalone version is useful when you want to regenerate
+the conference stats for a specific season without re-running the full pipeline.
+It also serves as a readable, self-contained reference for how conference stats
+are computed.
+
+Outputs:
+    player_stats_conf_{SEASON}.csv   Conference-only season totals + per-game averages.
+
+Run locally:
     python3 build_conf_stats.py
+    OVERRIDE_SEASON=2025 python3 build_conf_stats.py
 """
+import os
+from datetime import date as _date
+
 import pandas as pd
 import sportsdataverse.mbb as mbb
 
-SEASON = 2026
+# ---------------------------------------------------------------------------
+# Season detection
+# ---------------------------------------------------------------------------
+_season_override = os.environ.get("OVERRIDE_SEASON")
+if _season_override:
+    SEASON = int(_season_override)
+else:
+    _today = _date.today()
+    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 
+# ---------------------------------------------------------------------------
+# Identify conference game IDs from the schedule
+# ---------------------------------------------------------------------------
 print("Loading schedule...")
-sched = mbb.load_mbb_schedule(seasons=[SEASON], return_as_pandas=True)
-conf_game_ids = set(sched.loc[sched["conference_competition"] == True, "game_id"])
-print(f"  {len(conf_game_ids)} conference games found")
+schedule_df = mbb.load_mbb_schedule(seasons=[SEASON], return_as_pandas=True)
 
+conference_game_id_set = set(
+    schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"]
+)
+print(f"  {len(conference_game_id_set)} conference games found")
+
+# ---------------------------------------------------------------------------
+# Load player box scores and filter to conference games
+# ---------------------------------------------------------------------------
 print("Loading player boxscores...")
-box = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
+full_player_boxscores_df = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
 
-# Filter to conference games only, exclude did-not-play rows
-conf_box = box[
-    box["game_id"].isin(conf_game_ids) &
-    (box["did_not_play"] == False) &
-    (box["active"] == True)
+conference_boxscores_df = full_player_boxscores_df[
+    full_player_boxscores_df["game_id"].isin(conference_game_id_set)
+    & (full_player_boxscores_df["did_not_play"] == False)
+    & (full_player_boxscores_df["active"] == True)
 ].copy()
-print(f"  {len(conf_box)} player-game rows in conference games")
+print(f"  {len(conference_boxscores_df)} player-game rows in conference games")
 
-# Parse minutes (stored as "MM:SS" string)
-def parse_minutes(m):
+
+# ---------------------------------------------------------------------------
+# Parse minutes from "MM:SS" string format to decimal float
+# ---------------------------------------------------------------------------
+def parse_minutes_string(minutes_string):
+    """Convert ESPN's 'MM:SS' minutes format to a decimal float.
+
+    Examples: '32:45' → 32.75,  '8' → 8.0,  NaN → 0.0
+    """
     try:
-        if pd.isna(m): return 0.0
-        parts = str(m).split(":")
-        return int(parts[0]) + int(parts[1]) / 60 if len(parts) == 2 else float(parts[0])
-    except:
+        if pd.isna(minutes_string):
+            return 0.0
+        parts = str(minutes_string).split(":")
+        if len(parts) == 2:
+            return int(parts[0]) + int(parts[1]) / 60
+        return float(parts[0])
+    except Exception:
         return 0.0
 
-conf_box["minutes_f"] = conf_box["minutes"].apply(parse_minutes)
 
-# Pull in conference from original player_stats.csv
-player_info = pd.read_csv("player_stats.csv")[
+conference_boxscores_df["minutes_decimal"] = conference_boxscores_df["minutes"].apply(
+    parse_minutes_string
+)
+
+# ---------------------------------------------------------------------------
+# Pull in conference label and position from the overall player_stats CSV
+# (which already has conference labels from build_player_stats.py)
+# ---------------------------------------------------------------------------
+overall_player_stats_csv = f"player_stats_{SEASON}.csv"
+player_identity_info_df = pd.read_csv(overall_player_stats_csv)[
     ["athlete_id", "conf.", "athlete_position_name"]
 ].drop_duplicates(subset=["athlete_id"])
 
-stat_cols = [
+# ---------------------------------------------------------------------------
+# Aggregate: one row per player across all conference games
+# ---------------------------------------------------------------------------
+COUNTING_STAT_COLUMNS = [
     "field_goals_made", "field_goals_attempted",
     "three_point_field_goals_made", "three_point_field_goals_attempted",
     "free_throws_made", "free_throws_attempted",
@@ -47,43 +100,98 @@ stat_cols = [
     "assists", "steals", "blocks", "turnovers", "fouls", "points",
 ]
 
-agg = (
-    conf_box.groupby(["athlete_id", "athlete_display_name", "team_id", "team_display_name"])
+player_season_aggregates_df = (
+    conference_boxscores_df.groupby(
+        ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
+    )
     .agg(
         games_played=("game_id", "nunique"),
-        minutes=("minutes_f", "sum"),
-        **{c: (c, "sum") for c in stat_cols},
+        minutes=("minutes_decimal", "sum"),
+        **{stat_col: (stat_col, "sum") for stat_col in COUNTING_STAT_COLUMNS},
     )
     .reset_index()
 )
 
-agg = agg.merge(player_info, on="athlete_id", how="left")
+player_season_aggregates_df = player_season_aggregates_df.merge(
+    player_identity_info_df, on="athlete_id", how="left"
+)
 
+# ---------------------------------------------------------------------------
 # Shooting percentages
-agg["fg_pct"]  = agg["field_goals_made"] / agg["field_goals_attempted"].replace(0, float("nan"))
-agg["3pt_pct"] = agg["three_point_field_goals_made"] / agg["three_point_field_goals_attempted"].replace(0, float("nan"))
-agg["ft_pct"]  = agg["free_throws_made"] / agg["free_throws_attempted"].replace(0, float("nan"))
-agg["efg_pct"] = (agg["field_goals_made"] + 0.5 * agg["three_point_field_goals_made"]) / agg["field_goals_attempted"].replace(0, float("nan"))
+# ---------------------------------------------------------------------------
+def safe_divide(numerator_col, denominator_col):
+    """Divide two Series, replacing division-by-zero with NaN."""
+    return numerator_col / denominator_col.replace(0, float("nan"))
 
+
+player_season_aggregates_df["fg_pct"] = safe_divide(
+    player_season_aggregates_df["field_goals_made"],
+    player_season_aggregates_df["field_goals_attempted"]
+)
+player_season_aggregates_df["3pt_pct"] = safe_divide(
+    player_season_aggregates_df["three_point_field_goals_made"],
+    player_season_aggregates_df["three_point_field_goals_attempted"]
+)
+player_season_aggregates_df["ft_pct"] = safe_divide(
+    player_season_aggregates_df["free_throws_made"],
+    player_season_aggregates_df["free_throws_attempted"]
+)
+player_season_aggregates_df["efg_pct"] = safe_divide(
+    player_season_aggregates_df["field_goals_made"]
+    + 0.5 * player_season_aggregates_df["three_point_field_goals_made"],
+    player_season_aggregates_df["field_goals_attempted"]
+)
+
+# ---------------------------------------------------------------------------
 # Per-game averages
-gp = agg["games_played"]
-agg["minute_avg"]  = (agg["minutes"] / gp).round(2)
-agg["fgm_avg"]     = (agg["field_goals_made"] / gp).round(2)
-agg["fga_avg"]     = (agg["field_goals_attempted"] / gp).round(2)
-agg["3ptm_avg"]    = (agg["three_point_field_goals_made"] / gp).round(2)
-agg["3pta_avg"]    = (agg["three_point_field_goals_attempted"] / gp).round(2)
-agg["ftm_avg"]     = (agg["free_throws_made"] / gp).round(2)
-agg["fta_avg"]     = (agg["free_throws_attempted"] / gp).round(2)
-agg["oreb_avg"]    = (agg["offensive_rebounds"] / gp).round(2)
-agg["dreb_avg"]    = (agg["defensive_rebounds"] / gp).round(2)
-agg["reb_avg"]     = (agg["rebounds"] / gp).round(2)
-agg["ast_avg"]     = (agg["assists"] / gp).round(2)
-agg["steal_avg"]   = (agg["steals"] / gp).round(2)
-agg["blocks_avg"]  = (agg["blocks"] / gp).round(2)
-agg["to_avg"]      = (agg["turnovers"] / gp).round(2)
-agg["points_avg"]  = (agg["points"] / gp).round(2)
+# ---------------------------------------------------------------------------
+games_played_series = player_season_aggregates_df["games_played"]
 
-agg = agg.rename(columns={"conf.": "conf.", "athlete_position_name": "athlete_position_name"})
+per_game_average_column_pairs = [
+    ("minutes",                                "minute_avg"),
+    ("field_goals_made",                       "fgm_avg"),
+    ("field_goals_attempted",                  "fga_avg"),
+    ("three_point_field_goals_made",           "3ptm_avg"),
+    ("three_point_field_goals_attempted",      "3pta_avg"),
+    ("free_throws_made",                       "ftm_avg"),
+    ("free_throws_attempted",                  "fta_avg"),
+    ("offensive_rebounds",                     "oreb_avg"),
+    ("defensive_rebounds",                     "dreb_avg"),
+    ("rebounds",                               "reb_avg"),
+    ("assists",                                "ast_avg"),
+    ("steals",                                 "steal_avg"),
+    ("blocks",                                 "blocks_avg"),
+    ("turnovers",                              "to_avg"),
+    ("points",                                 "points_avg"),
+]
 
-agg.to_csv("player_stats_conf.csv", index=False)
-print(f"\nSaved player_stats_conf.csv — {len(agg)} players")
+for total_column, average_column in per_game_average_column_pairs:
+    player_season_aggregates_df[average_column] = (
+        player_season_aggregates_df[total_column] / games_played_series
+    ).round(2)
+
+# ---------------------------------------------------------------------------
+# Save
+# ---------------------------------------------------------------------------
+output_filename = f"player_stats_conf_{SEASON}.csv"
+player_season_aggregates_df.to_csv(output_filename, index=False)
+print(f"\nSaved {output_filename} — {len(player_season_aggregates_df)} players")
+
+
+# ===========================================================================
+# VARIABLE GLOSSARY
+# ===========================================================================
+#
+# SEASON                          int     Calendar year the season ends (e.g. 2026).
+# _season_override                str     Value of OVERRIDE_SEASON env var; None if unset.
+# schedule_df                     DataFrame  Full ESPN schedule for the season.
+# conference_game_id_set          set     game_id values where conference_competition == True.
+# full_player_boxscores_df        DataFrame  Every player-game box score row.
+# conference_boxscores_df         DataFrame  Subset: conference games, active/played rows only.
+# overall_player_stats_csv        str     Filename of the overall stats CSV (source of conf. labels).
+# player_identity_info_df         DataFrame  athlete_id → conf. + position (from overall CSV).
+# COUNTING_STAT_COLUMNS           list    Column names summed across games.
+# player_season_aggregates_df     DataFrame  One row per player; season totals + averages.
+# games_played_series             Series  games_played column, used as denominator for averages.
+# per_game_average_column_pairs   list    [(total_col, avg_col), …] pairs for per-game avg computation.
+# output_filename                 str     "player_stats_conf_{SEASON}.csv"

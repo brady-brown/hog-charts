@@ -192,9 +192,14 @@
     <!-- All-Tournament team + highlight standouts -->
     <div id="all-tournament"></div>
 
-    <div class="seg" id="leader-seg" style="margin-top:18px">
-      <button data-tab="players" class="active">Players</button>
-      <button data-tab="teams">Teams</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:18px">
+      <div class="seg" id="leader-seg" style="margin:0">
+        <button data-tab="players" class="active">Players</button>
+        <button data-tab="teams">Teams</button>
+      </div>
+      <input type="text" id="search" placeholder="Search player or team"
+             style="flex:0 0 240px;max-width:240px;background:var(--card2);border:1px solid var(--line);
+                    border-radius:8px;color:var(--ink);font-family:inherit;font-size:.9rem;padding:8px 12px">
     </div>
 
     <div id="players-tab">
@@ -299,6 +304,12 @@ async function init() {
 
   bindSort("players-table", playerSort, renderPlayers);
   bindSort("teams-table",   teamSort,   renderTeams);
+
+  // Leaders search — re-render whichever leader table is showing.
+  document.getElementById("search").addEventListener("input", () => {
+    renderPlayers();
+    renderTeams();
+  });
 
   await reload();
 }
@@ -495,8 +506,16 @@ function renderAllTournament() {
      <div class="hl-grid">${highlights}</div>`;
 }
 
+function leaderQuery() {
+  const el = document.getElementById("search");
+  return el ? el.value.toLowerCase().trim() : "";
+}
+
 function renderPlayers() {
-  const rows = sortRows(PS_DATA.player_leaders || [], playerSort);
+  const q = leaderQuery();
+  let rows = sortRows(PS_DATA.player_leaders || [], playerSort);
+  if (q) rows = rows.filter(p =>
+    (p.n ?? "").toLowerCase().includes(q) || (p.t ?? "").toLowerCase().includes(q));
   markSortHeaders("players-table", playerSort);
   document.getElementById("players-body").innerHTML = rows.map(p => `
     <tr>
@@ -514,7 +533,9 @@ function renderPlayers() {
 }
 
 function renderTeams() {
-  const rows = sortRows(PS_DATA.team_summary || [], teamSort);
+  const q = leaderQuery();
+  let rows = sortRows(PS_DATA.team_summary || [], teamSort);
+  if (q) rows = rows.filter(t => (t.team ?? "").toLowerCase().includes(q));
   markSortHeaders("teams-table", teamSort);
   document.getElementById("teams-body").innerHTML = rows.map(t => {
     const diffC = t.pt_diff > 0 ? "style='color:#16A34A;font-weight:700'"

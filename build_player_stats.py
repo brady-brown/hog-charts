@@ -204,6 +204,73 @@ conference_output_filename = f"player_stats_conf_{SEASON}.csv"
 conference_player_stats_df.to_csv(conference_output_filename, index=False)
 print(f"  {conference_output_filename}  — {len(conference_player_stats_df):,} players")
 
+# ---------------------------------------------------------------------------
+# Team context (opponent-faced totals) — powers the rate-stat percentages
+# (ORB%, DRB%, TRB%, STL%, BLK%) in build_site.py, which need the rebounds,
+# possessions and shot attempts the OPPONENT generated against each team.
+# ---------------------------------------------------------------------------
+TEAM_BOX_NUMERIC_COLUMNS = [
+    "field_goals_attempted", "free_throws_attempted",
+    "offensive_rebounds", "defensive_rebounds", "total_rebounds",
+    "three_point_field_goals_attempted", "turnovers",
+]
+
+
+def build_team_context(team_box_df):
+    """Sum the totals each team's OPPONENTS produced against them.
+
+    Group by ``opponent_team_id`` so the result is keyed by the team being
+    scouted: every row whose opponent is team X is one of X's opponents'
+    games, so the aggregate is what X's defense faced all season.
+
+    Returns a DataFrame keyed by ``team_id`` with opponent offensive
+    rebounds, defensive rebounds, total rebounds, FGA, 3PA and possessions
+    (FGA + 0.44·FTA − ORB + TOV).
+    """
+    rows = team_box_df.copy()
+    for col in TEAM_BOX_NUMERIC_COLUMNS:
+        rows[col] = pd.to_numeric(rows[col], errors="coerce").fillna(0)
+    rows["off_poss"] = (
+        rows["field_goals_attempted"] + 0.44 * rows["free_throws_attempted"]
+        - rows["offensive_rebounds"] + rows["turnovers"]
+    )
+    context_df = (
+        rows.groupby("opponent_team_id")
+        .agg(
+            opp_orb=("offensive_rebounds", "sum"),
+            opp_drb=("defensive_rebounds", "sum"),
+            opp_trb=("total_rebounds", "sum"),
+            opp_fga=("field_goals_attempted", "sum"),
+            opp_3pa=("three_point_field_goals_attempted", "sum"),
+            opp_poss=("off_poss", "sum"),
+        )
+        .reset_index()
+        .rename(columns={"opponent_team_id": "team_id"})
+    )
+    return context_df
+
+
+print("Loading team box scores for opponent context…")
+raw_team_boxscores_df = mbb.load_mbb_team_boxscore(seasons=[SEASON], return_as_pandas=True)
+team_boxscores_df = raw_team_boxscores_df[raw_team_boxscores_df["season_type"] == 2].copy()
+team_boxscores_df["game_id"]          = team_boxscores_df["game_id"].astype(int)
+team_boxscores_df["team_id"]          = team_boxscores_df["team_id"].astype(int)
+team_boxscores_df["opponent_team_id"] = pd.to_numeric(
+    team_boxscores_df["opponent_team_id"], errors="coerce"
+)
+team_boxscores_df = team_boxscores_df.dropna(subset=["opponent_team_id"])
+team_boxscores_df["opponent_team_id"] = team_boxscores_df["opponent_team_id"].astype(int)
+
+overall_team_context_df = build_team_context(team_boxscores_df)
+overall_team_context_df.to_csv(f"team_context_{SEASON}.csv", index=False)
+print(f"  team_context_{SEASON}.csv  — {len(overall_team_context_df):,} teams")
+
+conference_team_context_df = build_team_context(
+    team_boxscores_df[team_boxscores_df["game_id"].isin(conference_game_ids)]
+)
+conference_team_context_df.to_csv(f"team_context_conf_{SEASON}.csv", index=False)
+print(f"  team_context_conf_{SEASON}.csv  — {len(conference_team_context_df):,} teams")
+
 print("\nDone.")
 
 
@@ -244,3 +311,13 @@ print("\nDone.")
 # overall_player_stats_df          DataFrame  Aggregate over all regular-season games.
 # conference_only_boxscores_df     DataFrame  Subset of regular_season_boxscores_df for conf games.
 # conference_player_stats_df       DataFrame  Aggregate over conference games only.
+#
+# --- build_team_context() ---
+# TEAM_BOX_NUMERIC_COLUMNS         list    Team-box columns coerced to numeric before summing.
+# team_box_df                      DataFrame  Regular-season team-game rows (one per team per game).
+# rows                             DataFrame  Copy with off_poss (FGA + 0.44·FTA − ORB + TOV) added.
+# context_df                       DataFrame  Opponent-faced totals keyed by team_id.
+# raw_team_boxscores_df            DataFrame  All team-game rows from sportsdataverse.
+# team_boxscores_df                DataFrame  Filtered to regular season with numeric opponent_team_id.
+# overall_team_context_df          DataFrame  Opponent context across all games → team_context CSV.
+# conference_team_context_df       DataFrame  Opponent context, conference games only.

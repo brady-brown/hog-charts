@@ -102,6 +102,10 @@
       <label for="team-sel">Team</label>
       <select id="team-sel" disabled><option>Loading…</option></select>
     </div>
+    <div class="form-group">
+      <label for="search">Search player in lineup</label>
+      <input type="text" id="search" placeholder="e.g. a player's name">
+    </div>
     <div class="form-group narrow">
       <label for="min-poss">Min poss</label>
       <input type="number" id="min-poss" value="0" min="0" max="2000" step="25">
@@ -172,6 +176,7 @@ async function init() {
   sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
   tSel.addEventListener("change", () => loadTeam(tSel.value));
   document.getElementById("min-poss").addEventListener("input", render);
+  document.getElementById("search").addEventListener("input", render);
 
   document.querySelectorAll("thead th[data-col]").forEach(th => {
     th.addEventListener("click", () => {
@@ -255,7 +260,11 @@ function getRows() {
   const sizeData = curScope === "conf" ? data.conf : data.overall;
   const rows     = (sizeData?.[curSize] ?? []);
   const minPoss  = parseFloat(document.getElementById("min-poss").value) || 0;
-  return [...rows].filter(r => (r.Avg_Poss ?? 0) >= minPoss).sort((a, b) => {
+  const q        = document.getElementById("search").value.toLowerCase().trim();
+  return [...rows].filter(r =>
+    (r.Avg_Poss ?? 0) >= minPoss &&
+    (!q || (r.Combo ?? "").toLowerCase().includes(q))
+  ).sort((a, b) => {
     const av = a[sortCol], bv = b[sortCol];
     if (av == null && bv == null) return 0;
     if (av == null) return 1;

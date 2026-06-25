@@ -67,6 +67,24 @@
     .filters .form-group.narrow { flex: 0 0 110px; }
     .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
 
+    /* stackable stat-minimum filters */
+    .stat-filter-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .stat-filter-row .sf-stat { flex: 1; min-width: 0; }
+    .stat-filter-row .sf-ge   { color: var(--muted); font-weight: 700; }
+    .stat-filter-row .sf-min  { width: 80px; flex: 0 0 80px; }
+    .stat-filter-row .sf-remove {
+      flex: 0 0 auto; background: var(--card2); border: 1px solid var(--line);
+      color: var(--muted); border-radius: 8px; width: 34px; height: 38px;
+      cursor: pointer; font-size: .9rem; line-height: 1;
+    }
+    .stat-filter-row .sf-remove:hover { color: var(--t1); border-color: var(--t1); }
+    .add-filter-btn {
+      background: var(--card2); border: 1px dashed var(--line); border-radius: 8px;
+      color: var(--ink); font-family: inherit; font-size: .82rem; font-weight: 700;
+      padding: 7px 13px; cursor: pointer; margin-top: 2px;
+    }
+    .add-filter-btn:hover { border-color: var(--t1); color: var(--t1); }
+
     /* column group separators */
     .grp-sep { border-left: 1px solid var(--line) !important; }
 
@@ -223,25 +241,10 @@
       <label for="min-poss">Min poss</label>
       <input type="number" id="min-poss" value="0" min="0" max="3000" step="100">
     </div>
-    <div class="form-group">
-      <label for="stat-sel">Stat minimum</label>
-      <div style="display:flex;gap:6px">
-        <select id="stat-sel" style="flex:1">
-          <option value="">— none —</option>
-          <option value="ppg">PPG</option>
-          <option value="rpg">RPG</option>
-          <option value="apg">APG</option>
-          <option value="spg">SPG</option>
-          <option value="bpg">BPG</option>
-          <option value="ts">TS%</option>
-          <option value="efg">eFG%</option>
-          <option value="fg3">3P%</option>
-          <option value="usg">USG%</option>
-          <option value="rapm">RAPM</option>
-          <option value="rapm_bp">Box RAPM</option>
-        </select>
-        <input type="number" id="stat-min" placeholder="min" style="width:64px" step="0.1">
-      </div>
+    <div class="form-group" style="flex:1 1 100%;min-width:0">
+      <label>Stat minimums <span style="text-transform:none;font-weight:500;color:var(--muted)">— stack multiple (all must pass)</span></label>
+      <div id="stat-filters"></div>
+      <button type="button" id="add-stat-filter" class="add-filter-btn">+ Add stat minimum</button>
     </div>
   </div>
 
@@ -251,9 +254,15 @@
       <button onclick="setGroup('advanced')">Advanced</button>
       <button onclick="setGroup('rapm')">RAPM</button>
     </div>
-    <div class="col-toggle" style="margin-bottom:0">
-      <button class="active" id="ps-btn-all"  onclick="setScope('all')">All games</button>
-      <button id="ps-btn-conf" onclick="setScope('conf')">Conference only</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each player's percentile rank vs. all qualified D-I players">
+        <button class="active" id="ps-btn-raw" onclick="setDisplay('raw')">Raw</button>
+        <button id="ps-btn-pct" onclick="setDisplay('pct')">Percentile</button>
+      </div>
+      <div class="col-toggle" style="margin-bottom:0">
+        <button class="active" id="ps-btn-all"  onclick="setScope('all')">All games</button>
+        <button id="ps-btn-conf" onclick="setScope('conf')">Conference only</button>
+      </div>
     </div>
   </div>
 
@@ -343,12 +352,19 @@ const COL_GROUPS = {
   advanced: [
     { key:"ts",    label:"TS%",   dir:"desc", tip:"True shooting%: PTS / (2 × (FGA + 0.44×FTA))", pct:true },
     { key:"efg",   label:"eFG%",  dir:"desc", tip:"Effective FG%: (FGM + 0.5×3PM) / FGA", pct:true },
+    { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
+    { key:"astp",  label:"AST%",  dir:"desc", tip:"Assist%: share of teammates' made field goals the player assisted while on the floor" },
+    { key:"tovp",  label:"TOV%",  dir:"asc",  tip:"Turnover%: turnovers per 100 individual possessions used (lower is better)" },
+    { key:"orbp",  label:"ORB%",  dir:"desc", tip:"Offensive rebound%: share of available offensive rebounds grabbed while on the floor" },
+    { key:"drbp",  label:"DRB%",  dir:"desc", tip:"Defensive rebound%: share of available defensive rebounds grabbed while on the floor" },
+    { key:"trbp",  label:"TRB%",  dir:"desc", tip:"Total rebound%: share of all available rebounds grabbed while on the floor" },
+    { key:"stlp",  label:"STL%",  dir:"desc", tip:"Steal%: share of opponent possessions ended by a steal while on the floor" },
+    { key:"blkp",  label:"BLK%",  dir:"desc", tip:"Block%: share of opponent two-point attempts blocked while on the floor" },
     { key:"fg",    label:"FG%",   dir:"desc", tip:"Field goal percentage", pct:true },
     { key:"fg3",   label:"3P%",   dir:"desc", tip:"Three-point percentage", pct:true },
     { key:"ft",    label:"FT%",   dir:"desc", tip:"Free throw percentage", pct:true },
     { key:"par3",  label:"3PAr",  dir:"desc", tip:"Three-point attempt rate: 3PA / FGA", pct:true },
     { key:"ftr",   label:"FTr",   dir:"desc", tip:"Free throw rate: FTA / FGA", pct:true },
-    { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
   ],
   // RAPM columns are merged in from player-impact.json (same model as the old
@@ -372,6 +388,7 @@ let sortCol    = "ppg";
 let sortDir    = "desc";
 let colGroup   = "box";
 let curScope   = "all";
+let displayMode = "raw";   // "raw" | "pct" — percentile ranks vs. all qualified D-I players
 let SEASON     = null;
 let CUR_SEASON = null;   // newest/live season — only it has shot data
 let HAS_ONOFF  = true;   // false for historical seasons with no on/off computed
@@ -414,14 +431,14 @@ async function ensureImpact(scope) {
     IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
   });
   IMPACT_MERGED[scope] = true;
+  delete PCT_SORTED[scope];   // RAPM fields now present — rebuild percentile pools
 }
 
 // Whether the current view/filters need RAPM data merged in.
 function needsImpact() {
   if (colGroup === "rapm") return true;
   if ((parseFloat(document.getElementById("min-poss").value) || 0) > 0) return true;
-  const sk = document.getElementById("stat-sel").value;
-  return sk === "rapm" || sk === "rapm_bp";
+  return activeStatFilters().some(s => IMPACT_FILTER_KEYS.has(s.key));
 }
 
 // (Re)build the conference / team / class dropdowns from the current rows.
@@ -462,6 +479,7 @@ async function init() {
 async function reload() {
   PS_ALL = null; PS_CONF = null; allPlayers = [];
   IMPACT_MERGED.all = false; IMPACT_MERGED.conf = false;  // re-merge for the new season
+  PCT_SORTED = {};   // recompute percentile pools for the new season
   curScope = "all";
   document.getElementById("ps-btn-all").classList.add("active");
   document.getElementById("ps-btn-conf").classList.remove("active");
@@ -485,9 +503,12 @@ async function reload() {
   // otherwise stack duplicate listeners.
   if (!handlersBound) {
     ["search","conf-sel","team-sel","pos-sel","class-sel",
-     "min-gp","min-mpg","min-poss","stat-sel","stat-min"].forEach(id =>
+     "min-gp","min-mpg","min-poss"].forEach(id =>
       document.getElementById(id).addEventListener("input", render)
     );
+    document.getElementById("add-stat-filter")
+      .addEventListener("click", () => { addStatFilterRow(); });
+    ensureStatFilterRow();   // start with one empty row so the control is visible
     handlersBound = true;
   }
 
@@ -559,8 +580,64 @@ function buildHead() {
   });
 }
 
-// Stats stored as 0-1 fractions; a stat-minimum of "55" should mean 55%.
-const PCT_STATS = new Set(["ts","efg","fg","fg3","ft"]);
+// ── Stackable stat-minimum filters ─────────────────────────────────────────
+// Grouped option list for each filter row's stat picker.
+const STAT_FILTER_GROUPS = [
+  ["Scoring & box", [["ppg","PPG"],["rpg","RPG"],["apg","APG"],["spg","SPG"],
+                     ["bpg","BPG"],["tpg","TOV/g"],["mpg","MPG"],["gp","GP"]]],
+  ["Shooting volume", [["fg3m","3PM/g"],["fg3a","3PA/g"],["fg2m","2PM/g"],["fg2a","2PA/g"],
+                       ["fgmpg","FGM/g"],["fgapg","FGA/g"],["ftmpg","FTM/g"],["ftapg","FTA/g"]]],
+  ["Shooting %", [["ts","TS%"],["efg","eFG%"],["fg","FG%"],["fg3","3P%"],["ft","FT%"],
+                  ["par3","3PAr"],["ftr","FTr"]]],
+  ["Advanced", [["usg","USG%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
+                ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["on_off","On/Off"]]],
+  ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
+];
+// Stats stored as 0-1 fractions; a minimum of "40" should mean 40%.
+const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr"]);
+// Filter keys whose data lives in player-impact.json (lazy-loaded).
+const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp"]);
+
+const STAT_FILTER_OPTIONS_HTML =
+  `<option value="">— stat —</option>` +
+  STAT_FILTER_GROUPS.map(([grp, opts]) =>
+    `<optgroup label="${grp}">` +
+    opts.map(([k, l]) => `<option value="${k}">${l}</option>`).join("") +
+    `</optgroup>`
+  ).join("");
+
+function addStatFilterRow(key = "", min = "") {
+  const row = document.createElement("div");
+  row.className = "stat-filter-row";
+  row.innerHTML =
+    `<select class="sf-stat">${STAT_FILTER_OPTIONS_HTML}</select>
+     <span class="sf-ge">≥</span>
+     <input type="number" class="sf-min" placeholder="min" step="0.1">
+     <button type="button" class="sf-remove" title="Remove">✕</button>`;
+  document.getElementById("stat-filters").appendChild(row);
+  row.querySelector(".sf-stat").value = key;
+  row.querySelector(".sf-min").value  = min;
+  row.querySelector(".sf-stat").addEventListener("change", render);
+  row.querySelector(".sf-min").addEventListener("input", render);
+  row.querySelector(".sf-remove").addEventListener("click", () => {
+    row.remove();
+    ensureStatFilterRow();   // always keep at least one visible row
+    render();
+  });
+  return row;
+}
+
+function ensureStatFilterRow() {
+  if (!document.querySelector(".stat-filter-row")) addStatFilterRow();
+}
+
+// Active (fully specified) filters: {key, min}. Ignores blank rows.
+function activeStatFilters() {
+  return [...document.querySelectorAll(".stat-filter-row")].map(r => ({
+    key: r.querySelector(".sf-stat").value,
+    min: parseFloat(r.querySelector(".sf-min").value),
+  })).filter(s => s.key && !isNaN(s.min));
+}
 
 function filtered() {
   const q     = document.getElementById("search").value.toLowerCase().trim();
@@ -571,9 +648,7 @@ function filtered() {
   const minG  = parseFloat(document.getElementById("min-gp").value)   || 0;
   const minM  = parseFloat(document.getElementById("min-mpg").value)  || 0;
   const minP  = parseFloat(document.getElementById("min-poss").value) || 0;
-  const statKey = document.getElementById("stat-sel").value;
-  const statMinRaw = parseFloat(document.getElementById("stat-min").value);
-  const hasStatMin = statKey && !isNaN(statMinRaw);
+  const statMins = activeStatFilters();
 
   return allPlayers.filter(p => {
     if (q    && !(p.n?.toLowerCase().includes(q) || p.t?.toLowerCase().includes(q))) return false;
@@ -584,11 +659,11 @@ function filtered() {
     if (p.gp  != null && p.gp  < minG) return false;
     if (p.mpg != null && p.mpg < minM) return false;
     if (minP > 0 && (p.poss == null || p.poss < minP)) return false;
-    if (hasStatMin) {
-      const val = p[statKey];
+    for (const s of statMins) {
+      const val = p[s.key];
       if (val == null) return false;
-      const cmp = PCT_STATS.has(statKey) ? val * 100 : val;
-      if (cmp < statMinRaw) return false;
+      const cmp = PCT_STATS.has(s.key) ? val * 100 : val;
+      if (cmp < s.min) return false;
     }
     return true;
   });
@@ -625,6 +700,68 @@ function onOffClass(val) {
   return val > 0 ? "good" : val < 0 ? "bad" : "";
 }
 
+// ── Percentile mode ─────────────────────────────────────────────────────────
+// Ranks each player against the FULL qualified-D-I pool for the current scope
+// (not the filtered view), so "98th percentile in points" holds regardless of
+// the conference/team filters — the way Cleaning the Glass does it. Identity /
+// sample-size columns are never converted to percentiles.
+const PCT_EXCLUDE = new Set(["gp", "poss"]);
+let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
+
+function buildPctSorted(scope) {
+  const pool = scope === "conf" ? PS_CONF : PS_ALL;
+  const keys = new Set();
+  Object.values(COL_GROUPS).forEach(g => g.forEach(c => { if (!PCT_EXCLUDE.has(c.key)) keys.add(c.key); }));
+  const sortedByKey = {};
+  keys.forEach(k => {
+    const vals = [];
+    for (const p of (pool || [])) {
+      const x = p[k];
+      if (x != null && !isNaN(x)) vals.push(+x);
+    }
+    vals.sort((a, b) => a - b);
+    sortedByKey[k] = vals;
+  });
+  PCT_SORTED[scope] = sortedByKey;
+}
+
+// first index i with arr[i] >= x  (count of values strictly < x)
+function _lowerBound(arr, x) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; }
+  return lo;
+}
+// first index i with arr[i] > x
+function _upperBound(arr, x) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; }
+  return lo;
+}
+
+// Percentile 0–100 where 100 = best. higherBetter flips for "lower is better"
+// stats (turnovers). Leader → 100, worst → 0.
+function pctRank(key, val, higherBetter) {
+  const arr = (PCT_SORTED[curScope] || {})[key];
+  if (!arr || arr.length < 2 || val == null || isNaN(val)) return null;
+  const n = arr.length;
+  const below = _lowerBound(arr, val);        // strictly less
+  const above = n - _upperBound(arr, val);    // strictly greater
+  return 100 * (higherBetter ? below : above) / (n - 1);
+}
+
+// Diverging colour band: red (0, worst) → amber (50) → green (100, best).
+function pctColor(p) {
+  const hue = (p / 100) * 130;   // 0 = red, 130 = green
+  return { bg: `hsla(${hue},70%,42%,0.20)`, fg: `hsl(${hue},75%,72%)` };
+}
+
+function setDisplay(mode) {
+  displayMode = mode;
+  document.getElementById("ps-btn-raw").classList.toggle("active", mode === "raw");
+  document.getElementById("ps-btn-pct").classList.toggle("active", mode === "pct");
+  render();
+}
+
 let _currentRows = [];
 
 // Windowed rendering: a full table is ~3,600 rows × 2 images. Building that on
@@ -640,6 +777,12 @@ function rowHTML(p, idx) {
   const posG = posGroup(p.pos);
   const posLbl = p.pos ?? "—";
   const cells = cols.map(c => {
+    if (displayMode === "pct" && !PCT_EXCLUDE.has(c.key)) {
+      const pr = pctRank(c.key, p[c.key], c.dir === "desc");
+      if (pr == null) return `<td class="num"><span style="color:var(--muted)">—</span></td>`;
+      const { bg, fg } = pctColor(pr);
+      return `<td class="num" style="background:${bg};color:${fg};font-weight:700">${Math.round(pr)}</td>`;
+    }
     const signed = c.signed || c.key === "on_off";
     const cls  = signed ? onOffClass(p[c.key]) : "";
     const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
@@ -716,9 +859,13 @@ function render() {
     return;
   }
 
+  if (displayMode === "pct" && !PCT_SORTED[curScope]) buildPctSorted(curScope);
+
   _currentRows = sorted(filtered().map((p, i) => ({ ...p, _rank: i + 1 })));
   document.getElementById("count-label").textContent =
-    `${_currentRows.length} of ${allPlayers.length} players`;
+    `${_currentRows.length} of ${allPlayers.length} players`
+    + (displayMode === "pct"
+        ? " · percentile vs. all qualified D-I players (100 = best)" : "");
 
   document.getElementById("ps-body").innerHTML = "";
   _rendered = 0;
@@ -870,13 +1017,21 @@ async function openModal(p) {
     { lbl:"TOV", val: p.tpg?.toFixed(1) ?? "—" },
     { lbl:"MPG", val: p.mpg?.toFixed(1) ?? "—" },
   ];
+  const pc1 = (val) => val != null ? val.toFixed(1) : "—";   // already a percentage
   const advStats = [
     { lbl:"TS%",   val: p.ts   != null ? (p.ts*100).toFixed(1)+"%"  : "—" },
     { lbl:"eFG%",  val: p.efg  != null ? (p.efg*100).toFixed(1)+"%" : "—" },
+    { lbl:"USG%",  val: pc1(p.usg) },
+    { lbl:"AST%",  val: pc1(p.astp) },
+    { lbl:"TOV%",  val: pc1(p.tovp) },
+    { lbl:"ORB%",  val: pc1(p.orbp) },
+    { lbl:"DRB%",  val: pc1(p.drbp) },
+    { lbl:"TRB%",  val: pc1(p.trbp) },
+    { lbl:"STL%",  val: pc1(p.stlp) },
+    { lbl:"BLK%",  val: pc1(p.blkp) },
     { lbl:"FG%",   val: p.fg   != null ? (p.fg*100).toFixed(1)+"%"  : "—" },
     { lbl:"3P%",   val: p.fg3  != null ? (p.fg3*100).toFixed(1)+"%" : "—" },
     { lbl:"FT%",   val: p.ft   != null ? (p.ft*100).toFixed(1)+"%"  : "—" },
-    { lbl:"USG%",  val: p.usg?.toFixed(1) ?? "—" },
   ];
   if (HAS_ONOFF) {
     advStats.push({ lbl:"On/Off", val: p.on_off != null

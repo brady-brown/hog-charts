@@ -1,0 +1,12 @@
+{
+  "built_at": "2026-06-19T01:06:18.846810",
+  "season": 2017,
+  "calibration_years": [],
+  "n_teams": 353,
+  "form_mode": "residual",
+  "form_games": 5,
+  "league_avg_pace": 70.1,
+  "league_home_adv": 10.02,
+  "backtest_year": 2016,
+  "backtest": {}
+}

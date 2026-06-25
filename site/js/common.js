@@ -94,7 +94,120 @@ function buildResponsiveNav() {
   });
 }
 
+// ── Searchable select ───────────────────────────────────────────────────────
+// Upgrades a native <select> into a type-to-filter combobox WITHOUT changing the
+// markup contract: the <select> stays in the DOM as the source of truth, so all
+// existing code (sel.value reads, "change" listeners) keeps working. Picking an
+// option sets sel.value and dispatches a real "change" event.
+//
+// It self-gates on option count (only activates at >= threshold) and watches the
+// <select> with a MutationObserver, so selects that are populated *after* load
+// (most of ours are) upgrade automatically once their options arrive — and small
+// dropdowns (season, position, class) are left as plain native selects.
+const SS_THRESHOLD = 15;
+
+function makeSearchable(sel, threshold = SS_THRESHOLD) {
+  if (sel._ssInit) return;
+  sel._ssInit = true;
+
+  const wrap  = document.createElement("div");
+  wrap.className = "ss-wrap";
+  const input = document.createElement("input");
+  input.type = "text"; input.className = "ss-input"; input.autocomplete = "off";
+  input.setAttribute("role", "combobox");
+  input.style.display = "none";   // hidden until activated (small selects stay native)
+  const list  = document.createElement("div");
+  list.className = "ss-list"; list.style.display = "none";
+
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  wrap.appendChild(sel); wrap.appendChild(input); wrap.appendChild(list);
+
+  // Placeholder when nothing is selected — derived from the field's <label>.
+  const labelEl = sel.id ? document.querySelector(`label[for="${sel.id}"]`) : null;
+  const basePlaceholder = labelEl ? `Search ${labelEl.textContent.trim().toLowerCase()}…` : "Search…";
+
+  let active = false, items = [], filtered = [], hi = -1;
+
+  const selectedLabel = () => {
+    const o = sel.options[sel.selectedIndex];
+    return o ? o.textContent : "";
+  };
+  const readOptions = () => {
+    items = [...sel.options].map(o => ({ value: o.value, label: o.textContent }));
+  };
+  // The input stays EMPTY (a real search bar); the current pick lives in the
+  // placeholder so you still see what's selected. An empty value (e.g. the
+  // "All teams" option) falls back to the generic "Search …" placeholder.
+  function syncDisplay() {
+    input.value = "";
+    input.placeholder = sel.value !== "" ? selectedLabel() : basePlaceholder;
+    input.disabled = sel.disabled;
+  }
+  function setActive(on) {
+    active = on;
+    sel.style.display   = on ? "none" : "";
+    input.style.display = on ? "" : "none";
+  }
+  function refresh() {
+    readOptions();
+    setActive(items.length >= threshold);   // enforce display every time, not just on change
+    if (active) syncDisplay();
+  }
+  function openList(q = "") {
+    const ql = q.toLowerCase();
+    filtered = items.filter(it => it.label.toLowerCase().includes(ql));
+    list.innerHTML = filtered.length
+      ? filtered.map((it, i) =>
+          `<div class="ss-opt${it.value === sel.value ? " sel" : ""}" data-i="${i}">${it.label}</div>`).join("")
+      : `<div class="ss-empty">No matches</div>`;
+    list.style.display = ""; hi = -1;
+  }
+  const closeList = () => { list.style.display = "none"; input.value = ""; };
+  function markHi() {
+    [...list.children].forEach((c, i) => c.classList.toggle("hi", i === hi));
+    if (hi >= 0 && list.children[hi]) list.children[hi].scrollIntoView({ block: "nearest" });
+  }
+  function choose(it) {
+    if (!it) return;
+    sel.value = it.value; list.style.display = "none";
+    syncDisplay();
+    // Fire BOTH events: a native <select> emits "input" and "change" on user
+    // selection, and different pages bind to different ones.
+    sel.dispatchEvent(new Event("input",  { bubbles: true }));
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // Empty on focus so you can type immediately; the list shows all options.
+  input.addEventListener("focus", () => { if (active) openList(""); });
+  input.addEventListener("input", () => openList(input.value));
+  input.addEventListener("keydown", e => {
+    if (list.style.display === "none" && e.key === "ArrowDown") { openList(input.value); return; }
+    if (e.key === "ArrowDown")      { hi = Math.min(hi + 1, filtered.length - 1); markHi(); e.preventDefault(); }
+    else if (e.key === "ArrowUp")   { hi = Math.max(hi - 1, 0); markHi(); e.preventDefault(); }
+    else if (e.key === "Enter")     { choose(hi >= 0 ? filtered[hi] : (filtered.length === 1 ? filtered[0] : null)); e.preventDefault(); }
+    else if (e.key === "Escape")    { closeList(); input.blur(); }
+  });
+  // mousedown (not click) so it fires before the input loses focus
+  list.addEventListener("mousedown", e => {
+    const opt = e.target.closest(".ss-opt");
+    if (!opt) return;
+    e.preventDefault();
+    choose(filtered[+opt.dataset.i]);
+  });
+  document.addEventListener("click", e => { if (!wrap.contains(e.target)) closeList(); });
+
+  new MutationObserver(refresh).observe(sel, {
+    childList: true, attributes: true, attributeFilter: ["disabled"],
+  });
+  refresh();
+}
+
+function enhanceAllSelects(threshold = SS_THRESHOLD) {
+  document.querySelectorAll("select:not([data-no-search])").forEach(s => makeSearchable(s, threshold));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   buildResponsiveNav();
   markActiveNav();
+  enhanceAllSelects();
 });

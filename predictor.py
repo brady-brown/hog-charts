@@ -5,13 +5,23 @@ Extracted verbatim from isotonic_predictor.ipynb (the production TempoPredictor,
 FORM_MODE='residual') so it can be imported by the web app and the artifact
 builder without running a notebook.
 
-Pipeline:
-    spread     = reg.predict([tempo_adj, home_court, form_diff])   # predicted margin
-    win_prob   = calibrator(spread)                                # monotone margin -> P(win)
+HIGH-LEVEL PIPELINE
+-------------------
+1.  For every team, compute an "adjusted efficiency" rating (off_eff, def_eff)
+    by iterating over games and adjusting each performance for the quality of
+    the opponent faced.  We blend this season's ratings with last season's to
+    stabilize early-season estimates.
 
-Data comes live from ESPN via sportsdataverse. Training + loading current ratings
-is slow and network-bound, so build_artifacts.py trains once and pickles a ready
-TempoPredictor for the website to load instantly.
+2.  Train a linear spread model on historical walk-forward data:
+        predicted_margin = coef[0] * tempo_adj
+                         + coef[1] * home_court
+                         + coef[2] * form_diff
+
+3.  Calibrate predicted margins to win probabilities using isotonic regression
+    so the curve is always monotone (higher spread → higher win prob).
+
+4.  At prediction time, look up efficiency, pace, and form for both teams and
+    run the spread through the calibrator to get P(team1 wins).
 """
 
 import time
@@ -26,554 +36,1014 @@ from sklearn.metrics import log_loss, roc_auc_score
 
 warnings.filterwarnings("ignore")
 
-GAME_WEIGHT_CONSTANT = 7  # tuned: 74.24% held-out vs 74.13% @ 10 (FORM_GAMES=5)
+# Bayesian shrinkage constant for blending current-season and prior-season
+# efficiency ratings.  A team with n games is given weight n / (n + k).
+# Tuned empirically to 7 (74.24% held-out accuracy vs 74.13% at k=10 with FORM_GAMES=5).
+GAME_WEIGHT_CONSTANT = 7
 
 
 # ==============================================================================
 # Efficiency helpers
 # ==============================================================================
-def calculate_efficiency(df):
-    d1_teams = df['team_id'].unique()
-    df = df[df['opponent_team_id'].isin(d1_teams)]
-    t_stats = df.groupby(['season', 'team_id']).agg({
-        'team_score': 'sum',
-        'opponent_team_score': 'sum',
-        'field_goals_attempted': 'sum',
-        'free_throws_attempted': 'sum',
-        'offensive_rebounds': 'sum',
-        'turnovers': 'sum',
+
+def calculate_efficiency(team_game_df):
+    """Compute raw (unadjusted) offensive and defensive efficiency per team-season.
+
+    Offensive efficiency = points scored per 100 possessions.
+    Defensive efficiency = points allowed per 100 possessions.
+    Possessions estimated with the standard formula:
+        FGA + 0.475 * FTA - ORB + TOV
+
+    Parameters
+    ----------
+    team_game_df : DataFrame
+        One row per team per game (from the team boxscore loader).
+
+    Returns
+    -------
+    DataFrame with columns: season, team_id, off_poss, def_poss, off_eff, def_eff.
+    """
+    # Only keep games where the opponent is also a Division I team.
+    division_one_team_ids = team_game_df['team_id'].unique()
+    team_game_df = team_game_df[team_game_df['opponent_team_id'].isin(division_one_team_ids)]
+
+    # Season totals for the team.
+    team_season_stats = team_game_df.groupby(['season', 'team_id']).agg({
+        'team_score':              'sum',
+        'opponent_team_score':     'sum',
+        'field_goals_attempted':   'sum',
+        'free_throws_attempted':   'sum',
+        'offensive_rebounds':      'sum',
+        'turnovers':               'sum',
     }).reset_index()
-    o_stats = df.groupby(['season', 'opponent_team_id']).agg({
-        'field_goals_attempted': 'sum',
-        'free_throws_attempted': 'sum',
-        'offensive_rebounds': 'sum',
-        'turnovers': 'sum'
+
+    # Season totals for opponents (needed for defensive efficiency denominator).
+    opponent_season_stats = team_game_df.groupby(['season', 'opponent_team_id']).agg({
+        'field_goals_attempted':  'sum',
+        'free_throws_attempted':  'sum',
+        'offensive_rebounds':     'sum',
+        'turnovers':              'sum',
     }).reset_index()
-    o_stats.columns = ['season', 'team_id', 'opp_fga', 'opp_fta', 'opp_orb', 'opp_tov']
-    stats = t_stats.merge(o_stats, on=['season', 'team_id'], how='left')
-    stats['off_poss'] = (stats['field_goals_attempted'] + 0.475 * stats['free_throws_attempted'] -
-                         stats['offensive_rebounds'] + stats['turnovers']).replace(0, 1)
-    stats['def_poss'] = (stats['opp_fga'] + 0.475 * stats['opp_fta'] -
-                         stats['opp_orb'] + stats['opp_tov']).replace(0, 1)
-    stats['off_eff'] = ((stats['team_score'] / stats['off_poss']) * 100).clip(70, 140)
-    stats['def_eff'] = ((stats['opponent_team_score'] / stats['def_poss']) * 100).clip(70, 140)
-    return stats
+    opponent_season_stats.columns = [
+        'season', 'team_id',
+        'opp_fga', 'opp_fta', 'opp_orb', 'opp_tov'
+    ]
+
+    combined_stats = team_season_stats.merge(opponent_season_stats, on=['season', 'team_id'], how='left')
+
+    combined_stats['off_poss'] = (
+        combined_stats['field_goals_attempted']
+        + 0.475 * combined_stats['free_throws_attempted']
+        - combined_stats['offensive_rebounds']
+        + combined_stats['turnovers']
+    ).replace(0, 1)    # prevent division by zero
+
+    combined_stats['def_poss'] = (
+        combined_stats['opp_fga']
+        + 0.475 * combined_stats['opp_fta']
+        - combined_stats['opp_orb']
+        + combined_stats['opp_tov']
+    ).replace(0, 1)
+
+    combined_stats['off_eff'] = (combined_stats['team_score']     / combined_stats['off_poss'] * 100).clip(70, 140)
+    combined_stats['def_eff'] = (combined_stats['opponent_team_score'] / combined_stats['def_poss'] * 100).clip(70, 140)
+    return combined_stats
 
 
-def calculate_adjusted_efficiency(df, team_stats, iterations=10):
-    ratings = team_stats[['season', 'team_id', 'off_eff', 'def_eff']].copy()
+def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iterations=10):
+    """Iteratively adjust efficiency ratings for opponent quality.
+
+    Each iteration recomputes each game's offensive/defensive efficiency and
+    adds the "quality bonus" from facing a tough/weak opponent.  After enough
+    iterations (10 is standard) the ratings converge to opponent-adjusted values.
+
+    Parameters
+    ----------
+    team_game_df         : DataFrame  One row per team per game.
+    raw_efficiency_ratings: DataFrame  Starting point from calculate_efficiency().
+    iterations            : int        Number of Markov-style adjustment passes.
+
+    Returns
+    -------
+    DataFrame with columns: season, team_id, off_eff, def_eff, net_eff.
+    """
+    current_ratings = raw_efficiency_ratings[['season', 'team_id', 'off_eff', 'def_eff']].copy()
+
     for _ in range(iterations):
-        rating_map = ratings.set_index(['season', 'team_id'])[['off_eff', 'def_eff']].to_dict('index')
-        adjustments = []
-        for _, game in df.iterrows():
-            opp_key = (game['season'], game['opponent_team_id'])
-            opp_rating = rating_map.get(opp_key, {'off_eff': 100, 'def_eff': 100})
-            p = (game['field_goals_attempted'] + 0.475 * game['free_throws_attempted'] -
-                 game['offensive_rebounds'] + game['turnovers'])
-            if p <= 0:
+        current_ratings_by_team_season = (
+            current_ratings.set_index(['season', 'team_id'])[['off_eff', 'def_eff']]
+            .to_dict('index')
+        )
+        game_adjustments = []
+        for _, game_row in team_game_df.iterrows():
+            opponent_key    = (game_row['season'], game_row['opponent_team_id'])
+            opponent_rating = current_ratings_by_team_season.get(
+                opponent_key, {'off_eff': 100, 'def_eff': 100}
+            )
+            team_possessions = (
+                game_row['field_goals_attempted']
+                + 0.475 * game_row['free_throws_attempted']
+                - game_row['offensive_rebounds']
+                + game_row['turnovers']
+            )
+            if team_possessions <= 0:
                 continue
-            adj_off = (game['team_score'] / p * 100) + (100 - opp_rating['def_eff'])
-            adj_def = (game['opponent_team_score'] / p * 100) + (100 - opp_rating['off_eff'])
-            adjustments.append({'season': game['season'], 'team_id': game['team_id'],
-                                'a_off': adj_off, 'a_def': adj_def})
-        adj_df = pd.DataFrame(adjustments).groupby(['season', 'team_id']).mean().reset_index()
-        ratings = ratings[['season', 'team_id']].merge(adj_df, on=['season', 'team_id'])
-        ratings.columns = ['season', 'team_id', 'off_eff', 'def_eff']
-    ratings['net_eff'] = ratings['off_eff'] - ratings['def_eff']
-    return ratings
+            adjusted_offense = (game_row['team_score'] / team_possessions * 100
+                                + (100 - opponent_rating['def_eff']))
+            adjusted_defense = (game_row['opponent_team_score'] / team_possessions * 100
+                                + (100 - opponent_rating['off_eff']))
+            game_adjustments.append({
+                'season':  game_row['season'],
+                'team_id': game_row['team_id'],
+                'adjusted_off_per_game': adjusted_offense,
+                'adjusted_def_per_game': adjusted_defense,
+            })
+
+        adjusted_df = (
+            pd.DataFrame(game_adjustments)
+            .groupby(['season', 'team_id'])
+            .mean().reset_index()
+        )
+        current_ratings = current_ratings[['season', 'team_id']].merge(
+            adjusted_df, on=['season', 'team_id']
+        )
+        current_ratings.columns = ['season', 'team_id', 'off_eff', 'def_eff']
+
+    current_ratings['net_eff'] = current_ratings['off_eff'] - current_ratings['def_eff']
+    return current_ratings
 
 
-def blend_efficiency_ratings(current_eff, prior_eff, counts):
-    blended = current_eff.merge(counts, on='team_id').merge(
-        prior_eff, on='team_id', how='left', suffixes=('', '_p')
+def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency, game_counts_df):
+    """Bayesian blend of current-season and prior-season efficiency ratings.
+
+    A team with many games this season leans on this year's data; a team with
+    few games leans on last year.  The blend weight is:
+        w = n / (n + GAME_WEIGHT_CONSTANT)
+    where n is the number of games played this season.
+
+    Parameters
+    ----------
+    current_season_efficiency : DataFrame   season + team_id + off_eff + def_eff
+    prior_season_efficiency   : DataFrame   Same structure for the previous season.
+    game_counts_df            : DataFrame   Columns: team_id, n (games played this season).
+
+    Returns
+    -------
+    DataFrame: team_id, off_eff, def_eff, net_eff (blended values).
+    """
+    blended = (
+        current_season_efficiency
+        .merge(game_counts_df, on='team_id')
+        .merge(prior_season_efficiency, on='team_id', how='left', suffixes=('', '_prior'))
     )
-    blended[['off_eff_p', 'def_eff_p']] = blended[['off_eff_p', 'def_eff_p']].fillna(100)
-    w = blended['n'] / (blended['n'] + GAME_WEIGHT_CONSTANT)
-    blended['adj_off'] = blended['off_eff'] * w + blended['off_eff_p'] * (1 - w)
-    blended['adj_def'] = blended['def_eff'] * w + blended['def_eff_p'] * (1 - w)
-    blended['net_eff'] = blended['adj_off'] - blended['adj_def']
-    return blended[['team_id', 'adj_off', 'adj_def', 'net_eff']].rename(
-        columns={'adj_off': 'off_eff', 'adj_def': 'def_eff'}
+    blended[['off_eff_prior', 'def_eff_prior']] = (
+        blended[['off_eff_prior', 'def_eff_prior']].fillna(100)  # assume average if no prior data
+    )
+    game_weight_fraction = blended['n'] / (blended['n'] + GAME_WEIGHT_CONSTANT)
+    blended['blended_off_eff'] = (blended['off_eff']       * game_weight_fraction
+                                   + blended['off_eff_prior'] * (1 - game_weight_fraction))
+    blended['blended_def_eff'] = (blended['def_eff']       * game_weight_fraction
+                                   + blended['def_eff_prior'] * (1 - game_weight_fraction))
+    blended['net_eff'] = blended['blended_off_eff'] - blended['blended_def_eff']
+    return blended[['team_id', 'blended_off_eff', 'blended_def_eff', 'net_eff']].rename(
+        columns={'blended_off_eff': 'off_eff', 'blended_def_eff': 'def_eff'}
     )
 
 
 # ==============================================================================
-# BasePredictor — one spread model + one monotone win-prob calibrator, both fit
-# on a walk-forward pass over the calibration year(s).
+# BasePredictor
 # ==============================================================================
 class BasePredictor:
-    def __init__(self):
-        self.reg = None
-        self.calibrator = None
-        self.calibration_years = None
-        self.current_efficiency = None
-        self.team_lookup = None
-        self.team_id_to_name = None
-        self.current_season = None
-        self.as_of_date = None
+    """One spread model (LinearRegression) + one win-prob calibrator (subclass).
 
-    def _fit_calibrator(self, pred_margins, actuals):
+    Training is walk-forward: for each month of the calibration year, the model
+    is given only games from prior months, so it never sees the future.
+    """
+
+    def __init__(self):
+        self.spread_regression_model = None   # LinearRegression: features → predicted margin
+        self.calibrator              = None   # e.g. IsotonicRegression: margin → P(win)
+        self.calibration_years       = None   # list of seasons used to train
+        self.current_efficiency      = None   # DataFrame indexed by team_id
+        self.team_lookup             = None   # {team_display_name: team_id}
+        self.team_id_to_name         = None   # {team_id: team_display_name}
+        self.current_season          = None
+        self.as_of_date              = None
+
+    # Subclasses implement these two methods.
+    def _fit_calibrator(self, predicted_margins, actual_outcomes):
         raise NotImplementedError
 
-    def _calibrate(self, pred_margin):
+    def _calibrate(self, predicted_margin):
         raise NotImplementedError
 
     def _walk_forward_raw(self, season, prior_season):
+        """Collect (actual_outcome, margin, net_eff_diff, location_code) for a season
+        via a monthly walk-forward: only games from prior months are used as ratings inputs."""
         import sportsdataverse.mbb.mbb_loaders as mbb_loaders
-        data = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
-        data['month'] = pd.to_datetime(data['game_date']).dt.to_period('M')
-        months = sorted(data['month'].unique())
-        historical = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
-        prior_eff = calculate_adjusted_efficiency(historical, calculate_efficiency(historical))
+        season_game_df = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
+        season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period('M')
+        chronological_months = sorted(season_game_df['month'].unique())
 
-        actuals, margins, net_diffs, locs = [], [], [], []
-        for i, month in enumerate(months):
-            month_games = data[data['month'] == month]
-            prev_games = data[data['month'].isin(months[:i])]
-            if len(prev_games) > 0:
-                curr_eff = calculate_adjusted_efficiency(prev_games, calculate_efficiency(prev_games))
-                eff = blend_efficiency_ratings(
-                    curr_eff, prior_eff, prev_games.groupby('team_id').size().reset_index(name='n'))
+        prior_season_game_df   = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_efficiency = calculate_adjusted_efficiency(
+            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+        )
+
+        actual_outcomes_list, actual_margins_list, net_efficiency_diffs_list, location_codes_list = (
+            [], [], [], []
+        )
+        for month_index, current_month in enumerate(chronological_months):
+            month_games  = season_game_df[season_game_df['month'] == current_month]
+            games_before = season_game_df[season_game_df['month'].isin(chronological_months[:month_index])]
+
+            if len(games_before) > 0:
+                current_season_efficiency = calculate_adjusted_efficiency(
+                    games_before, calculate_efficiency(games_before)
+                )
+                blended_efficiency = blend_efficiency_ratings(
+                    current_season_efficiency, prior_season_efficiency,
+                    games_before.groupby('team_id').size().reset_index(name='n')
+                )
             else:
-                eff = prior_eff[['team_id', 'off_eff', 'def_eff', 'net_eff']].copy()
-            eff_map = eff.set_index('team_id')
-            for _, game in month_games.iterrows():
-                t1, t2 = game['team_id'], game['opponent_team_id']
-                if t1 not in eff_map.index or t2 not in eff_map.index:
+                blended_efficiency = prior_season_efficiency[
+                    ['team_id', 'off_eff', 'def_eff', 'net_eff']
+                ].copy()
+
+            efficiency_lookup = blended_efficiency.set_index('team_id')
+            for _, game_row in month_games.iterrows():
+                team1_id = game_row['team_id']
+                team2_id = game_row['opponent_team_id']
+                if team1_id not in efficiency_lookup.index or team2_id not in efficiency_lookup.index:
                     continue
-                net_diffs.append(eff_map.loc[t1]['net_eff'] - eff_map.loc[t2]['net_eff'])
-                locs.append({'home': 1, 'neutral': 0, 'away': -1}.get(game['team_home_away'], 0))
-                actuals.append(int(game['team_winner']))
-                margins.append(game['team_score'] - game['opponent_team_score'])
-        return (np.array(actuals), np.array(margins), np.array(net_diffs), np.array(locs))
+                net_efficiency_diffs_list.append(
+                    efficiency_lookup.loc[team1_id]['net_eff']
+                    - efficiency_lookup.loc[team2_id]['net_eff']
+                )
+                location_codes_list.append(
+                    {'home': 1, 'neutral': 0, 'away': -1}.get(game_row['team_home_away'], 0)
+                )
+                actual_outcomes_list.append(int(game_row['team_winner']))
+                actual_margins_list.append(game_row['team_score'] - game_row['opponent_team_score'])
+
+        return (
+            np.array(actual_outcomes_list),
+            np.array(actual_margins_list),
+            np.array(net_efficiency_diffs_list),
+            np.array(location_codes_list),
+        )
 
     def train(self, calibration_year):
+        """Fit the spread model and calibrator on walk-forward data.
+
+        calibration_year: int or list[int].  Multiple years concatenated.
+        """
         start_time = time.time()
-        name = type(self).__name__
-        cal_years = [calibration_year] if isinstance(calibration_year, int) else list(calibration_year)
-        self.calibration_years = cal_years
-        print(f"Training {name} (walk-forward) on {cal_years}...")
+        model_class_name = type(self).__name__
+        calibration_year_list = (
+            [calibration_year] if isinstance(calibration_year, int) else list(calibration_year)
+        )
+        self.calibration_years = calibration_year_list
+        print(f"Training {model_class_name} (walk-forward) on {calibration_year_list}...")
 
-        act, margin, net, loc = [], [], [], []
-        for cy in cal_years:
-            ac, mg, nd, lc = self._walk_forward_raw(cy, cy - 1)
-            act.append(ac); margin.append(mg); net.append(nd); loc.append(lc)
-        act = np.concatenate(act)
-        margin = np.concatenate(margin)
-        X = np.column_stack([np.concatenate(net), np.concatenate(loc)])
+        all_actual_outcomes   = []
+        all_actual_margins    = []
+        all_net_eff_diffs     = []
+        all_location_codes    = []
+        for cal_year in calibration_year_list:
+            year_actuals, year_margins, year_net_diffs, year_locs = (
+                self._walk_forward_raw(cal_year, cal_year - 1)
+            )
+            all_actual_outcomes.append(year_actuals)
+            all_actual_margins.append(year_margins)
+            all_net_eff_diffs.append(year_net_diffs)
+            all_location_codes.append(year_locs)
 
-        self.reg = LinearRegression().fit(X, margin)
-        print(f"   spread: margin = {self.reg.coef_[0]:.3f}*net_diff "
-              f"+ {self.reg.coef_[1]:+.2f}*loc  (home court = {self.reg.coef_[1]:+.2f} pts)")
-        self._fit_calibrator(self.reg.predict(X), act)
-        print(f"OK {name} trained in {time.time() - start_time:.1f}s ({len(act)} games)")
+        all_actual_outcomes = np.concatenate(all_actual_outcomes)
+        all_actual_margins  = np.concatenate(all_actual_margins)
+        feature_matrix = np.column_stack([
+            np.concatenate(all_net_eff_diffs),
+            np.concatenate(all_location_codes),
+        ])
+
+        self.spread_regression_model = LinearRegression().fit(feature_matrix, all_actual_margins)
+        print(
+            f"   spread: margin = {self.spread_regression_model.coef_[0]:.3f}*net_diff "
+            f"+ {self.spread_regression_model.coef_[1]:+.2f}*loc  "
+            f"(home court = {self.spread_regression_model.coef_[1]:+.2f} pts)"
+        )
+        self._fit_calibrator(
+            self.spread_regression_model.predict(feature_matrix), all_actual_outcomes
+        )
+        print(f"OK {model_class_name} trained in {time.time() - start_time:.1f}s "
+              f"({len(all_actual_outcomes)} games)")
 
     @staticmethod
-    def _infer_current_season(ts=None):
-        """NCAA seasons are labeled by the calendar year they END (spring): a date
-        in Jul-Dec belongs to next year's season, Jan-Jun to the current year's."""
-        ts = pd.Timestamp.now() if ts is None else pd.Timestamp(ts)
-        return ts.year + 1 if ts.month >= 7 else ts.year
+    def _infer_current_season(timestamp=None):
+        """NCAA seasons are labeled by the calendar year they END (spring).
+        A date in Jul–Dec belongs to next year's season; Jan–Jun to the current year."""
+        timestamp = pd.Timestamp.now() if timestamp is None else pd.Timestamp(timestamp)
+        return timestamp.year + 1 if timestamp.month >= 7 else timestamp.year
 
     @staticmethod
-    def _match_team_name(team_name, lookup):
-        """Resolve a team name to its id against {display_name: team_id}:
-        exact -> case-insensitive -> best word-subset match. None if no hit."""
-        if team_name in lookup:
-            return lookup[team_name]
-        lower = team_name.lower().strip()
-        for name, tid in lookup.items():
-            if name.lower() == lower:
-                return tid
-        search_words = set(lower.split())
-        candidates = []
-        for name, tid in lookup.items():
-            name_words = set(name.lower().split())
-            if search_words.issubset(name_words):
-                candidates.append((len(name_words) - len(search_words), len(name), name, tid))
-        if candidates:
-            candidates.sort()
-            return candidates[0][3]
+    def _match_team_name(search_name, name_to_id_lookup):
+        """Resolve a team name string to its numeric ID.
+
+        Resolution order:
+          1. Exact match
+          2. Case-insensitive exact match
+          3. Best word-subset match (search words ⊆ candidate name words, fewest extra words wins)
+          4. None if no hit
+        """
+        if search_name in name_to_id_lookup:
+            return name_to_id_lookup[search_name]
+        search_lower = search_name.lower().strip()
+        for candidate_name, team_id in name_to_id_lookup.items():
+            if candidate_name.lower() == search_lower:
+                return team_id
+        search_words = set(search_lower.split())
+        word_subset_candidates = []
+        for candidate_name, team_id in name_to_id_lookup.items():
+            candidate_words = set(candidate_name.lower().split())
+            if search_words.issubset(candidate_words):
+                word_subset_candidates.append((
+                    len(candidate_words) - len(search_words),  # fewer extra words = better
+                    len(candidate_name),
+                    candidate_name,
+                    team_id,
+                ))
+        if word_subset_candidates:
+            word_subset_candidates.sort()
+            return word_subset_candidates[0][3]
         return None
 
     def _build_ratings(self, current_season, prior_season=None, as_of_date=None):
+        """Load and blend efficiency ratings for the current season."""
         import sportsdataverse.mbb.mbb_loaders as mbb_loaders
         if prior_season is None:
             prior_season = current_season - 1
-        df_current = mbb_loaders.load_mbb_team_boxscore(seasons=[current_season]).to_pandas()
+
+        current_season_game_df = mbb_loaders.load_mbb_team_boxscore(
+            seasons=[current_season]
+        ).to_pandas()
         if as_of_date is not None:
-            df_current = df_current[pd.to_datetime(df_current['game_date']) <= pd.Timestamp(as_of_date)]
-        df_prior = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
-        prior_eff = calculate_adjusted_efficiency(df_prior, calculate_efficiency(df_prior))
-        curr_eff = calculate_adjusted_efficiency(df_current, calculate_efficiency(df_current))
-        counts = df_current.groupby('team_id').size().reset_index(name='n')
-        blended = blend_efficiency_ratings(curr_eff, prior_eff, counts)
-        self.current_efficiency = blended.set_index('team_id')
-        self.team_lookup = (df_current[['team_id', 'team_display_name']].drop_duplicates()
-                            .set_index('team_display_name')['team_id'].to_dict())
-        self.team_id_to_name = {v: k for k, v in self.team_lookup.items()}
-        self.current_season = current_season
-        self.as_of_date = None if as_of_date is None else pd.Timestamp(as_of_date)
-        stamp = f" as of {self.as_of_date.date()}" if self.as_of_date is not None else ""
-        print(f"OK Loaded {current_season} ratings for {len(self.current_efficiency)} teams{stamp}")
+            current_season_game_df = current_season_game_df[
+                pd.to_datetime(current_season_game_df['game_date']) <= pd.Timestamp(as_of_date)
+            ]
+
+        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_efficiency = calculate_adjusted_efficiency(
+            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+        )
+        current_raw_efficiency = calculate_adjusted_efficiency(
+            current_season_game_df, calculate_efficiency(current_season_game_df)
+        )
+        game_counts_df = (
+            current_season_game_df.groupby('team_id').size().reset_index(name='n')
+        )
+        blended_efficiency = blend_efficiency_ratings(
+            current_raw_efficiency, prior_season_efficiency, game_counts_df
+        )
+        self.current_efficiency = blended_efficiency.set_index('team_id')
+        self.team_lookup = (
+            current_season_game_df[['team_id', 'team_display_name']]
+            .drop_duplicates()
+            .set_index('team_display_name')['team_id'].to_dict()
+        )
+        self.team_id_to_name = {team_id: name for name, team_id in self.team_lookup.items()}
+        self.current_season  = current_season
+        self.as_of_date      = None if as_of_date is None else pd.Timestamp(as_of_date)
+        freshness_note = f" as of {self.as_of_date.date()}" if self.as_of_date is not None else ""
+        print(f"OK Loaded {current_season} ratings for {len(self.current_efficiency)} teams{freshness_note}")
 
     def load_current_ratings(self, prior_season=None):
-        """Ratings as they stand right now: current season, every game played to date."""
+        """Refresh ratings using every game played to date this season."""
         self._build_ratings(self._infer_current_season(), prior_season=prior_season)
 
     def get_team_id(self, team_name):
         return self._match_team_name(team_name, self.team_lookup)
 
     def validate_walk_forward(self, test_season, prior_season=None):
+        """Run walk-forward validation and return accuracy/logloss/AUC metrics."""
         if prior_season is None:
             prior_season = test_season - 1
-        actuals, margins, net_diffs, locs = self._walk_forward_raw(test_season, prior_season)
-        spreads = self.reg.predict(np.column_stack([net_diffs, locs]))
-        probs = np.array([self._calibrate(s) for s in spreads])
-        metrics = {
-            'accuracy': np.mean((probs > 0.5) == actuals),
-            'logloss': log_loss(actuals, probs),
-            'auc': roc_auc_score(actuals, probs),
-            'spread_mae': np.mean(np.abs(spreads - margins)),
-            'spread_rmse': np.sqrt(np.mean((spreads - margins) ** 2)),
+        actual_outcomes, actual_margins, net_eff_diffs, location_codes = (
+            self._walk_forward_raw(test_season, prior_season)
+        )
+        feature_matrix    = np.column_stack([net_eff_diffs, location_codes])
+        predicted_spreads = self.spread_regression_model.predict(feature_matrix)
+        predicted_win_probs = np.array([self._calibrate(spread) for spread in predicted_spreads])
+        validation_metrics = {
+            'accuracy':    np.mean((predicted_win_probs > 0.5) == actual_outcomes),
+            'logloss':     log_loss(actual_outcomes, predicted_win_probs),
+            'auc':         roc_auc_score(actual_outcomes, predicted_win_probs),
+            'spread_mae':  np.mean(np.abs(predicted_spreads - actual_margins)),
+            'spread_rmse': np.sqrt(np.mean((predicted_spreads - actual_margins) ** 2)),
         }
-        return metrics, probs, actuals
+        return validation_metrics, predicted_win_probs, actual_outcomes
 
 
 # ==============================================================================
-# IsotonicPredictor — isotonic regression mapping predicted margin -> P(win)
+# IsotonicPredictor
 # ==============================================================================
 class IsotonicPredictor(BasePredictor):
-    def _fit_calibrator(self, pred_margins, actuals):
-        self.calibrator = IsotonicRegression(out_of_bounds='clip')
-        self.calibrator.fit(pred_margins, actuals)
+    """Maps predicted margin → P(win) with isotonic (monotone) regression.
 
-    def _calibrate(self, pred_margin):
-        return float(self.calibrator.predict([pred_margin])[0])
+    Isotonic regression is guaranteed to be non-decreasing, so a larger
+    predicted margin always produces a higher win probability.
+    """
+
+    def _fit_calibrator(self, predicted_margins, actual_outcomes):
+        self.calibrator = IsotonicRegression(out_of_bounds='clip')
+        self.calibrator.fit(predicted_margins, actual_outcomes)
+
+    def _calibrate(self, predicted_margin):
+        return float(self.calibrator.predict([predicted_margin])[0])
 
 
 # ==============================================================================
-# TempoPredictor — tempo-adjusted spread + recent form + team-specific home court
-#
-#   tempo_adj  = net_diff * pace_factor          (efficiency x pace interaction)
-#   home_court = home_team_adv or -away_team_adv (replaces flat loc coef)
-#   form_diff  = team1_form - team2_form         (recent form, last FORM_GAMES)
+# TempoPredictor
 # ==============================================================================
 class TempoPredictor(IsotonicPredictor):
-    SPREAD_FEATURES = ['tempo_adj', 'home_court', 'form_diff']
-    FORM_GAMES = 5            # rolling window for recent form
-    FORM_MODE = 'residual'    # opponent-adjusted form; tuned default
-    CONF_GATE_GAMES = 5       # conf games needed before form turns on (gate/window modes)
-    HOME_ADV_SHRINK = 30      # Bayesian shrink constant for home court estimates
-    HOME_ADV_MIN_GP = 20      # minimum games to appear in leaderboard
+    """Full model adding tempo adjustment, recent form, and per-team home court.
 
-    _conf_cache = {}          # season -> set(conference game_ids)
+    Three features used in the spread regression:
+        tempo_adj  = net_efficiency_diff * pace_factor
+                     (efficiency advantage scaled by how fast both teams play)
+        home_court = home_team_advantage OR -away_team_advantage
+                     (replaces the flat location coefficient in BasePredictor)
+        form_diff  = team1_recent_form - team2_recent_form
+                     (rolling mean of last FORM_GAMES residual margins)
+    """
+
+    SPREAD_FEATURES   = ['tempo_adj', 'home_court', 'form_diff']
+    FORM_GAMES        = 5       # rolling window for recent form
+    FORM_MODE         = 'residual'   # use opponent-adjusted form; tuned default
+    CONF_GATE_GAMES   = 5       # conference games needed before gate/window form turns on
+    HOME_ADV_SHRINK   = 30      # Bayesian shrink constant for home-court estimates
+    HOME_ADV_MIN_GP   = 20      # minimum games to appear in leaderboard
+
+    _conference_game_id_cache = {}  # season → set(conference game_ids), class-level
 
     def __init__(self):
         super().__init__()
-        self.current_pace = {}
-        self.current_form = {}
-        self.home_adv = {}
-        self._league_avg_pace = 70.0
-        self._league_home_adv = 3.0
+        self.current_pace       = {}    # {team_id: avg_possessions_per_game}
+        self.current_form       = {}    # {team_id: recent_form_value}
+        self.home_adv           = {}    # {team_id: estimated_home_court_pts}
+        self._league_avg_pace   = 70.0  # fallback if no data
+        self._league_home_adv   = 3.0   # fallback home-court advantage
 
     @classmethod
-    def _conf_game_ids(cls, season):
+    def _conference_game_ids(cls, season):
+        """Return the set of game_ids flagged as conference competition for a season."""
         import sportsdataverse.mbb.mbb_loaders as mbb_loaders
-        if season not in cls._conf_cache:
-            sched = mbb_loaders.load_mbb_schedule(seasons=[season]).to_pandas()
-            cls._conf_cache[season] = set(
-                sched.loc[sched['conference_competition'] == True, 'game_id'])
-        return cls._conf_cache[season]
+        if season not in cls._conference_game_id_cache:
+            schedule = mbb_loaders.load_mbb_schedule(seasons=[season]).to_pandas()
+            cls._conference_game_id_cache[season] = set(
+                schedule.loc[schedule['conference_competition'] == True, 'game_id']
+            )
+        return cls._conference_game_id_cache[season]
 
-    def _form_value(self, log):
-        """Reduce one team's chronological game log to a single form number under
-        the active FORM_MODE. Returns 0.0 when form is unavailable."""
-        if not log:
+    def _compute_form_value(self, game_log_for_team):
+        """Reduce a team's chronological game log to a single recent-form number.
+
+        The game log is a list of dicts: {'margin': float, 'conf': bool, 'resid': float}.
+        Returns 0.0 when not enough data is available under the current mode.
+        """
+        if not game_log_for_team:
             return 0.0
         mode = self.FORM_MODE
         if mode == 'raw':
-            vals = [e['margin'] for e in log][-self.FORM_GAMES:]
+            recent_values = [entry['margin'] for entry in game_log_for_team][-self.FORM_GAMES:]
         elif mode == 'residual':
-            vals = [e['resid'] for e in log][-self.FORM_GAMES:]
+            # Residual = actual margin minus what the model predicted → opponent-adjusted form.
+            recent_values = [entry['resid'] for entry in game_log_for_team][-self.FORM_GAMES:]
         elif mode == 'conf_gate':
-            if sum(e['conf'] for e in log) < self.CONF_GATE_GAMES:
+            conf_game_count = sum(entry['conf'] for entry in game_log_for_team)
+            if conf_game_count < self.CONF_GATE_GAMES:
                 return 0.0
-            vals = [e['margin'] for e in log][-self.FORM_GAMES:]
+            recent_values = [entry['margin'] for entry in game_log_for_team][-self.FORM_GAMES:]
         elif mode == 'conf_window':
-            conf = [e['margin'] for e in log if e['conf']]
-            if len(conf) < self.CONF_GATE_GAMES:
+            conference_margins = [entry['margin'] for entry in game_log_for_team if entry['conf']]
+            if len(conference_margins) < self.CONF_GATE_GAMES:
                 return 0.0
-            vals = conf[-self.FORM_GAMES:]
+            recent_values = conference_margins[-self.FORM_GAMES:]
         else:
             raise ValueError(f"unknown FORM_MODE: {mode!r}")
-        return float(np.mean(vals)) if vals else 0.0
+        return float(np.mean(recent_values)) if recent_values else 0.0
 
     @staticmethod
-    def _compute_team_pace(data):
-        data = data.copy()
-        data['poss'] = (data['field_goals_attempted']
-                        + 0.475 * data['free_throws_attempted']
-                        - data['offensive_rebounds']
-                        + data['turnovers'])
-        return data.groupby('team_id')['poss'].mean()
+    def _compute_team_pace(team_game_df):
+        """Average possessions per game for each team."""
+        team_game_df = team_game_df.copy()
+        team_game_df['possessions'] = (
+            team_game_df['field_goals_attempted']
+            + 0.475 * team_game_df['free_throws_attempted']
+            - team_game_df['offensive_rebounds']
+            + team_game_df['turnovers']
+        )
+        return team_game_df.groupby('team_id')['possessions'].mean()
 
     @staticmethod
-    def _league_pace(data):
-        poss = (data['field_goals_attempted']
-                + 0.475 * data['free_throws_attempted']
-                - data['offensive_rebounds']
-                + data['turnovers'])
-        return float(poss.mean())
+    def _compute_league_avg_pace(team_game_df):
+        """League-average possessions per team per game."""
+        possessions = (
+            team_game_df['field_goals_attempted']
+            + 0.475 * team_game_df['free_throws_attempted']
+            - team_game_df['offensive_rebounds']
+            + team_game_df['turnovers']
+        )
+        return float(possessions.mean())
 
-    def _compute_current_form(self, data, conf_ids):
-        data = data.sort_values('game_date')
-        league = self._league_avg_pace
-        eff = self.current_efficiency
-        logs = {}
-        for _, g in data.iterrows():
-            t1, t2 = g['team_id'], g['opponent_team_id']
-            margin = float(g['team_score'] - g['opponent_team_score'])
-            if t1 in eff.index and t2 in eff.index:
-                net = eff.loc[t1]['net_eff'] - eff.loc[t2]['net_eff']
-                pf = ((self.current_pace.get(t1, league)
-                       + self.current_pace.get(t2, league)) / 2) / league
-                loc = {'home': 1, 'neutral': 0, 'away': -1}.get(g['team_home_away'], 0)
-                hc = self._home_court_feature(t1, t2, loc, self.home_adv, self._league_home_adv)
-                exp = net * pf + hc
+    def _compute_current_form(self, current_season_game_df, conference_game_id_set):
+        """Build a form value for every team from the chronological game log."""
+        sorted_game_df = current_season_game_df.sort_values('game_date')
+        efficiency_lookup = self.current_efficiency
+        team_game_logs = {}
+
+        for _, game_row in sorted_game_df.iterrows():
+            team1_id = game_row['team_id']
+            team2_id = game_row['opponent_team_id']
+            actual_margin = float(game_row['team_score'] - game_row['opponent_team_score'])
+
+            if team1_id in efficiency_lookup.index and team2_id in efficiency_lookup.index:
+                net_efficiency_diff = (efficiency_lookup.loc[team1_id]['net_eff']
+                                       - efficiency_lookup.loc[team2_id]['net_eff'])
+                pace_factor = (
+                    (self.current_pace.get(team1_id, self._league_avg_pace)
+                     + self.current_pace.get(team2_id, self._league_avg_pace)) / 2
+                ) / self._league_avg_pace
+                location_code = {'home': 1, 'neutral': 0, 'away': -1}.get(game_row['team_home_away'], 0)
+                home_court_pts = self._home_court_feature(
+                    team1_id, team2_id, location_code, self.home_adv, self._league_home_adv
+                )
+                model_expected_margin = net_efficiency_diff * pace_factor + home_court_pts
             else:
-                exp = 0.0
-            logs.setdefault(t1, []).append({'margin': margin,
-                                            'conf': bool(g['game_id'] in conf_ids),
-                                            'resid': margin - exp})
-        return {tid: self._form_value(log) for tid, log in logs.items()}
+                model_expected_margin = 0.0
+
+            team_game_logs.setdefault(team1_id, []).append({
+                'margin': actual_margin,
+                'conf':   bool(game_row['game_id'] in conference_game_id_set),
+                'resid':  actual_margin - model_expected_margin,
+            })
+
+        return {team_id: self._compute_form_value(log) for team_id, log in team_game_logs.items()}
 
     @classmethod
-    def _compute_home_adv(cls, data, shrink=None):
-        """Per-team home court advantage in pts, Bayes-shrunk toward league mean.
-        Returns (adv_dict, league_avg). adv = (mean_home_margin - mean_away_margin)/2."""
+    def _compute_home_adv(cls, team_game_df, shrink=None):
+        """Estimate per-team home-court advantage in points, shrunk toward the league mean.
+
+        raw_adv = (avg home margin - avg away margin) / 2
+        shrunk  = raw_adv * w + league_avg * (1 - w),  where w = n / (n + shrink)
+
+        Returns (adv_dict, league_avg_adv).
+        """
         if shrink is None:
             shrink = cls.HOME_ADV_SHRINK
-        df = data.copy()
-        df['margin'] = df['team_score'] - df['opponent_team_score']
-        home = (df[df['team_home_away'] == 'home']
-                .groupby('team_id')['margin']
-                .agg(home_mean='mean', n_home='count'))
-        away = (df[df['team_home_away'] == 'away']
-                .groupby('team_id')['margin']
-                .agg(away_mean='mean', n_away='count'))
-        merged = home.join(away, how='outer').fillna(0)
-        merged['raw_adv'] = (merged['home_mean'] - merged['away_mean']) / 2
-        league_avg = float(merged['raw_adv'].mean())
-        n_total = merged['n_home'] + merged['n_away']
-        w = n_total / (n_total + shrink)
-        merged['home_adv'] = merged['raw_adv'] * w + league_avg * (1 - w)
-        return merged['home_adv'].to_dict(), league_avg
+        game_df = team_game_df.copy()
+        game_df['margin'] = game_df['team_score'] - game_df['opponent_team_score']
 
-    def _home_court_feature(self, t1, t2, loc, adv_dict, league_avg):
-        """Points contribution of home court from team1's perspective."""
-        if loc == 1:
-            return adv_dict.get(t1, league_avg)
-        elif loc == -1:
-            return -adv_dict.get(t2, league_avg)
+        home_stats = (game_df[game_df['team_home_away'] == 'home']
+                      .groupby('team_id')['margin']
+                      .agg(home_mean='mean', n_home='count'))
+        away_stats = (game_df[game_df['team_home_away'] == 'away']
+                      .groupby('team_id')['margin']
+                      .agg(away_mean='mean', n_away='count'))
+        merged_home_away = home_stats.join(away_stats, how='outer').fillna(0)
+        merged_home_away['raw_home_adv'] = (merged_home_away['home_mean'] - merged_home_away['away_mean']) / 2
+        league_avg_home_adv = float(merged_home_away['raw_home_adv'].mean())
+        total_games = merged_home_away['n_home'] + merged_home_away['n_away']
+        shrink_weight = total_games / (total_games + shrink)
+        merged_home_away['shrunk_home_adv'] = (merged_home_away['raw_home_adv'] * shrink_weight
+                                               + league_avg_home_adv * (1 - shrink_weight))
+        return merged_home_away['shrunk_home_adv'].to_dict(), league_avg_home_adv
+
+    def _home_court_feature(self, team1_id, team2_id, location_code,
+                            home_adv_dict, league_avg_home_adv):
+        """Return the point value of home court from team1's perspective.
+
+        location_code: 1 = team1 is at home, -1 = team1 is away, 0 = neutral.
+        """
+        if location_code == 1:
+            return home_adv_dict.get(team1_id, league_avg_home_adv)
+        elif location_code == -1:
+            return -home_adv_dict.get(team2_id, league_avg_home_adv)
         return 0.0
 
     def _walk_forward_frame(self, season, prior_season):
+        """Produce a training DataFrame for one season via monthly walk-forward.
+
+        Returns a DataFrame with one row per game containing the three model
+        features (tempo_adj, home_court, form_diff) plus the actual margin and
+        win indicator.
+        """
         import sportsdataverse.mbb.mbb_loaders as mbb_loaders
-        data = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
-        data['month'] = pd.to_datetime(data['game_date']).dt.to_period('M')
-        data = data.sort_values('game_date')
-        months = sorted(data['month'].unique())
-        conf_ids = self._conf_game_ids(season)
-        historical = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
-        prior_eff = calculate_adjusted_efficiency(historical, calculate_efficiency(historical))
-        prior_pace = self._compute_team_pace(historical)
-        league_avg = self._league_pace(historical)
-        prior_home_adv, league_home_adv = self._compute_home_adv(historical)
+        season_game_df = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
+        season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period('M')
+        season_game_df = season_game_df.sort_values('game_date')
+        chronological_months = sorted(season_game_df['month'].unique())
 
-        form_log = {}
+        conference_game_id_set = self._conference_game_ids(season)
 
-        rows = []
-        for i, month in enumerate(months):
-            month_games = data[data['month'] == month].sort_values('game_date')
-            prev_games = data[data['month'].isin(months[:i])]
+        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_efficiency = calculate_adjusted_efficiency(
+            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+        )
+        prior_season_pace       = self._compute_team_pace(prior_season_game_df)
+        league_avg_pace         = self._compute_league_avg_pace(prior_season_game_df)
+        prior_home_adv_dict, league_home_adv = self._compute_home_adv(prior_season_game_df)
 
-            if len(prev_games) > 0:
-                curr_eff = calculate_adjusted_efficiency(prev_games, calculate_efficiency(prev_games))
-                counts = prev_games.groupby('team_id').size()
-                eff = blend_efficiency_ratings(curr_eff, prior_eff, counts.reset_index(name='n'))
-                curr_pace = self._compute_team_pace(prev_games)
+        team_form_logs = {}    # {team_id: list of game log entries}
+        training_rows  = []
 
-                def blended_pace(tid, _cp=curr_pace, _pp=prior_pace, _c=counts, _la=league_avg):
-                    n = _c.get(tid, 0)
+        for month_index, current_month in enumerate(chronological_months):
+            month_games  = season_game_df[season_game_df['month'] == current_month].sort_values('game_date')
+            games_before = season_game_df[season_game_df['month'].isin(chronological_months[:month_index])]
+
+            if len(games_before) > 0:
+                current_raw_efficiency = calculate_adjusted_efficiency(
+                    games_before, calculate_efficiency(games_before)
+                )
+                games_played_per_team = games_before.groupby('team_id').size()
+                blended_efficiency = blend_efficiency_ratings(
+                    current_raw_efficiency, prior_season_efficiency,
+                    games_played_per_team.reset_index(name='n')
+                )
+                current_season_pace = self._compute_team_pace(games_before)
+
+                def _blended_pace(team_id,
+                                  _curr=current_season_pace,
+                                  _prior=prior_season_pace,
+                                  _counts=games_played_per_team,
+                                  _league=league_avg_pace):
+                    n = _counts.get(team_id, 0)
                     w = n / (n + GAME_WEIGHT_CONSTANT)
-                    return float(_cp.get(tid, _la)) * w + float(_pp.get(tid, _la)) * (1 - w)
+                    return (float(_curr.get(team_id, _league)) * w
+                            + float(_prior.get(team_id, _league)) * (1 - w))
             else:
-                eff = prior_eff[['team_id', 'off_eff', 'def_eff', 'net_eff']].copy()
+                blended_efficiency = prior_season_efficiency[
+                    ['team_id', 'off_eff', 'def_eff', 'net_eff']
+                ].copy()
 
-                def blended_pace(tid, _pp=prior_pace, _la=league_avg):
-                    return float(_pp.get(tid, _la))
+                def _blended_pace(team_id, _prior=prior_season_pace, _league=league_avg_pace):
+                    return float(_prior.get(team_id, _league))
 
-            eff_map = eff.set_index('team_id')
-            for _, g in month_games.iterrows():
-                t1, t2 = g['team_id'], g['opponent_team_id']
-                if t1 not in eff_map.index or t2 not in eff_map.index:
+            efficiency_lookup = blended_efficiency.set_index('team_id')
+
+            for _, game_row in month_games.iterrows():
+                team1_id = game_row['team_id']
+                team2_id = game_row['opponent_team_id']
+                if team1_id not in efficiency_lookup.index or team2_id not in efficiency_lookup.index:
                     continue
 
-                net_diff = eff_map.loc[t1]['net_eff'] - eff_map.loc[t2]['net_eff']
-                exp_pace = (blended_pace(t1) + blended_pace(t2)) / 2
-                pace_factor = exp_pace / league_avg
-                loc = {'home': 1, 'neutral': 0, 'away': -1}.get(g['team_home_away'], 0)
-                home_court = self._home_court_feature(t1, t2, loc, prior_home_adv, league_home_adv)
+                net_efficiency_diff = (efficiency_lookup.loc[team1_id]['net_eff']
+                                       - efficiency_lookup.loc[team2_id]['net_eff'])
+                expected_pace = (_blended_pace(team1_id) + _blended_pace(team2_id)) / 2
+                pace_factor   = expected_pace / league_avg_pace
+                tempo_adj     = net_efficiency_diff * pace_factor
 
-                t1_form = self._form_value(form_log.get(t1, []))
-                t2_form = self._form_value(form_log.get(t2, []))
+                location_code = {'home': 1, 'neutral': 0, 'away': -1}.get(game_row['team_home_away'], 0)
+                home_court_pts = self._home_court_feature(
+                    team1_id, team2_id, location_code, prior_home_adv_dict, league_home_adv
+                )
 
-                margin = g['team_score'] - g['opponent_team_score']
-                exp_margin = net_diff * pace_factor + home_court
+                team1_form = self._compute_form_value(team_form_logs.get(team1_id, []))
+                team2_form = self._compute_form_value(team_form_logs.get(team2_id, []))
 
-                rows.append({
-                    'game_date': g['game_date'],
-                    'tempo_adj': net_diff * pace_factor,
-                    'net_diff': net_diff,
-                    'loc': loc,
-                    'home_court': home_court,
+                actual_margin         = game_row['team_score'] - game_row['opponent_team_score']
+                model_expected_margin = net_efficiency_diff * pace_factor + home_court_pts
+
+                training_rows.append({
+                    'game_date':   game_row['game_date'],
+                    'tempo_adj':   tempo_adj,
+                    'net_diff':    net_efficiency_diff,
+                    'loc':         location_code,
+                    'home_court':  home_court_pts,
                     'pace_factor': pace_factor,
-                    'form_diff': t1_form - t2_form,
-                    'margin': margin,
-                    'won': int(g['team_winner']),
+                    'form_diff':   team1_form - team2_form,
+                    'margin':      actual_margin,
+                    'won':         int(game_row['team_winner']),
                 })
-                form_log.setdefault(t1, []).append({
-                    'margin': float(margin),
-                    'conf': bool(g['game_id'] in conf_ids),
-                    'resid': float(margin - exp_margin),
+                team_form_logs.setdefault(team1_id, []).append({
+                    'margin': float(actual_margin),
+                    'conf':   bool(game_row['game_id'] in conference_game_id_set),
+                    'resid':  float(actual_margin - model_expected_margin),
                 })
 
-        return pd.DataFrame(rows)
+        return pd.DataFrame(training_rows)
 
     def train(self, calibration_year):
+        """Fit spread model + calibrator using walk-forward training data."""
         start = time.time()
-        cal_years = [calibration_year] if isinstance(calibration_year, int) else list(calibration_year)
-        self.calibration_years = cal_years
-        print(f"Training TempoPredictor (walk-forward, form={self.FORM_MODE}) on {cal_years}...")
-        frame = pd.concat([self._walk_forward_frame(cy, cy - 1) for cy in cal_years],
-                          ignore_index=True)
-        self.reg = LinearRegression().fit(frame[self.SPREAD_FEATURES], frame['margin'])
-        print("   spread: " + "  ".join(f"{k}={v:+.4f}"
-              for k, v in zip(self.SPREAD_FEATURES, self.reg.coef_)))
-        self._fit_calibrator(self.reg.predict(frame[self.SPREAD_FEATURES]), frame['won'].values)
-        print(f"OK TempoPredictor trained in {time.time() - start:.1f}s ({len(frame)} games)")
+        calibration_year_list = (
+            [calibration_year] if isinstance(calibration_year, int) else list(calibration_year)
+        )
+        self.calibration_years = calibration_year_list
+        print(f"Training TempoPredictor (walk-forward, form={self.FORM_MODE}) on {calibration_year_list}...")
+
+        training_frame = pd.concat(
+            [self._walk_forward_frame(cal_year, cal_year - 1) for cal_year in calibration_year_list],
+            ignore_index=True
+        )
+        self.spread_regression_model = LinearRegression().fit(
+            training_frame[self.SPREAD_FEATURES], training_frame['margin']
+        )
+        print("   spread: " + "  ".join(
+            f"{feature_name}={coef:+.4f}"
+            for feature_name, coef in zip(self.SPREAD_FEATURES, self.spread_regression_model.coef_)
+        ))
+        self._fit_calibrator(
+            self.spread_regression_model.predict(training_frame[self.SPREAD_FEATURES]),
+            training_frame['won'].values
+        )
+        print(f"OK TempoPredictor trained in {time.time() - start:.1f}s ({len(training_frame)} games)")
 
     def validate_walk_forward(self, test_season, prior_season=None):
+        """Evaluate walk-forward accuracy on a held-out season."""
         if prior_season is None:
             prior_season = test_season - 1
-        f = self._walk_forward_frame(test_season, prior_season)
-        spreads = self.reg.predict(f[self.SPREAD_FEATURES])
-        probs = np.array([self._calibrate(s) for s in spreads])
-        actuals, margins = f['won'].values, f['margin'].values
+        validation_frame = self._walk_forward_frame(test_season, prior_season)
+        predicted_spreads     = self.spread_regression_model.predict(
+            validation_frame[self.SPREAD_FEATURES]
+        )
+        predicted_win_probs   = np.array([self._calibrate(s) for s in predicted_spreads])
+        actual_outcomes       = validation_frame['won'].values
+        actual_margins        = validation_frame['margin'].values
         return {
-            'accuracy': np.mean((probs > 0.5) == actuals),
-            'logloss': log_loss(actuals, probs),
-            'auc': roc_auc_score(actuals, probs),
-            'spread_mae': np.mean(np.abs(spreads - margins)),
-            'spread_rmse': np.sqrt(np.mean((spreads - margins) ** 2)),
-        }, probs, actuals
+            'accuracy':    np.mean((predicted_win_probs > 0.5) == actual_outcomes),
+            'logloss':     log_loss(actual_outcomes, predicted_win_probs),
+            'auc':         roc_auc_score(actual_outcomes, predicted_win_probs),
+            'spread_mae':  np.mean(np.abs(predicted_spreads - actual_margins)),
+            'spread_rmse': np.sqrt(np.mean((predicted_spreads - actual_margins) ** 2)),
+        }, predicted_win_probs, actual_outcomes
 
     def _build_ratings(self, current_season, prior_season=None, as_of_date=None):
+        """Extend BasePredictor._build_ratings to also compute pace, home court, and form."""
         import sportsdataverse.mbb.mbb_loaders as mbb_loaders
         if prior_season is None:
             prior_season = current_season - 1
-        df_current = mbb_loaders.load_mbb_team_boxscore(seasons=[current_season]).to_pandas()
+
+        current_season_game_df = mbb_loaders.load_mbb_team_boxscore(
+            seasons=[current_season]
+        ).to_pandas()
         if as_of_date is not None:
-            df_current = df_current[pd.to_datetime(df_current['game_date']) <= pd.Timestamp(as_of_date)]
-        df_prior = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
-        prior_eff = calculate_adjusted_efficiency(df_prior, calculate_efficiency(df_prior))
-        curr_eff = calculate_adjusted_efficiency(df_current, calculate_efficiency(df_current))
-        counts = df_current.groupby('team_id').size()
-        blended = blend_efficiency_ratings(curr_eff, prior_eff, counts.reset_index(name='n'))
-        self.current_efficiency = blended.set_index('team_id')
-        self.team_lookup = (df_current[['team_id', 'team_display_name']].drop_duplicates()
-                            .set_index('team_display_name')['team_id'].to_dict())
-        self.team_id_to_name = {v: k for k, v in self.team_lookup.items()}
-        self.current_season = current_season
-        self.as_of_date = None if as_of_date is None else pd.Timestamp(as_of_date)
+            current_season_game_df = current_season_game_df[
+                pd.to_datetime(current_season_game_df['game_date']) <= pd.Timestamp(as_of_date)
+            ]
+        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
 
+        prior_season_efficiency = calculate_adjusted_efficiency(
+            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+        )
+        current_raw_efficiency  = calculate_adjusted_efficiency(
+            current_season_game_df, calculate_efficiency(current_season_game_df)
+        )
+        game_counts_per_team = current_season_game_df.groupby('team_id').size()
+        blended_efficiency   = blend_efficiency_ratings(
+            current_raw_efficiency, prior_season_efficiency,
+            game_counts_per_team.reset_index(name='n')
+        )
+        self.current_efficiency = blended_efficiency.set_index('team_id')
+        self.team_lookup = (
+            current_season_game_df[['team_id', 'team_display_name']]
+            .drop_duplicates()
+            .set_index('team_display_name')['team_id'].to_dict()
+        )
+        self.team_id_to_name = {team_id: name for name, team_id in self.team_lookup.items()}
+        self.current_season  = current_season
+        self.as_of_date      = None if as_of_date is None else pd.Timestamp(as_of_date)
+
+        # Pace
         self.current_pace = {}
-        self.home_adv = {}
+        self.home_adv     = {}
+        prior_season_pace    = self._compute_team_pace(prior_season_game_df)
+        current_season_pace  = self._compute_team_pace(current_season_game_df)
+        self._league_avg_pace = self._compute_league_avg_pace(prior_season_game_df)
 
-        prior_pace = self._compute_team_pace(df_prior)
-        curr_pace = self._compute_team_pace(df_current)
-        self._league_avg_pace = self._league_pace(df_prior)
-        for tid in set(curr_pace.index) | set(prior_pace.index):
-            n = counts.get(tid, 0)
+        for team_id in set(current_season_pace.index) | set(prior_season_pace.index):
+            n = game_counts_per_team.get(team_id, 0)
             w = n / (n + GAME_WEIGHT_CONSTANT)
-            self.current_pace[tid] = (float(curr_pace.get(tid, self._league_avg_pace)) * w
-                                      + float(prior_pace.get(tid, self._league_avg_pace)) * (1 - w))
+            self.current_pace[team_id] = (
+                float(current_season_pace.get(team_id, self._league_avg_pace)) * w
+                + float(prior_season_pace.get(team_id, self._league_avg_pace)) * (1 - w)
+            )
 
-        prior_adv, prior_league = self._compute_home_adv(df_prior)
-        curr_adv, curr_league = self._compute_home_adv(df_current)
-        self._league_home_adv = curr_league
-        for tid in set(prior_adv) | set(curr_adv):
-            n = counts.get(tid, 0)
+        # Home-court advantage
+        prior_home_adv_dict, prior_league_home_adv = self._compute_home_adv(prior_season_game_df)
+        curr_home_adv_dict,  curr_league_home_adv  = self._compute_home_adv(current_season_game_df)
+        self._league_home_adv = curr_league_home_adv
+        for team_id in set(prior_home_adv_dict) | set(curr_home_adv_dict):
+            n = game_counts_per_team.get(team_id, 0)
             w = n / (n + self.HOME_ADV_SHRINK)
-            self.home_adv[tid] = (curr_adv.get(tid, prior_league) * w
-                                  + prior_adv.get(tid, prior_league) * (1 - w))
+            self.home_adv[team_id] = (
+                curr_home_adv_dict.get(team_id, prior_league_home_adv) * w
+                + prior_home_adv_dict.get(team_id, prior_league_home_adv) * (1 - w)
+            )
 
-        conf_ids = self._conf_game_ids(current_season)
-        self.current_form = self._compute_current_form(df_current, conf_ids)
+        # Form
+        conference_game_id_set = self._conference_game_ids(current_season)
+        self.current_form = self._compute_current_form(current_season_game_df, conference_game_id_set)
 
-        stamp = f" as of {self.as_of_date.date()}" if self.as_of_date is not None else ""
-        print(f"OK Loaded {current_season} ratings + pace + form (L{self.FORM_GAMES}, {self.FORM_MODE}) "
-              f"+ home court for {len(self.current_efficiency)} teams{stamp}")
+        freshness_note = f" as of {self.as_of_date.date()}" if self.as_of_date is not None else ""
+        print(
+            f"OK Loaded {current_season} ratings + pace + form "
+            f"(L{self.FORM_GAMES}, {self.FORM_MODE}) "
+            f"+ home court for {len(self.current_efficiency)} teams{freshness_note}"
+        )
 
     def predict_game(self, team1_name, team2_name, team1_home=True, neutral_site=False,
                      verbose=True, save_output=False):
-        t1_id = self.get_team_id(team1_name)
-        t2_id = self.get_team_id(team2_name)
-        if t1_id is None:
+        """Predict the outcome of a single game.
+
+        Parameters
+        ----------
+        team1_name   : str   Display name of team 1 (listed first).
+        team2_name   : str   Display name of team 2.
+        team1_home   : bool  True if team 1 is at home.
+        neutral_site : bool  True if playing at a neutral venue.
+
+        Returns
+        -------
+        dict with win probabilities, projected spread, efficiency ratings, etc.
+        """
+        team1_id = self.get_team_id(team1_name)
+        team2_id = self.get_team_id(team2_name)
+        if team1_id is None:
             raise ValueError(f"Team not found: '{team1_name}'")
-        if t2_id is None:
+        if team2_id is None:
             raise ValueError(f"Team not found: '{team2_name}'")
-        t1 = self.team_id_to_name[t1_id]
-        t2 = self.team_id_to_name[t2_id]
-        eff1, eff2 = self.current_efficiency.loc[t1_id], self.current_efficiency.loc[t2_id]
-        loc = 0 if neutral_site else (1 if team1_home else -1)
-        net_diff = eff1['net_eff'] - eff2['net_eff']
-        t1_pace = self.current_pace.get(t1_id, self._league_avg_pace)
-        t2_pace = self.current_pace.get(t2_id, self._league_avg_pace)
-        exp_pace = (t1_pace + t2_pace) / 2
-        pace_factor = exp_pace / self._league_avg_pace
-        tempo_adj = net_diff * pace_factor
-        t1_form = self.current_form.get(t1_id, 0.0)
-        t2_form = self.current_form.get(t2_id, 0.0)
-        form_diff = t1_form - t2_form
-        home_court = self._home_court_feature(t1_id, t2_id, loc, self.home_adv, self._league_home_adv)
 
-        spread = self.reg.predict(np.array([[tempo_adj, home_court, form_diff]]))[0]
-        prob_cal = self._calibrate(spread)
+        team1_display_name = self.team_id_to_name[team1_id]
+        team2_display_name = self.team_id_to_name[team2_id]
+        team1_efficiency   = self.current_efficiency.loc[team1_id]
+        team2_efficiency   = self.current_efficiency.loc[team2_id]
 
-        result = {
-            'team1': t1, 'team2': t2,
+        location_code       = 0 if neutral_site else (1 if team1_home else -1)
+        net_efficiency_diff = team1_efficiency['net_eff'] - team2_efficiency['net_eff']
+        team1_pace          = self.current_pace.get(team1_id, self._league_avg_pace)
+        team2_pace          = self.current_pace.get(team2_id, self._league_avg_pace)
+        expected_pace       = (team1_pace + team2_pace) / 2
+        pace_factor         = expected_pace / self._league_avg_pace
+        tempo_adj           = net_efficiency_diff * pace_factor
+
+        team1_form = self.current_form.get(team1_id, 0.0)
+        team2_form = self.current_form.get(team2_id, 0.0)
+        form_diff  = team1_form - team2_form
+
+        home_court_pts = self._home_court_feature(
+            team1_id, team2_id, location_code, self.home_adv, self._league_home_adv
+        )
+        predicted_spread = self.spread_regression_model.predict(
+            np.array([[tempo_adj, home_court_pts, form_diff]])
+        )[0]
+        team1_win_probability = self._calibrate(predicted_spread)
+
+        prediction_result = {
+            'team1': team1_display_name, 'team2': team2_display_name,
             'team1_home': team1_home, 'neutral_site': neutral_site,
-            'expected_pace': round(exp_pace, 1), 'pace_factor': round(pace_factor, 3),
-            'team1_form': round(t1_form, 1), 'team2_form': round(t2_form, 1),
-            'home_court_pts': round(home_court, 2),
-            'team1_win_prob': prob_cal, 'team2_win_prob': 1 - prob_cal,
-            'team1_spread': spread, 'team2_spread': -spread,
-            'team1_net_eff': eff1['net_eff'], 'team2_net_eff': eff2['net_eff'],
-            'team1_off_eff': eff1['off_eff'], 'team1_def_eff': eff1['def_eff'],
-            'team2_off_eff': eff2['off_eff'], 'team2_def_eff': eff2['def_eff'],
+            'expected_pace':   round(expected_pace, 1),
+            'pace_factor':     round(pace_factor, 3),
+            'team1_form':      round(team1_form, 1),
+            'team2_form':      round(team2_form, 1),
+            'home_court_pts':  round(home_court_pts, 2),
+            'team1_win_prob':  team1_win_probability,
+            'team2_win_prob':  1 - team1_win_probability,
+            'team1_spread':    predicted_spread,
+            'team2_spread':    -predicted_spread,
+            'team1_net_eff':   team1_efficiency['net_eff'],
+            'team2_net_eff':   team2_efficiency['net_eff'],
+            'team1_off_eff':   team1_efficiency['off_eff'],
+            'team1_def_eff':   team1_efficiency['def_eff'],
+            'team2_off_eff':   team2_efficiency['off_eff'],
+            'team2_def_eff':   team2_efficiency['def_eff'],
         }
         if verbose:
-            venue = "Neutral" if neutral_site else (f"{t1} (Home)" if team1_home else f"{t2} (Home)")
-            fav = t1 if prob_cal > 0.5 else t2
-            fav_prob = max(prob_cal, 1 - prob_cal)
-            fav_spread = spread if prob_cal > 0.5 else -spread
+            venue_str  = ("Neutral" if neutral_site
+                          else (f"{team1_display_name} (Home)" if team1_home
+                                else f"{team2_display_name} (Home)"))
+            favorite   = team1_display_name if team1_win_probability > 0.5 else team2_display_name
+            fav_prob   = max(team1_win_probability, 1 - team1_win_probability)
+            fav_spread = predicted_spread if team1_win_probability > 0.5 else -predicted_spread
             print(f"\n{'='*60}")
-            print(f"{t1} vs {t2}  |  {venue}  |  pace {exp_pace:.1f} ({pace_factor:+.2%} vs avg)")
-            print(f"   Ratings  - {t1}: {eff1['net_eff']:+.1f}  {t2}: {eff2['net_eff']:+.1f}")
-            print(f"   Form L{self.FORM_GAMES} ({self.FORM_MODE}) - {t1}: {t1_form:+.1f}  {t2}: {t2_form:+.1f}")
-            print(f"   {t1}: {prob_cal*100:.1f}%   {t2}: {(1-prob_cal)*100:.1f}%")
-            print(f"   Favorite: {fav} by {abs(fav_spread):.1f}  ({fav_prob*100:.1f}%)")
+            print(f"{team1_display_name} vs {team2_display_name}  |  {venue_str}  "
+                  f"|  pace {expected_pace:.1f} ({pace_factor:+.2%} vs avg)")
+            print(f"   Ratings  - {team1_display_name}: {team1_efficiency['net_eff']:+.1f}  "
+                  f"{team2_display_name}: {team2_efficiency['net_eff']:+.1f}")
+            print(f"   Form L{self.FORM_GAMES} ({self.FORM_MODE}) - "
+                  f"{team1_display_name}: {team1_form:+.1f}  {team2_display_name}: {team2_form:+.1f}")
+            print(f"   {team1_display_name}: {team1_win_probability*100:.1f}%   "
+                  f"{team2_display_name}: {(1-team1_win_probability)*100:.1f}%")
+            print(f"   Favorite: {favorite} by {abs(fav_spread):.1f}  ({fav_prob*100:.1f}%)")
             print(f"{'='*60}\n")
-        return result
+        return prediction_result
+
+
+# ==============================================================================
+# VARIABLE GLOSSARY
+# ==============================================================================
+#
+# GAME_WEIGHT_CONSTANT         int    Bayesian shrink constant k; weight = n/(n+k).
+#                                     Higher k → lean more on prior season data.
+#
+# --- calculate_efficiency() ---
+# division_one_team_ids        ndarray  All team_ids in the dataset (proxy for D-I membership).
+# team_season_stats            DataFrame  Season totals: pts, FGA, FTA, ORB, TOV per team.
+# opponent_season_stats        DataFrame  Same columns but from the opponent's perspective.
+# combined_stats               DataFrame  Merged frame with both team and opponent totals.
+# off_poss                     Series  Estimated offensive possessions = FGA + 0.475*FTA - ORB + TOV.
+# def_poss                     Series  Estimated defensive possessions (same formula, opponent's stats).
+# off_eff                      Series  Points scored per 100 offensive possessions.
+# def_eff                      Series  Points allowed per 100 defensive possessions.
+#
+# --- calculate_adjusted_efficiency() ---
+# current_ratings              DataFrame  Ratings updated each iteration.
+# current_ratings_by_team_season dict    Lookup {(season, team_id): {off_eff, def_eff}} for speed.
+# opponent_key                 tuple   (season, opponent_team_id) for dict lookup.
+# opponent_rating              dict    The opponent's current off/def efficiency.
+# team_possessions             float   Possessions for a single game row.
+# adjusted_offense             float   adj_off = actual_off_rtg + (100 - opp_def_eff).
+# adjusted_defense             float   adj_def = actual_def_rtg + (100 - opp_off_eff).
+# game_adjustments             list    One dict per eligible game row.
+# adjusted_df                  DataFrame  Per-team mean adjusted values for this iteration.
+#
+# --- blend_efficiency_ratings() ---
+# game_weight_fraction         Series  w = n / (n + k); fraction of weight on current-season data.
+# blended_off_eff              Series  Weighted average of current and prior offensive efficiency.
+# blended_def_eff              Series  Weighted average of current and prior defensive efficiency.
+#
+# --- BasePredictor ---
+# spread_regression_model      LinearRegression  Predicts actual margin from features.
+# calibrator                   IsotonicRegression  Maps predicted margin → P(win).
+# calibration_years            list[int]  Seasons the model was trained on.
+# current_efficiency           DataFrame (indexed by team_id)  Blended eff ratings.
+# team_lookup                  dict  {team_display_name: team_id}.
+# team_id_to_name              dict  {team_id: team_display_name}.
+# current_season               int   The season for which ratings are loaded.
+# as_of_date                   Timestamp or None  Rating cutoff date.
+#
+# _walk_forward_raw():
+# season_game_df               DataFrame  All games in the target season.
+# chronological_months         list[Period]  Months in sorted order.
+# prior_season_efficiency      DataFrame  Adjusted efficiency from the prior season.
+# actual_outcomes_list         list[int]   1 = team1 won, 0 = team1 lost.
+# actual_margins_list          list[int]   Final score margin (team1 - team2).
+# net_efficiency_diffs_list    list[float]  team1_net_eff - team2_net_eff at prediction time.
+# location_codes_list          list[int]   1 = home, 0 = neutral, -1 = away for team1.
+# games_before                 DataFrame  All games from months before the current month.
+# blended_efficiency           DataFrame  Bayesian blend used as the rating at this point in time.
+# efficiency_lookup            DataFrame (indexed)  Fast team-id → eff lookup.
+#
+# train():
+# calibration_year_list        list[int]  Always a list (even if one year given).
+# all_actual_outcomes          ndarray  Concatenated across all calibration years.
+# all_actual_margins           ndarray  Concatenated actual margins.
+# feature_matrix               ndarray  Shape (n_games, 2): [net_diff, location_code].
+# year_actuals / year_margins  ndarray  Outputs for a single calendar year.
+# year_net_diffs / year_locs   ndarray  Outputs for a single calendar year.
+#
+# _match_team_name():
+# search_lower                 str   Lowercase stripped version of input name.
+# search_words                 set   Words in the search name for subset matching.
+# word_subset_candidates       list  Tuples of (extra_words, name_len, name, team_id).
+#
+# --- TempoPredictor ---
+# SPREAD_FEATURES              list[str]  ['tempo_adj', 'home_court', 'form_diff'].
+# FORM_GAMES                   int   Rolling window length for recent-form calculation.
+# FORM_MODE                    str   'raw', 'residual', 'conf_gate', or 'conf_window'.
+# CONF_GATE_GAMES              int   Min conf games before conf-gated form activates.
+# HOME_ADV_SHRINK              int   Bayesian k constant for home-court shrinkage.
+# current_pace                 dict  {team_id: blended avg possessions per game}.
+# current_form                 dict  {team_id: scalar form value under FORM_MODE}.
+# home_adv                     dict  {team_id: home-court advantage in points}.
+# _league_avg_pace             float  League-wide average possessions per game.
+# _league_home_adv             float  League-average home-court advantage.
+#
+# _compute_form_value():
+# game_log_for_team            list[dict]  Each dict: {margin, conf, resid}.
+# recent_values                list[float]  The last FORM_GAMES values to average.
+#
+# _compute_home_adv():
+# home_stats                   DataFrame  Mean margin + count for home games per team.
+# away_stats                   DataFrame  Mean margin + count for away games per team.
+# merged_home_away             DataFrame  Joined home/away stats.
+# raw_home_adv                 Series  (home_mean - away_mean) / 2 per team.
+# league_avg_home_adv          float  Mean of raw_home_adv across all teams.
+# shrink_weight                Series  w = total_games / (total_games + HOME_ADV_SHRINK).
+# shrunk_home_adv              Series  Bayesian estimate of home-court advantage.
+#
+# predict_game():
+# team1_id / team2_id          int   Numeric ESPN team IDs.
+# team1_display_name / team2_display_name  str  Resolved team names.
+# team1_efficiency / team2_efficiency      Series  off_eff, def_eff, net_eff for each team.
+# location_code                int   1 home / 0 neutral / -1 away for team1.
+# net_efficiency_diff          float  team1_net_eff - team2_net_eff.
+# team1_pace / team2_pace      float  Each team's blended avg possessions per game.
+# expected_pace                float  Average of both teams' pace.
+# pace_factor                  float  expected_pace / league_avg_pace (>1 = faster game).
+# tempo_adj                    float  net_efficiency_diff * pace_factor (main spread driver).
+# team1_form / team2_form      float  Recent form scalar for each team.
+# form_diff                    float  team1_form - team2_form.
+# home_court_pts               float  Points from home-court advantage (from team1's perspective).
+# predicted_spread             float  Model output: expected margin (team1 - team2).
+# team1_win_probability        float  P(team1 wins) after isotonic calibration.
+# prediction_result            dict   Full result including spreads, probs, and ratings.
