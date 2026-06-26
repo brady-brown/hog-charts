@@ -431,6 +431,7 @@ PLAYER_STATS_COLUMN_RENAME_MAP = {
     "trb_pct":               "trbp",
     "stl_pct":               "stlp",
     "blk_pct":               "blkp",
+    "adv_src":               "advsrc",
     "bpm":                   "bpm",
     "on_off":                "on_off",
 }
@@ -439,7 +440,7 @@ PLAYER_STATS_COLUMN_RENAME_MAP = {
 def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
                              min_games_played=8, min_mpg=8,
                              min_onoff_possessions=200, label="",
-                             team_context_csv_path=None):
+                             team_context_csv_path=None, stint_csv_path=None):
     """Read a player-stats CSV, compute derived stats, and return JSON records.
 
     Derived stats added here (not in build_player_stats.py):
@@ -594,6 +595,51 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
         if team_context_csv_path:
             print(f"  [warn] {team_context_csv_path} not found — rebound/steal/block% blank")
 
+    # --- Stint-based advanced rates (preferred where lineup data supports them) ---
+    # The on/off CSV carries each player's ON-COURT team and opponent box totals,
+    # accumulated over the exact stints they played. That lets AST%/STL%/BLK% and
+    # the rebound rates be computed against what actually happened on the floor
+    # instead of season team totals. Used only where (a) the stint file matches
+    # this scope's games (regular & conference — NOT all/post, whose box totals
+    # include games the regular-season stint data doesn't) and (b) the player has
+    # enough on-court possessions. Everyone else keeps the season approximation.
+    STINT_COLS = ["poss_off_on", "poss_def_on", "fgm_for_on", "orb_for_on", "drb_for_on",
+                  "fga_against_on", "tpa_against_on", "orb_against_on", "drb_against_on"]
+    player_stats_df["adv_src"] = "season"
+    if stint_csv_path and os.path.exists(stint_csv_path) \
+            and all(c in pd.read_csv(stint_csv_path, nrows=0).columns for c in STINT_COLS):
+        stint_df = pd.read_csv(stint_csv_path, usecols=["athlete_id", *STINT_COLS])
+        # A player who changed teams mid-season has two on/off rows; keep the
+        # higher-possession one so the merge stays one row per athlete (otherwise
+        # it would duplicate player rows and break downstream length assumptions).
+        stint_df["_tot_poss"] = stint_df["poss_off_on"].fillna(0) + stint_df["poss_def_on"].fillna(0)
+        stint_df = (stint_df.sort_values("_tot_poss", ascending=False)
+                    .drop_duplicates("athlete_id").drop(columns="_tot_poss"))
+        player_stats_df = player_stats_df.merge(stint_df, on="athlete_id", how="left")
+        on_court_poss = player_stats_df["poss_off_on"].fillna(0) + player_stats_df["poss_def_on"].fillna(0)
+        has_stint = on_court_poss >= min_onoff_possessions
+
+        teammate_fgm_floor = player_stats_df["fgm_for_on"] - player_stats_df["field_goals_made"]
+        opp_two_pt_att     = player_stats_df["fga_against_on"] - player_stats_df["tpa_against_on"]
+        available_orb      = player_stats_df["orb_for_on"] + player_stats_df["drb_against_on"]
+        available_drb      = player_stats_df["drb_for_on"] + player_stats_df["orb_against_on"]
+
+        def apply_stint(season_col, numerator, denominator):
+            """Override the season estimate with the on-court rate where valid."""
+            stint_val = np.where(has_stint & (denominator > 0),
+                                 100 * numerator / denominator.where(denominator > 0, 1), np.nan)
+            player_stats_df[season_col] = np.where(
+                np.isfinite(stint_val), stint_val, player_stats_df[season_col])
+
+        apply_stint("ast_pct", player_stats_df["assists"],             teammate_fgm_floor)
+        apply_stint("stl_pct", player_stats_df["steals"],             player_stats_df["poss_def_on"])
+        apply_stint("blk_pct", player_stats_df["blocks"],             opp_two_pt_att)
+        apply_stint("orb_pct", player_stats_df["offensive_rebounds"], available_orb)
+        apply_stint("drb_pct", player_stats_df["defensive_rebounds"], available_drb)
+        apply_stint("trb_pct", player_stats_df["rebounds"],           available_orb + available_drb)
+        player_stats_df.loc[has_stint, "adv_src"] = "stint"
+        print(f"  stint-based advanced rates for {int(has_stint.sum())} players {label}")
+
     # --- Box Plus-Minus (transparent proxy, not regressed BPM) ---
     # Scaled Game Score per 100 team possessions, centered on the minutes-weighted
     # league average so 0.0 ≈ an average rotation player.
@@ -688,30 +734,40 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
 
 all_player_bios = fetch_all_player_bios(current_player_stats_csv_path)
 
+# One JSON per scope. on/off and RAPM come from the regular-season pipeline, so
+# the overall on/off CSV is attached to reg + all (it's a season metric); the
+# postseason scope has no on/off (no postseason RAPM pipeline).
 onoff_overall_csv = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_v2.csv")
-team_context_overall_csv = os.path.join(PROJECT_ROOT, f"team_context_{SEASON}.csv")
-overall_player_records = build_player_stats_json(
-    current_player_stats_csv_path,
-    onoff_overall_csv if os.path.exists(onoff_overall_csv) else None,
-    bios_dict=all_player_bios, min_games_played=8, min_mpg=8,
-    min_onoff_possessions=200, label="(overall)",
-    team_context_csv_path=team_context_overall_csv
-)
-if overall_player_records is not None:
-    write_json({"players": overall_player_records, "meta": build_metadata}, "player-stats.json")
+onoff_conf_csv    = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_conf_v2.csv")
+_exists = lambda path: path if os.path.exists(path) else None
 
-conference_player_stats_csv = os.path.join(PROJECT_ROOT, f"player_stats_conf_{SEASON}.csv")
-onoff_conf_csv = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_conf_v2.csv")
-team_context_conf_csv = os.path.join(PROJECT_ROOT, f"team_context_conf_{SEASON}.csv")
-conference_player_records = build_player_stats_json(
-    conference_player_stats_csv,
-    onoff_conf_csv if os.path.exists(onoff_conf_csv) else None,
-    bios_dict=all_player_bios, min_games_played=4, min_mpg=8,
-    min_onoff_possessions=100, label="(conference)",
-    team_context_csv_path=team_context_conf_csv
-)
-if conference_player_records is not None:
-    write_json({"players": conference_player_records, "meta": build_metadata}, "player-stats-conf.json")
+# stint_csv supplies on-court box totals for the stint-based advanced rates; it
+# may only be used where its games match the scope (regular & conference), so
+# all/post pass None and fall back to the season approximation.
+PLAYER_STATS_SCOPE_SPECS = [
+    # (stats_csv, onoff_csv, stint_csv, team_context_csv, min_gp, min_mpg,
+    #  min_onoff_poss, output_json, label)
+    (f"player_stats_{SEASON}.csv",      onoff_overall_csv, onoff_overall_csv, f"team_context_{SEASON}.csv",
+     8, 8, 200, "player-stats.json",      "(regular)"),
+    (f"player_stats_all_{SEASON}.csv",  onoff_overall_csv, None,              f"team_context_all_{SEASON}.csv",
+     8, 8, 200, "player-stats-all.json",  "(all games)"),
+    (f"player_stats_post_{SEASON}.csv", None,              None,              f"team_context_post_{SEASON}.csv",
+     1, 1, 200, "player-stats-post.json", "(postseason)"),
+    (f"player_stats_conf_{SEASON}.csv", onoff_conf_csv,    onoff_conf_csv,    f"team_context_conf_{SEASON}.csv",
+     4, 8, 100, "player-stats-conf.json", "(conference)"),
+]
+
+for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, min_gp, min_mpg, min_op, out_json, label in PLAYER_STATS_SCOPE_SPECS:
+    records = build_player_stats_json(
+        os.path.join(PROJECT_ROOT, stats_csv_name),
+        _exists(onoff_csv) if onoff_csv else None,
+        bios_dict=all_player_bios, min_games_played=min_gp, min_mpg=min_mpg,
+        min_onoff_possessions=min_op, label=label,
+        team_context_csv_path=os.path.join(PROJECT_ROOT, team_ctx_name),
+        stint_csv_path=_exists(stint_csv) if stint_csv else None,
+    )
+    if records is not None:
+        write_json({"players": records, "meta": build_metadata}, out_json)
 
 
 # ===========================================================================

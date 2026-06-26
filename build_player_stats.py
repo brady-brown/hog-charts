@@ -52,6 +52,27 @@ conference_game_ids = (
 )
 print(f"  {len(conference_game_ids):,} conference game IDs")
 
+# Conference TOURNAMENT games are a quirk: ESPN tags them season_type == 2
+# (regular season) even though they're played in March after league play. They
+# carry conference_competition == True plus a notes headline naming the event
+# ("SEC Tournament", "Big Ten Tournament", "ASUN Championship", "America East
+# Playoffs", …). We detect them so they can be grouped with the postseason
+# instead of the regular season. (Early-season multi-team events like the Maui
+# Invitational are non-conference, so conference_competition is False and they
+# are correctly excluded.)
+_notes = season_schedule_df.get("notes_headline")
+if _notes is not None:
+    is_conf_tournament_game = (
+        (season_schedule_df["conference_competition"] == True)
+        & _notes.astype(str).str.contains("Tournament|Championship|Playoffs", case=False, na=False)
+    )
+    conference_tournament_game_ids = set(
+        season_schedule_df.loc[is_conf_tournament_game, "game_id"].astype(int).unique()
+    )
+else:
+    conference_tournament_game_ids = set()
+print(f"  {len(conference_tournament_game_ids):,} conference-tournament game IDs (grouped into postseason)")
+
 # ---------------------------------------------------------------------------
 # Build conference label map: team_id → short site label (e.g. "SEC", "Big 12").
 # Sourced from ESPN's season standings (see conferences.py) so it works for every
@@ -73,26 +94,47 @@ else:
         seasons=[SEASON], return_as_pandas=True
     )
 
-# Keep only regular-season games (season_type == 2 is ESPN's code for regular season).
-regular_season_boxscores_df = raw_player_boxscores_df[
-    raw_player_boxscores_df["season_type"] == 2
+# Keep regular-season (season_type == 2) AND postseason (season_type == 3) games.
+# Preseason (1) and any other types are dropped.  Each scope below is a mask over
+# this combined frame.
+played_boxscores_df = raw_player_boxscores_df[
+    raw_player_boxscores_df["season_type"].isin([2, 3])
 ].copy()
-regular_season_boxscores_df["game_id"] = regular_season_boxscores_df["game_id"].astype(int)
-regular_season_boxscores_df["team_id"] = regular_season_boxscores_df["team_id"].astype(int)
-regular_season_boxscores_df["minutes"] = pd.to_numeric(
-    regular_season_boxscores_df["minutes"], errors="coerce"
+played_boxscores_df["game_id"]     = played_boxscores_df["game_id"].astype(int)
+played_boxscores_df["team_id"]     = played_boxscores_df["team_id"].astype(int)
+played_boxscores_df["season_type"] = played_boxscores_df["season_type"].astype(int)
+played_boxscores_df["minutes"] = pd.to_numeric(
+    played_boxscores_df["minutes"], errors="coerce"
 ).fillna(0)
-regular_season_boxscores_df = regular_season_boxscores_df[
-    regular_season_boxscores_df["minutes"] >= MIN_MINUTES_THRESHOLD
+played_boxscores_df = played_boxscores_df[
+    played_boxscores_df["minutes"] >= MIN_MINUTES_THRESHOLD
 ]
 
-# Mark which games are conference matchups.
-regular_season_boxscores_df["is_conference_game"] = regular_season_boxscores_df["game_id"].isin(
-    conference_game_ids
+# Per-row scope flags.
+#   is_conf_tournament : season_type-2 game flagged as a conference tournament
+#                        (reclassified into the postseason, out of regular/conf).
+#   is_postseason      : NCAA/NIT/etc (season_type 3) OR a conference tournament.
+#   is_regular_game    : season_type 2 that is NOT a conference tournament.
+#   is_conference_game : regular-season LEAGUE games only (no conf tournament).
+played_boxscores_df["is_conf_tournament"] = (
+    played_boxscores_df["game_id"].isin(conference_tournament_game_ids)
+)
+played_boxscores_df["is_postseason"] = (
+    (played_boxscores_df["season_type"] == 3) | played_boxscores_df["is_conf_tournament"]
+)
+played_boxscores_df["is_regular_game"] = (
+    (played_boxscores_df["season_type"] == 2) & ~played_boxscores_df["is_conf_tournament"]
+)
+played_boxscores_df["is_conference_game"] = (
+    played_boxscores_df["is_regular_game"]
+    & played_boxscores_df["game_id"].isin(conference_game_ids)
 )
 print(
-    f"  {len(regular_season_boxscores_df):,} player-game rows  "
-    f"({regular_season_boxscores_df['is_conference_game'].sum():,} from conference games)"
+    f"  {len(played_boxscores_df):,} player-game rows  "
+    f"({played_boxscores_df['is_regular_game'].sum():,} regular, "
+    f"{played_boxscores_df['is_postseason'].sum():,} postseason "
+    f"[{played_boxscores_df['is_conf_tournament'].sum():,} from conf tournaments], "
+    f"{played_boxscores_df['is_conference_game'].sum():,} conference)"
 )
 
 # ---------------------------------------------------------------------------
@@ -187,22 +229,28 @@ def aggregate_player_stats(player_game_rows_df):
 
 
 # ---------------------------------------------------------------------------
-# Build and write
+# Build and write — one CSV per scope.
+#   reg  → player_stats_{SEASON}.csv       (regular season; consumed by other
+#          scripts, so its name/meaning is kept stable)
+#   all  → player_stats_all_{SEASON}.csv   (regular + postseason)
+#   post → player_stats_post_{SEASON}.csv  (postseason only)
+#   conf → player_stats_conf_{SEASON}.csv  (regular-season conference games)
 # ---------------------------------------------------------------------------
-print("Aggregating overall stats…")
-overall_player_stats_df = aggregate_player_stats(regular_season_boxscores_df)
-overall_output_filename = f"player_stats_{SEASON}.csv"
-overall_player_stats_df.to_csv(overall_output_filename, index=False)
-print(f"  {overall_output_filename}  — {len(overall_player_stats_df):,} players")
-
-print("Aggregating conference-only stats…")
-conference_only_boxscores_df = regular_season_boxscores_df[
-    regular_season_boxscores_df["is_conference_game"]
+PLAYER_STAT_SCOPES = [
+    ("reg",  f"player_stats_{SEASON}.csv",      played_boxscores_df["is_regular_game"]),
+    ("all",  f"player_stats_all_{SEASON}.csv",  played_boxscores_df["season_type"].isin([2, 3])),
+    ("post", f"player_stats_post_{SEASON}.csv", played_boxscores_df["is_postseason"]),
+    ("conf", f"player_stats_conf_{SEASON}.csv", played_boxscores_df["is_conference_game"]),
 ]
-conference_player_stats_df = aggregate_player_stats(conference_only_boxscores_df)
-conference_output_filename = f"player_stats_conf_{SEASON}.csv"
-conference_player_stats_df.to_csv(conference_output_filename, index=False)
-print(f"  {conference_output_filename}  — {len(conference_player_stats_df):,} players")
+
+for scope_name, output_filename, scope_mask in PLAYER_STAT_SCOPES:
+    scope_boxscores_df = played_boxscores_df[scope_mask]
+    if scope_boxscores_df.empty:
+        print(f"  {output_filename}  — no games, skipped ({scope_name})")
+        continue
+    scope_player_stats_df = aggregate_player_stats(scope_boxscores_df)
+    scope_player_stats_df.to_csv(output_filename, index=False)
+    print(f"  {output_filename}  — {len(scope_player_stats_df):,} players ({scope_name})")
 
 # ---------------------------------------------------------------------------
 # Team context (opponent-faced totals) — powers the rate-stat percentages
@@ -252,24 +300,39 @@ def build_team_context(team_box_df):
 
 print("Loading team box scores for opponent context…")
 raw_team_boxscores_df = mbb.load_mbb_team_boxscore(seasons=[SEASON], return_as_pandas=True)
-team_boxscores_df = raw_team_boxscores_df[raw_team_boxscores_df["season_type"] == 2].copy()
+team_boxscores_df = raw_team_boxscores_df[
+    raw_team_boxscores_df["season_type"].isin([2, 3])
+].copy()
 team_boxscores_df["game_id"]          = team_boxscores_df["game_id"].astype(int)
 team_boxscores_df["team_id"]          = team_boxscores_df["team_id"].astype(int)
+team_boxscores_df["season_type"]      = team_boxscores_df["season_type"].astype(int)
 team_boxscores_df["opponent_team_id"] = pd.to_numeric(
     team_boxscores_df["opponent_team_id"], errors="coerce"
 )
 team_boxscores_df = team_boxscores_df.dropna(subset=["opponent_team_id"])
 team_boxscores_df["opponent_team_id"] = team_boxscores_df["opponent_team_id"].astype(int)
 
-overall_team_context_df = build_team_context(team_boxscores_df)
-overall_team_context_df.to_csv(f"team_context_{SEASON}.csv", index=False)
-print(f"  team_context_{SEASON}.csv  — {len(overall_team_context_df):,} teams")
+# One context file per scope — must mirror the player-stat scope masks above
+# (including the conference-tournament reclassification) so the advanced rate
+# stats use the matching opponent totals.
+tc_is_conf_tourney = team_boxscores_df["game_id"].isin(conference_tournament_game_ids)
+tc_is_regular      = (team_boxscores_df["season_type"] == 2) & ~tc_is_conf_tourney
+TEAM_CONTEXT_SCOPES = [
+    ("reg",  f"team_context_{SEASON}.csv",      tc_is_regular),
+    ("all",  f"team_context_all_{SEASON}.csv",  team_boxscores_df["season_type"].isin([2, 3])),
+    ("post", f"team_context_post_{SEASON}.csv", (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
+    ("conf", f"team_context_conf_{SEASON}.csv",
+     tc_is_regular & team_boxscores_df["game_id"].isin(conference_game_ids)),
+]
 
-conference_team_context_df = build_team_context(
-    team_boxscores_df[team_boxscores_df["game_id"].isin(conference_game_ids)]
-)
-conference_team_context_df.to_csv(f"team_context_conf_{SEASON}.csv", index=False)
-print(f"  team_context_conf_{SEASON}.csv  — {len(conference_team_context_df):,} teams")
+for scope_name, output_filename, scope_mask in TEAM_CONTEXT_SCOPES:
+    scope_team_box_df = team_boxscores_df[scope_mask]
+    if scope_team_box_df.empty:
+        print(f"  {output_filename}  — no games, skipped ({scope_name})")
+        continue
+    scope_context_df = build_team_context(scope_team_box_df)
+    scope_context_df.to_csv(output_filename, index=False)
+    print(f"  {output_filename}  — {len(scope_context_df):,} teams ({scope_name})")
 
 print("\nDone.")
 

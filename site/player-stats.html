@@ -67,10 +67,10 @@
     .filters .form-group.narrow { flex: 0 0 110px; }
     .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
 
-    /* stackable stat-minimum filters */
+    /* stackable stat-threshold filters */
     .stat-filter-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
     .stat-filter-row .sf-stat { flex: 1; min-width: 0; }
-    .stat-filter-row .sf-op   { flex: 0 0 60px; padding-left: 10px; padding-right: 6px; }
+    .stat-filter-row .sf-op   { flex: 0 0 92px; padding-left: 10px; padding-right: 6px; }
     .stat-filter-row .sf-val  { width: 80px; flex: 0 0 80px; }
     .stat-filter-row .sf-remove {
       flex: 0 0 auto; background: var(--card2); border: 1px solid var(--line);
@@ -194,7 +194,8 @@
 
   <h2>Player Stats</h2>
   <p class="page-sub">
-    Advanced stats for every Division&nbsp;I player.
+    Advanced stats for every Division&nbsp;I player. Toggle game scope —
+    All games (regular + postseason), Regular, Postseason, or Conference.
     On/Off = net rating differential when on vs. off the court (min 200 poss).
     Click any column to sort.
   </p>
@@ -242,9 +243,9 @@
       <input type="number" id="min-poss" value="0" min="0" max="3000" step="100">
     </div>
     <div class="form-group" style="flex:1 1 100%;min-width:0">
-      <label>Stat minimums <span style="text-transform:none;font-weight:500;color:var(--muted)">— stack multiple (all must pass)</span></label>
+      <label>Stat thresholds <span style="text-transform:none;font-weight:500;color:var(--muted)">— stack multiple (all must pass)</span></label>
       <div id="stat-filters"></div>
-      <button type="button" id="add-stat-filter" class="add-filter-btn">+ Add stat minimum</button>
+      <button type="button" id="add-stat-filter" class="add-filter-btn">+ Add stat threshold</button>
     </div>
   </div>
 
@@ -261,7 +262,9 @@
       </div>
       <div class="col-toggle" style="margin-bottom:0">
         <button class="active" id="ps-btn-all"  onclick="setScope('all')">All games</button>
-        <button id="ps-btn-conf" onclick="setScope('conf')">Conference only</button>
+        <button id="ps-btn-reg"  onclick="setScope('reg')">Regular</button>
+        <button id="ps-btn-post" onclick="setScope('post')">Postseason</button>
+        <button id="ps-btn-conf" onclick="setScope('conf')">Conference</button>
       </div>
     </div>
   </div>
@@ -353,13 +356,13 @@ const COL_GROUPS = {
     { key:"ts",    label:"TS%",   dir:"desc", tip:"True shooting%: PTS / (2 × (FGA + 0.44×FTA))", pct:true },
     { key:"efg",   label:"eFG%",  dir:"desc", tip:"Effective FG%: (FGM + 0.5×3PM) / FGA", pct:true },
     { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
-    { key:"astp",  label:"AST%",  dir:"desc", tip:"Assist%: share of teammates' made field goals the player assisted while on the floor" },
+    { key:"astp",  label:"AST%",  dir:"desc", tip:"Assist%: share of teammates' made field goals the player assisted while on the floor. Computed from actual on-court stints where lineup data allows, otherwise a season estimate." },
     { key:"tovp",  label:"TOV%",  dir:"asc",  tip:"Turnover%: turnovers per 100 individual possessions used (lower is better)" },
-    { key:"orbp",  label:"ORB%",  dir:"desc", tip:"Offensive rebound%: share of available offensive rebounds grabbed while on the floor" },
-    { key:"drbp",  label:"DRB%",  dir:"desc", tip:"Defensive rebound%: share of available defensive rebounds grabbed while on the floor" },
-    { key:"trbp",  label:"TRB%",  dir:"desc", tip:"Total rebound%: share of all available rebounds grabbed while on the floor" },
-    { key:"stlp",  label:"STL%",  dir:"desc", tip:"Steal%: share of opponent possessions ended by a steal while on the floor" },
-    { key:"blkp",  label:"BLK%",  dir:"desc", tip:"Block%: share of opponent two-point attempts blocked while on the floor" },
+    { key:"orbp",  label:"ORB%",  dir:"desc", tip:"Offensive rebound%: share of available offensive rebounds grabbed while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
+    { key:"drbp",  label:"DRB%",  dir:"desc", tip:"Defensive rebound%: share of available defensive rebounds grabbed while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
+    { key:"trbp",  label:"TRB%",  dir:"desc", tip:"Total rebound%: share of all available rebounds grabbed while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
+    { key:"stlp",  label:"STL%",  dir:"desc", tip:"Steal%: share of opponent possessions ended by a steal while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
+    { key:"blkp",  label:"BLK%",  dir:"desc", tip:"Block%: share of opponent two-point attempts blocked while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
     { key:"fg",    label:"FG%",   dir:"desc", tip:"Field goal percentage", pct:true },
     { key:"fg3",   label:"3P%",   dir:"desc", tip:"Three-point percentage", pct:true },
     { key:"ft",    label:"FT%",   dir:"desc", tip:"Free throw percentage", pct:true },
@@ -381,8 +384,22 @@ const COL_GROUPS = {
   ],
 };
 
-let PS_ALL    = null;
-let PS_CONF   = null;
+// Four game scopes. PS holds the loaded player array for each (null until first
+// visited). "all" = regular + postseason; "reg" = regular only; "post" =
+// postseason only; "conf" = regular-season conference games.
+const SCOPES = ["all", "reg", "post", "conf"];
+const SCOPE_FILE = {
+  all:  "player-stats-all.json",
+  reg:  "player-stats.json",
+  post: "player-stats-post.json",
+  conf: "player-stats-conf.json",
+};
+const SCOPE_BTN = { all: "ps-btn-all", reg: "ps-btn-reg", post: "ps-btn-post", conf: "ps-btn-conf" };
+// Sensible default games/MPG floors per scope (postseason maxes out at ~6 games).
+const SCOPE_MIN_GP  = { all: 15, reg: 15, post: 1, conf: 8 };
+const SCOPE_MIN_MPG = { all: 15, reg: 15, post: 1, conf: 10 };
+
+let PS = { all: null, reg: null, post: null, conf: null };
 let allPlayers = [];
 let sortCol    = "ppg";
 let sortDir    = "desc";
@@ -391,12 +408,12 @@ let curScope   = "all";
 let displayMode = "raw";   // "raw" | "pct" — percentile ranks vs. all qualified D-I players
 let SEASON     = null;
 let CUR_SEASON = null;   // newest/live season — only it has shot data
-let HAS_ONOFF  = true;   // false for historical seasons with no on/off computed
+let HAS_ONOFF  = true;   // false for historical seasons / postseason with no on/off computed
 let handlersBound = false; // guard so filter listeners bind only once
 let IMPACT_MODAL_CACHE = {}; // cross-loaded impact data, keyed by "${SEASON}-${scope}"
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
-function activeScope() { return curScope === "conf" ? PS_CONF : PS_ALL; }
+function activeScope() { return PS[curScope]; }
 
 // Advanced columns, minus On/Off when this season has none computed.
 function activeCols() {
@@ -413,16 +430,17 @@ const IMPACT_MERGED = {};   // { "all"|"conf": true } once impact is merged for 
 
 // Initial scope load: player-stats only (fast). Impact is merged later.
 async function loadScopeData(scope) {
-  const statsFile = scope === "conf" ? "player-stats-conf.json" : "player-stats.json";
-  const stats = await loadJSON(`data/${SEASON}/${statsFile}`);
+  const stats = await loadJSON(`data/${SEASON}/${SCOPE_FILE[scope]}`);
   return stats?.players || null;
 }
 
 // Lazily fetch player-impact for the scope and merge the RAPM fields into its
 // rows. Cached per (season,scope) so it runs at most once each.
 async function ensureImpact(scope) {
-  const rows = scope === "conf" ? PS_CONF : PS_ALL;
+  const rows = PS[scope];
   if (!rows || IMPACT_MERGED[scope]) return;
+  // Conference uses conference RAPM; every other scope uses the season (overall)
+  // RAPM — it's a regular-season-based metric attached to the player by id.
   const impactFile = scope === "conf" ? "player-impact-conf.json" : "player-impact.json";
   const impact = await loadJSON(`data/${SEASON}/${impactFile}`);
   const byId = new Map((impact?.players || []).map(ip => [ip.id, ip]));
@@ -476,25 +494,39 @@ async function init() {
   await reload();
 }
 
+function markScopeButtons() {
+  SCOPES.forEach(s => {
+    const btn = document.getElementById(SCOPE_BTN[s]);
+    if (btn) btn.classList.toggle("active", s === curScope);
+  });
+}
+
+// Apply this scope's default games/MPG floors (e.g. postseason can't require 15).
+function applyScopeMinDefaults(scope) {
+  document.getElementById("min-gp").value  = SCOPE_MIN_GP[scope];
+  document.getElementById("min-mpg").value = SCOPE_MIN_MPG[scope];
+}
+
 async function reload() {
-  PS_ALL = null; PS_CONF = null; allPlayers = [];
-  IMPACT_MERGED.all = false; IMPACT_MERGED.conf = false;  // re-merge for the new season
+  PS = { all: null, reg: null, post: null, conf: null };
+  allPlayers = [];
+  SCOPES.forEach(s => { IMPACT_MERGED[s] = false; });  // re-merge for the new season
   PCT_SORTED = {};   // recompute percentile pools for the new season
   curScope = "all";
-  document.getElementById("ps-btn-all").classList.add("active");
-  document.getElementById("ps-btn-conf").classList.remove("active");
+  markScopeButtons();
+  applyScopeMinDefaults("all");
   document.getElementById("count-label").textContent = "Loading…";
 
-  PS_ALL = await loadScopeData("all");
-  if (!PS_ALL) {
+  PS.all = await loadScopeData("all");
+  if (!PS.all) {
     document.getElementById("count-label").textContent =
       "Data not found — run build_site.py first.";
     return;
   }
-  allPlayers = PS_ALL;
+  allPlayers = PS.all;
 
   // On/Off is only computed for some seasons — drop the column when absent.
-  HAS_ONOFF = PS_ALL.some(p => p.on_off != null);
+  HAS_ONOFF = PS.all.some(p => p.on_off != null);
 
   populateFilterDropdowns();
   buildHead();
@@ -527,22 +559,24 @@ function setGroup(g) {
 }
 
 async function setScope(scope) {
+  const prevScope = curScope;
   curScope = scope;
-  document.getElementById("ps-btn-all").classList.toggle("active",  scope === "all");
-  document.getElementById("ps-btn-conf").classList.toggle("active", scope === "conf");
+  markScopeButtons();
 
-  if (scope === "conf" && !PS_CONF) {
-    document.getElementById("count-label").textContent = "Loading conference data…";
-    PS_CONF = await loadScopeData("conf");
-    if (!PS_CONF) {
-      document.getElementById("count-label").textContent = "Conference data not found.";
-      curScope = "all";
-      document.getElementById("ps-btn-all").classList.add("active");
-      document.getElementById("ps-btn-conf").classList.remove("active");
+  // Lazy-load this scope the first time it's visited.
+  if (!PS[scope]) {
+    document.getElementById("count-label").textContent = "Loading…";
+    PS[scope] = await loadScopeData(scope);
+    if (!PS[scope] || !PS[scope].length) {
+      document.getElementById("count-label").textContent =
+        scope === "post" ? "No postseason data for this season." : "Data not found for this scope.";
+      curScope = prevScope;            // revert so the rest of the page stays consistent
+      markScopeButtons();
       return;
     }
   }
 
+  applyScopeMinDefaults(scope);
   allPlayers = activeScope();
   HAS_ONOFF  = allPlayers.some(p => p.on_off != null);
   populateFilterDropdowns();
@@ -580,7 +614,7 @@ function buildHead() {
   });
 }
 
-// ── Stackable stat-minimum filters ─────────────────────────────────────────
+// ── Stackable stat-threshold filters ────────────────────────────────────────
 // Grouped option list for each filter row's stat picker.
 const STAT_FILTER_GROUPS = [
   ["Scoring & box", [["ppg","PPG"],["rpg","RPG"],["apg","APG"],["spg","SPG"],
@@ -593,10 +627,15 @@ const STAT_FILTER_GROUPS = [
                 ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["on_off","On/Off"]]],
   ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
 ];
-// Stats stored as 0-1 fractions; a minimum of "40" should mean 40%.
+// Stats stored as 0-1 fractions; a threshold of "40" should mean 40%.
 const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr"]);
 // Filter keys whose data lives in player-impact.json (lazy-loaded).
 const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp"]);
+// Stats where a LOWER value is better (matters for percentile-rank thresholds).
+const LOWER_BETTER = new Set(["tpg","tovp"]);
+// Every key offered in a filter row (used to build percentile pools).
+const STAT_FILTER_KEYS = STAT_FILTER_GROUPS.flatMap(([, opts]) => opts.map(([k]) => k));
+const isPctOp = (op) => op === "pge" || op === "ple";
 
 const STAT_FILTER_OPTIONS_HTML =
   `<option value="">— stat —</option>` +
@@ -611,16 +650,26 @@ function addStatFilterRow(key = "", op = "ge", val = "") {
   row.className = "stat-filter-row";
   row.innerHTML =
     `<select class="sf-stat">${STAT_FILTER_OPTIONS_HTML}</select>
-     <select class="sf-op"><option value="ge">≥</option><option value="le">≤</option></select>
+     <select class="sf-op">
+       <option value="ge">≥</option>
+       <option value="le">≤</option>
+       <option value="pge">≥ %ile</option>
+       <option value="ple">≤ %ile</option>
+     </select>
      <input type="number" class="sf-val" placeholder="value" step="0.1">
      <button type="button" class="sf-remove" title="Remove">✕</button>`;
   document.getElementById("stat-filters").appendChild(row);
+  const opSel = row.querySelector(".sf-op");
+  const valEl = row.querySelector(".sf-val");
   row.querySelector(".sf-stat").value = key;
-  row.querySelector(".sf-op").value   = op;
-  row.querySelector(".sf-val").value  = val;
+  opSel.value   = op;
+  valEl.value   = val;
+  // Percentile ops take a 0–100 rank; show that hint in the value box.
+  const syncValHint = () => { valEl.placeholder = isPctOp(opSel.value) ? "0–100" : "value"; };
+  syncValHint();
   row.querySelector(".sf-stat").addEventListener("change", render);
-  row.querySelector(".sf-op").addEventListener("change", render);
-  row.querySelector(".sf-val").addEventListener("input", render);
+  opSel.addEventListener("change", () => { syncValHint(); render(); });
+  valEl.addEventListener("input", render);
   row.querySelector(".sf-remove").addEventListener("click", () => {
     row.remove();
     ensureStatFilterRow();   // always keep at least one visible row
@@ -663,10 +712,16 @@ function filtered() {
     if (p.mpg != null && p.mpg < minM) return false;
     if (minP > 0 && (p.poss == null || p.poss < minP)) return false;
     for (const s of statMins) {
-      const val = p[s.key];
-      if (val == null) return false;
-      const cmp = PCT_STATS.has(s.key) ? val * 100 : val;
-      if (s.op === "le" ? cmp > s.val : cmp < s.val) return false;
+      if (p[s.key] == null) return false;
+      if (isPctOp(s.op)) {
+        // Threshold on percentile rank vs. the full pool (100 = best).
+        const pr = pctRank(s.key, p[s.key], !LOWER_BETTER.has(s.key));
+        if (pr == null) return false;
+        if (s.op === "ple" ? pr > s.val : pr < s.val) return false;
+      } else {
+        const cmp = PCT_STATS.has(s.key) ? p[s.key] * 100 : p[s.key];
+        if (s.op === "le" ? cmp > s.val : cmp < s.val) return false;
+      }
     }
     return true;
   });
@@ -712,9 +767,11 @@ const PCT_EXCLUDE = new Set(["gp", "poss"]);
 let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 
 function buildPctSorted(scope) {
-  const pool = scope === "conf" ? PS_CONF : PS_ALL;
+  const pool = PS[scope];
   const keys = new Set();
+  // Table columns (for display mode) plus every filterable stat (for %ile thresholds).
   Object.values(COL_GROUPS).forEach(g => g.forEach(c => { if (!PCT_EXCLUDE.has(c.key)) keys.add(c.key); }));
+  STAT_FILTER_KEYS.forEach(k => { if (!PCT_EXCLUDE.has(k)) keys.add(k); });
   const sortedByKey = {};
   keys.forEach(k => {
     const vals = [];
@@ -862,7 +919,9 @@ function render() {
     return;
   }
 
-  if (displayMode === "pct" && !PCT_SORTED[curScope]) buildPctSorted(curScope);
+  // Percentile pools are needed for the display toggle AND for any %ile threshold.
+  const needPct = displayMode === "pct" || activeStatFilters().some(s => isPctOp(s.op));
+  if (needPct && !PCT_SORTED[curScope]) buildPctSorted(curScope);
 
   _currentRows = sorted(filtered().map((p, i) => ({ ...p, _rank: i + 1 })));
   document.getElementById("count-label").textContent =

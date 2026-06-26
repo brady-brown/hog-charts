@@ -34,3 +34,6 @@ charts/
 
 # Streamlit secrets
 .streamlit/secrets.toml
+
+# Local prototype / scratch (not part of the site)
+zone_chart_prototype/
