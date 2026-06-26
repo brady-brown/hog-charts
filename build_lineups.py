@@ -369,7 +369,7 @@ def process_all_teams(qualifying_teams, game_scope="overall"):
         for combo_size in [1, 2, 3, 5]:
             combo_df = compute_combo_stats(
                 season_lineup_totals_df,
-                n=combo_size,
+                combo_size=combo_size,
                 min_avg_possessions=minimum_poss_threshold
             )
             if not combo_df.empty:
