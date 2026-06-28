@@ -431,6 +431,7 @@ PLAYER_STATS_COLUMN_RENAME_MAP = {
     "trb_pct":               "trbp",
     "stl_pct":               "stlp",
     "blk_pct":               "blkp",
+    "ast_share":             "astdp",
     "adv_src":               "advsrc",
     "bpm":                   "bpm",
     "on_off":                "on_off",
@@ -440,7 +441,8 @@ PLAYER_STATS_COLUMN_RENAME_MAP = {
 def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
                              min_games_played=8, min_mpg=8,
                              min_onoff_possessions=200, label="",
-                             team_context_csv_path=None, stint_csv_path=None):
+                             team_context_csv_path=None, stint_csv_path=None,
+                             assist_share_csv_path=None):
     """Read a player-stats CSV, compute derived stats, and return JSON records.
 
     Derived stats added here (not in build_player_stats.py):
@@ -640,6 +642,21 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
         player_stats_df.loc[has_stint, "adv_src"] = "stint"
         print(f"  stint-based advanced rates for {int(has_stint.sum())} players {label}")
 
+    # --- Assisted-FG share (% of a player's own made FGs that were assisted) ---
+    # Counted straight from play-by-play in build_onoff_rapm.py (astd_fgm /
+    # fgm_pbp), one table per scope including postseason. Purely individual — no
+    # stint/lineup coverage or possession gate needed.
+    player_stats_df["ast_share"] = None
+    if assist_share_csv_path and os.path.exists(assist_share_csv_path):
+        share_df = pd.read_csv(assist_share_csv_path, usecols=["athlete_id", "astd_fgm", "fgm_pbp"])
+        # A mid-season transfer can have two rows; keep the one with more made FGs.
+        share_df = (share_df.sort_values("fgm_pbp", ascending=False)
+                    .drop_duplicates("athlete_id"))
+        player_stats_df = player_stats_df.merge(share_df, on="athlete_id", how="left")
+        made_fg_pbp = player_stats_df["fgm_pbp"].fillna(0)
+        player_stats_df["ast_share"] = np.where(
+            made_fg_pbp > 0, 100 * player_stats_df["astd_fgm"] / made_fg_pbp.where(made_fg_pbp > 0, 1), None)
+
     # --- Box Plus-Minus (transparent proxy, not regressed BPM) ---
     # Scaled Game Score per 100 team possessions, centered on the minutes-weighted
     # league average so 0.0 ≈ an average rotation player.
@@ -701,7 +718,7 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     rate_avg_cols     = ["mpg", "points_avg", "reb_avg", "ast_avg", "steal_avg",
                          "blocks_avg", "to_avg", "on_off", "usg", "bpm",
                          "ast_pct", "tov_pct", "orb_pct", "drb_pct", "trb_pct",
-                         "stl_pct", "blk_pct",
+                         "stl_pct", "blk_pct", "ast_share",
                          "fg3m_pg", "fg3a_pg", "fg2m_pg", "fg2a_pg",
                          "fgm_pg", "fga_pg", "ftm_pg", "fta_pg"]
     for col in shooting_pct_cols:
@@ -745,19 +762,19 @@ _exists = lambda path: path if os.path.exists(path) else None
 # may only be used where its games match the scope (regular & conference), so
 # all/post pass None and fall back to the season approximation.
 PLAYER_STATS_SCOPE_SPECS = [
-    # (stats_csv, onoff_csv, stint_csv, team_context_csv, min_gp, min_mpg,
-    #  min_onoff_poss, output_json, label)
-    (f"player_stats_{SEASON}.csv",      onoff_overall_csv, onoff_overall_csv, f"team_context_{SEASON}.csv",
+    # (stats_csv, onoff_csv, stint_csv, team_context_csv, assist_share_csv,
+    #  min_gp, min_mpg, min_onoff_poss, output_json, label)
+    (f"player_stats_{SEASON}.csv",      onoff_overall_csv, onoff_overall_csv, f"team_context_{SEASON}.csv",      f"assist_share_{SEASON}.csv",
      8, 8, 200, "player-stats.json",      "(regular)"),
-    (f"player_stats_all_{SEASON}.csv",  onoff_overall_csv, None,              f"team_context_all_{SEASON}.csv",
+    (f"player_stats_all_{SEASON}.csv",  onoff_overall_csv, None,              f"team_context_all_{SEASON}.csv",  f"assist_share_{SEASON}_all.csv",
      8, 8, 200, "player-stats-all.json",  "(all games)"),
-    (f"player_stats_post_{SEASON}.csv", None,              None,              f"team_context_post_{SEASON}.csv",
+    (f"player_stats_post_{SEASON}.csv", None,              None,              f"team_context_post_{SEASON}.csv", f"assist_share_{SEASON}_post.csv",
      1, 1, 200, "player-stats-post.json", "(postseason)"),
-    (f"player_stats_conf_{SEASON}.csv", onoff_conf_csv,    onoff_conf_csv,    f"team_context_conf_{SEASON}.csv",
+    (f"player_stats_conf_{SEASON}.csv", onoff_conf_csv,    onoff_conf_csv,    f"team_context_conf_{SEASON}.csv", f"assist_share_{SEASON}_conf.csv",
      4, 8, 100, "player-stats-conf.json", "(conference)"),
 ]
 
-for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, min_gp, min_mpg, min_op, out_json, label in PLAYER_STATS_SCOPE_SPECS:
+for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, assist_share_csv, min_gp, min_mpg, min_op, out_json, label in PLAYER_STATS_SCOPE_SPECS:
     records = build_player_stats_json(
         os.path.join(PROJECT_ROOT, stats_csv_name),
         _exists(onoff_csv) if onoff_csv else None,
@@ -765,6 +782,7 @@ for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, min_gp, min_mpg, min_op
         min_onoff_possessions=min_op, label=label,
         team_context_csv_path=os.path.join(PROJECT_ROOT, team_ctx_name),
         stint_csv_path=_exists(stint_csv) if stint_csv else None,
+        assist_share_csv_path=_exists(os.path.join(PROJECT_ROOT, assist_share_csv)),
     )
     if records is not None:
         write_json({"players": records, "meta": build_metadata}, out_json)

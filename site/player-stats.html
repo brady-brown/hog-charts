@@ -365,6 +365,7 @@ const COL_GROUPS = {
     { key:"trbp",  label:"TRB%",  dir:"desc", tip:"Total rebound%: share of all available rebounds grabbed while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
     { key:"stlp",  label:"STL%",  dir:"desc", tip:"Steal%: share of opponent possessions ended by a steal while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
     { key:"blkp",  label:"BLK%",  dir:"desc", tip:"Block%: share of opponent two-point attempts blocked while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
+    { key:"astdp", label:"Ast'd%",dir:"desc", tip:"Assisted FG%: share of the player's own made field goals that were set up by a teammate (counted straight from play-by-play)." },
     { key:"fg",    label:"FG%",   dir:"desc", tip:"Field goal percentage", pct:true },
     { key:"fg3",   label:"3P%",   dir:"desc", tip:"Three-point percentage", pct:true },
     { key:"ft",    label:"FT%",   dir:"desc", tip:"Free throw percentage", pct:true },
@@ -626,7 +627,7 @@ const STAT_FILTER_GROUPS = [
   ["Shooting %", [["ts","TS%"],["efg","eFG%"],["fg","FG%"],["fg3","3P%"],["ft","FT%"],
                   ["par3","3PAr"],["ftr","FTr"]]],
   ["Advanced", [["usg","USG%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
-                ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["on_off","On/Off"]]],
+                ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["astdp","Ast'd%"],["on_off","On/Off"]]],
   ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
 ];
 // Stats stored as 0-1 fractions; a threshold of "40" should mean 40%.
@@ -1093,6 +1094,7 @@ async function openModal(p) {
     { lbl:"TRB%",  val: pc1(p.trbp) },
     { lbl:"STL%",  val: pc1(p.stlp) },
     { lbl:"BLK%",  val: pc1(p.blkp) },
+    { lbl:"Ast'd%",val: pc1(p.astdp) },
     { lbl:"FG%",   val: p.fg   != null ? (p.fg*100).toFixed(1)+"%"  : "—" },
     { lbl:"3P%",   val: p.fg3  != null ? (p.fg3*100).toFixed(1)+"%" : "—" },
     { lbl:"FT%",   val: p.ft   != null ? (p.ft*100).toFixed(1)+"%"  : "—" },

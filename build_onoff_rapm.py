@@ -57,8 +57,10 @@ REGULAR_SEASON_TYPE = 2   # sportsdataverse code for regular season (1=pre, 3=po
 # Load raw data from ESPN (once, then filter inside run_pipeline)
 # ---------------------------------------------------------------------------
 print("Loading play-by-play...")
-raw_play_by_play = mbb.load_mbb_pbp(seasons=SEASON, return_as_pandas=True)
-raw_play_by_play = raw_play_by_play[raw_play_by_play["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
+# Keep the full feed (all season types) for the assisted-FG share tables below;
+# the on/off + RAPM pipeline itself only ever uses the regular-season subset.
+raw_play_by_play_full = mbb.load_mbb_pbp(seasons=SEASON, return_as_pandas=True)
+raw_play_by_play = raw_play_by_play_full[raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
 print("Loading player box scores...")
 raw_player_boxscores = mbb.load_mbb_player_boxscore(seasons=SEASON, return_as_pandas=True)
@@ -74,6 +76,50 @@ schedule_df = schedule_df[schedule_df["season_type"] == REGULAR_SEASON_TYPE]
 conference_game_id_set = set(schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"])
 
 print(f"  PBP: {len(raw_play_by_play):,} plays | Players: {len(raw_player_boxscores):,} rows | Teams: {len(raw_team_boxscores):,} rows")
+
+
+# ---------------------------------------------------------------------------
+# Assisted-FG share tables (one per player-stats scope)
+# ---------------------------------------------------------------------------
+# Pure individual stat: of a player's OWN made field goals, how many a teammate
+# set up. On a made-FG row athlete_id_1 is the scorer and athlete_id_2 is the
+# assister (NaN when unassisted). This needs no stint/lineup coverage, so we
+# compute it straight from the PBP for every scope — including postseason,
+# which has no on/off pipeline. build_site reads astd_fgm / fgm_pbp and divides.
+def _assisted_fg_share_table(pbp_frame):
+    """Per-scorer assisted/total made-FG counts for a PBP subset."""
+    is_free_throw = pbp_frame["type_text"].str.contains("FreeThrow", na=False)
+    is_made_field_goal = (
+        pbp_frame["shooting_play"].astype(bool)
+        & ~is_free_throw
+        & pbp_frame["scoring_play"].astype(bool)
+    )
+    scorer_id   = pd.to_numeric(pbp_frame["athlete_id_1"], errors="coerce")
+    assister_id = pd.to_numeric(pbp_frame["athlete_id_2"], errors="coerce")
+    made_field_goals = pd.DataFrame({
+        "athlete_id": scorer_id[is_made_field_goal],
+        "_is_assisted": assister_id[is_made_field_goal].notna().astype(int),
+    }).dropna(subset=["athlete_id"])
+    return (
+        made_field_goals.groupby("athlete_id")
+        .agg(astd_fgm=("_is_assisted", "sum"), fgm_pbp=("_is_assisted", "size"))
+        .reset_index()
+    )
+
+print("Building assisted-FG share tables...")
+_is_regular    = raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE
+_is_postseason = raw_play_by_play_full["season_type"] == 3   # conf tourneys + NCAA + NIT
+_is_conference = raw_play_by_play_full["game_id"].isin(conference_game_id_set)
+assist_share_scopes = {
+    "":      raw_play_by_play_full[_is_regular],
+    "_all":  raw_play_by_play_full[_is_regular | _is_postseason],
+    "_post": raw_play_by_play_full[_is_postseason],
+    "_conf": raw_play_by_play_full[_is_regular & _is_conference],
+}
+for _scope_suffix, _scope_pbp in assist_share_scopes.items():
+    _assisted_fg_share_table(_scope_pbp).to_csv(
+        f"assist_share_{SEASON}{_scope_suffix}.csv", index=False)
+    print(f"  assist_share_{SEASON}{_scope_suffix}.csv — {_scope_pbp['game_id'].nunique()} games")
 
 
 # ---------------------------------------------------------------------------
