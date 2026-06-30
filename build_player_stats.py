@@ -25,6 +25,7 @@ import pandas as pd
 import sportsdataverse.mbb as mbb
 
 from conferences import team_id_to_label
+from predictor import calculate_efficiency, calculate_adjusted_efficiency
 
 # ---------------------------------------------------------------------------
 # Season detection
@@ -298,6 +299,99 @@ def build_team_context(team_box_df):
     return context_df
 
 
+# Box columns summed for the full team-stats table (powers the Team Stats site
+# page). Superset of TEAM_BOX_NUMERIC_COLUMNS — also needs makes/points/assists
+# /steals/blocks for the box, shooting and four-factor stats on both ends.
+TEAM_STATS_NUMERIC_COLUMNS = [
+    "team_score",
+    "field_goals_made", "field_goals_attempted",
+    "three_point_field_goals_made", "three_point_field_goals_attempted",
+    "free_throws_made", "free_throws_attempted",
+    "offensive_rebounds", "defensive_rebounds", "total_rebounds",
+    "assists", "steals", "blocks", "turnovers",
+]
+
+# How each summed box column maps onto the short CSV key, for both the team's
+# own totals and the opponent totals (what opponents did against the team).
+_TEAM_STAT_AGG = {
+    "pts": "team_score",
+    "fgm": "field_goals_made",         "fga": "field_goals_attempted",
+    "tpm": "three_point_field_goals_made", "tpa": "three_point_field_goals_attempted",
+    "ftm": "free_throws_made",         "fta": "free_throws_attempted",
+    "orb": "offensive_rebounds",       "drb": "defensive_rebounds", "trb": "total_rebounds",
+    "ast": "assists", "stl": "steals", "blk": "blocks", "tov": "turnovers",
+}
+
+
+def build_team_stats(team_box_df):
+    """Build a per-team table of season box totals + opponent box totals.
+
+    Own totals are grouped by ``team_id`` (what the team did); opponent totals
+    are grouped by ``opponent_team_id`` (what opponents did against the team,
+    i.e. the team's defense). Both carry possessions, so build_site.py can
+    derive box per-game, shooting, and offensive/defensive four-factor rates.
+    Keyed by ``team_id``.
+    """
+    rows = team_box_df.copy()
+    for col in TEAM_STATS_NUMERIC_COLUMNS:
+        rows[col] = pd.to_numeric(rows[col], errors="coerce").fillna(0)
+    rows["off_poss"] = (
+        rows["field_goals_attempted"] + 0.44 * rows["free_throws_attempted"]
+        - rows["offensive_rebounds"] + rows["turnovers"]
+    )
+
+    own_agg = {k: (src, "sum") for k, src in _TEAM_STAT_AGG.items()}
+    own_agg["games"] = ("game_id", "nunique")
+    own_agg["poss"]  = ("off_poss", "sum")
+    own_df = rows.groupby("team_id").agg(**own_agg).reset_index()
+
+    opp_agg = {f"opp_{k}": (src, "sum") for k, src in _TEAM_STAT_AGG.items()}
+    opp_agg["opp_poss"] = ("off_poss", "sum")
+    opp_df = (
+        rows.groupby("opponent_team_id").agg(**opp_agg)
+        .reset_index().rename(columns={"opponent_team_id": "team_id"})
+    )
+
+    return own_df.merge(opp_df, on="team_id", how="left")
+
+
+# Columns the efficiency engine (predictor.calculate_efficiency) consumes.
+_EFF_INPUT_COLUMNS = [
+    "team_score", "opponent_team_score",
+    "field_goals_attempted", "free_throws_attempted",
+    "offensive_rebounds", "turnovers",
+]
+
+
+def build_scope_net_ratings(scope_team_box_df):
+    """Opponent-adjusted Off/Def/Net efficiency + SOS for ONE scope's games.
+
+    Re-runs the predictor's season solve (calculate_adjusted_efficiency) but on
+    just this scope's game set, so the Team Stats ratings reflect only those
+    games. No prior-season blend — a scope is its own sample. "D-I" self-limits
+    to teams appearing in the scope, and SOS is the mean adjusted net rating of
+    opponents faced within the scope.
+
+    Returns a DataFrame: team_id, off_eff, def_eff, net_eff, sos.
+    """
+    games = scope_team_box_df.copy()
+    games["season"] = SEASON   # single-season solve; guarantee the grouping key
+    for col in _EFF_INPUT_COLUMNS:
+        games[col] = pd.to_numeric(games[col], errors="coerce").fillna(0)
+
+    adjusted = calculate_adjusted_efficiency(games, calculate_efficiency(games))
+    net_eff_by_team = adjusted.set_index("team_id")["net_eff"]
+
+    vs_rated = games[games["opponent_team_id"].isin(net_eff_by_team.index)].copy()
+    vs_rated["opp_net_eff"] = vs_rated["opponent_team_id"].map(net_eff_by_team)
+    sos_per_team = vs_rated.groupby("team_id")["opp_net_eff"].mean().rename("sos")
+
+    out = adjusted[["team_id", "off_eff", "def_eff", "net_eff"]].merge(
+        sos_per_team, on="team_id", how="left"
+    )
+    return out.round({"off_eff": 1, "def_eff": 1, "net_eff": 1, "sos": 1})
+
+
 print("Loading team box scores for opponent context…")
 raw_team_boxscores_df = mbb.load_mbb_team_boxscore(seasons=[SEASON], return_as_pandas=True)
 team_boxscores_df = raw_team_boxscores_df[
@@ -333,6 +427,31 @@ for scope_name, output_filename, scope_mask in TEAM_CONTEXT_SCOPES:
     scope_context_df = build_team_context(scope_team_box_df)
     scope_context_df.to_csv(output_filename, index=False)
     print(f"  {output_filename}  — {len(scope_context_df):,} teams ({scope_name})")
+
+# Full team-stats tables (own + opponent box totals) — one per scope. Same
+# scope masks as the context files so the Team Stats site page lines up with
+# the player-stats scope toggle (All / Conf / Reg / Post).
+TEAM_STATS_SCOPES = [
+    ("reg",  f"team_stats_{SEASON}.csv",      tc_is_regular),
+    ("all",  f"team_stats_all_{SEASON}.csv",  team_boxscores_df["season_type"].isin([2, 3])),
+    ("post", f"team_stats_post_{SEASON}.csv", (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
+    ("conf", f"team_stats_conf_{SEASON}.csv",
+     tc_is_regular & team_boxscores_df["game_id"].isin(conference_game_ids)),
+]
+for scope_name, output_filename, scope_mask in TEAM_STATS_SCOPES:
+    scope_team_box_df = team_boxscores_df[scope_mask]
+    if scope_team_box_df.empty:
+        print(f"  {output_filename}  — no games, skipped ({scope_name})")
+        continue
+    scope_team_stats_df = build_team_stats(scope_team_box_df)
+    scope_team_stats_df.to_csv(output_filename, index=False)
+    print(f"  {output_filename}  — {len(scope_team_stats_df):,} teams ({scope_name})")
+
+    # Scope-specific opponent-adjusted net ratings (re-solved on this scope only).
+    net_filename = f"net_ratings_{scope_name}_{SEASON}.csv"
+    scope_net_df = build_scope_net_ratings(scope_team_box_df)
+    scope_net_df.to_csv(net_filename, index=False)
+    print(f"  {net_filename}  — {len(scope_net_df):,} teams ({scope_name})")
 
 print("\nDone.")
 

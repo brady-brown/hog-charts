@@ -89,6 +89,10 @@ def _sanitize_for_json(python_obj):
         return None if (python_obj != python_obj
                         or python_obj == float("inf")
                         or python_obj == float("-inf")) else python_obj
+    # pandas nullable scalars (pd.NA from Int64 columns, NaT) aren't floats and
+    # aren't JSON-serializable — collapse them to null.
+    if python_obj is pd.NA or python_obj is pd.NaT:
+        return None
     if isinstance(python_obj, dict):
         return {key: _sanitize_for_json(val) for key, val in python_obj.items()}
     if isinstance(python_obj, list):
@@ -325,6 +329,125 @@ net_ratings_records = (
     .to_dict("records")
 )
 write_json({"net_ratings": net_ratings_records, "meta": build_metadata}, "net-ratings.json")
+
+
+# ===========================================================================
+# 2b. team-stats-*.json  (powers the Team Stats page — the team analog of
+#     player-stats: box + shooting + four-factor rates, plus the net ratings)
+# ===========================================================================
+print("\nBuilding team-stats JSONs…")
+
+# Identity columns carried over from the net-ratings artifact. The actual
+# Net/Off/Def/SOS ratings are NOT taken from here — each scope re-solves its own
+# opponent-adjusted ratings (net_ratings_<scope>_<season>.csv from
+# build_player_stats.py) so the toggle reflects just that scope's games.
+# home_court stays season-overall (a venue property) and is blanked on the
+# neutral-floor postseason scope inside build_team_stats_json().
+TEAM_IDENTITY_COLS = ["team", "team_id", "conf", "record", "home_court"]
+# Final ordered columns written to each team-stats JSON.
+TEAM_STATS_OUTPUT_COLS = [
+    "team", "team_id", "conf", "record", "rank",
+    "net_eff", "off_eff", "def_eff", "off_rank", "def_rank", "sos", "home_court",
+    "games", "pace",
+    "ppg", "rpg", "apg", "spg", "bpg", "tpg",
+    "fg", "fg3", "ft", "efg", "ts", "par3", "ftr",
+    "opp_efg", "opp_fg3", "opp_ftr",
+    "tovp", "opp_tovp", "orbp", "drbp", "astp", "ast_to",
+    "ppp", "opp_ppp",
+]
+team_identity_df = net_ratings_df[
+    [c for c in TEAM_IDENTITY_COLS if c in net_ratings_df.columns]
+].copy()
+
+
+def _sdiv(numerator, denominator):
+    """Element-wise divide → NaN where the denominator is 0 (sanitized later)."""
+    return np.where(denominator > 0, numerator / denominator, np.nan)
+
+
+def build_team_stats_json(csv_path, identity_df, net_ratings_csv_path, scope):
+    """Compute the per-team stat table for one scope, merged with ratings.
+
+    Driven by identity_df (the rated D-I teams) via an inner merge, so only
+    leaderboard teams appear and they inherit team name / conf / record.
+    Net/Off/Def/SOS come from this scope's own re-solved ratings file; ranks
+    are recomputed within the scope.
+    """
+    box = pd.read_csv(csv_path)
+    # Inner-merge: only rated D-I teams that actually have box data for this
+    # scope (a team with no postseason games shouldn't appear in that scope).
+    df = identity_df.merge(box, on="team_id", how="inner")
+
+    # Scope-specific opponent-adjusted ratings (net/off/def/sos).
+    if os.path.exists(net_ratings_csv_path):
+        scope_net = pd.read_csv(net_ratings_csv_path)
+        df = df.merge(scope_net[["team_id", "off_eff", "def_eff", "net_eff", "sos"]],
+                      on="team_id", how="left")
+    else:
+        print(f"    (no {os.path.basename(net_ratings_csv_path)} — ratings left blank)")
+        for col in ("off_eff", "def_eff", "net_eff", "sos"):
+            df[col] = np.nan
+
+    # home_court is a venue property — meaningless on neutral postseason floors.
+    if scope == "post":
+        df["home_court"] = np.nan
+
+    g = df["games"]
+    # Box per game
+    for short, col in [("ppg", "pts"), ("rpg", "trb"), ("apg", "ast"),
+                       ("spg", "stl"), ("bpg", "blk"), ("tpg", "tov")]:
+        df[short] = np.round(_sdiv(df[col], g), 1)
+
+    # Shooting — stored as 0-1 fractions (frontend ×100), like player-stats
+    df["fg"]   = np.round(_sdiv(df["fgm"], df["fga"]), 3)
+    df["fg3"]  = np.round(_sdiv(df["tpm"], df["tpa"]), 3)
+    df["ft"]   = np.round(_sdiv(df["ftm"], df["fta"]), 3)
+    df["efg"]  = np.round(_sdiv(df["fgm"] + 0.5 * df["tpm"], df["fga"]), 3)
+    df["ts"]   = np.round(_sdiv(df["pts"], 2 * (df["fga"] + 0.44 * df["fta"])), 3)
+    df["par3"] = np.round(_sdiv(df["tpa"], df["fga"]), 3)
+    df["ftr"]  = np.round(_sdiv(df["fta"], df["fga"]), 3)
+    # Defensive shooting allowed
+    df["opp_efg"] = np.round(_sdiv(df["opp_fgm"] + 0.5 * df["opp_tpm"], df["opp_fga"]), 3)
+    df["opp_fg3"] = np.round(_sdiv(df["opp_tpm"], df["opp_tpa"]), 3)
+    df["opp_ftr"] = np.round(_sdiv(df["opp_fta"], df["opp_fga"]), 3)
+
+    # Four-factor / rate stats — stored as percentages already (no ×100)
+    df["tovp"]     = np.round(100 * _sdiv(df["tov"], df["poss"]), 1)
+    df["opp_tovp"] = np.round(100 * _sdiv(df["opp_tov"], df["opp_poss"]), 1)
+    df["orbp"]     = np.round(100 * _sdiv(df["orb"], df["orb"] + df["opp_drb"]), 1)
+    df["drbp"]     = np.round(100 * _sdiv(df["drb"], df["drb"] + df["opp_orb"]), 1)
+    df["astp"]     = np.round(100 * _sdiv(df["ast"], df["fgm"]), 1)
+    df["ast_to"]   = np.round(_sdiv(df["ast"], df["tov"]), 2)
+
+    # Efficiency from the box (points per 100 possessions) + scope-accurate pace
+    df["ppp"]     = np.round(100 * _sdiv(df["pts"], df["poss"]), 1)
+    df["opp_ppp"] = np.round(100 * _sdiv(df["opp_pts"], df["opp_poss"]), 1)
+    df["pace"]    = np.round(_sdiv(df["poss"] + df["opp_poss"], 2 * g), 1)
+
+    df["games"] = g.astype("Int64")
+
+    # Ranks are recomputed within the scope from its own re-solved ratings.
+    df["rank"]     = df["net_eff"].rank(ascending=False, method="min").astype("Int64")
+    df["off_rank"] = df["off_eff"].rank(ascending=False, method="min").astype("Int64")
+    df["def_rank"] = df["def_eff"].rank(ascending=True,  method="min").astype("Int64")
+
+    return df[[c for c in TEAM_STATS_OUTPUT_COLS if c in df.columns]].to_dict("records")
+
+
+TEAM_STATS_SCOPE_SPECS = [
+    ("all",  f"team_stats_all_{SEASON}.csv",  f"net_ratings_all_{SEASON}.csv",  "team-stats-all.json"),
+    ("reg",  f"team_stats_{SEASON}.csv",      f"net_ratings_reg_{SEASON}.csv",  "team-stats.json"),
+    ("post", f"team_stats_post_{SEASON}.csv", f"net_ratings_post_{SEASON}.csv", "team-stats-post.json"),
+    ("conf", f"team_stats_conf_{SEASON}.csv", f"net_ratings_conf_{SEASON}.csv", "team-stats-conf.json"),
+]
+for scope, csv_name, net_name, json_name in TEAM_STATS_SCOPE_SPECS:
+    csv_full = os.path.join(PROJECT_ROOT, csv_name)
+    if not os.path.exists(csv_full):
+        print(f"  {json_name:<35s} skipped (no {csv_name})")
+        continue
+    net_full = os.path.join(PROJECT_ROOT, net_name)
+    records = build_team_stats_json(csv_full, team_identity_df, net_full, scope)
+    write_json({"team_stats": records, "meta": build_metadata}, json_name)
 
 
 # ===========================================================================

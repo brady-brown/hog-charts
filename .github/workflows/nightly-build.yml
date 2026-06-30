@@ -3,13 +3,23 @@ name: Nightly Site Build
 on:
   schedule:
     - cron: "0 7 * * *"   # 2 AM CT (7 AM UTC)
-  push:
-    branches: [main]
   workflow_dispatch:        # manual trigger from GitHub UI
+  # NOTE: no `push` trigger. A full build is ~28 min; firing it on every commit
+  # burned the private-repo Actions minutes quota (2,000/mo) and got runs
+  # cancelled mid-flight. Nightly + manual keeps us well under the limit.
+
+# Never run two builds at once (they'd both try to push site/data). Let an
+# in-progress run finish rather than cancelling it.
+concurrency:
+  group: nightly-site-build
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Cap runaway/hung runs (a step occasionally hangs and ran 1h+). Normal
+    # build is ~28 min, so 45 leaves headroom while still failing fast.
+    timeout-minutes: 45
 
     permissions:
       contents: write

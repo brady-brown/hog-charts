@@ -3,66 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Net Ratings | Hog Charts</title>
+  <title>Team Stats | Hog Charts</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
   <link rel="apple-touch-icon" href="img/logo.png">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <style>
-    /* ── table ─────────────────────────────────────────────────────── */
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
-    /* Mobile: pin rank + logo + team to the left so identity stays visible
-       while the stats columns scroll horizontally. */
+    /* Mobile: pin rank + logo + team to the left while stats scroll. */
     @media (max-width: 700px) {
-      #ratings-table thead th { z-index: 3; }
-      #ratings-table thead th:nth-child(-n+3),
-      #ratings-table tbody td:nth-child(-n+3) { position: sticky; z-index: 2; }
-      #ratings-table thead th:nth-child(-n+3) { z-index: 4; background: var(--card2); }
-      #ratings-table tbody td:nth-child(-n+3) { background: var(--bg); }
-      #ratings-table th:nth-child(1), #ratings-table td:nth-child(1) { left: 0;    min-width: 28px; width: 28px; }
-      #ratings-table th:nth-child(2), #ratings-table td:nth-child(2) { left: 28px;  min-width: 30px; }
-      #ratings-table th:nth-child(3), #ratings-table td:nth-child(3) { left: 58px;  box-shadow: 1px 0 0 var(--line); }
-      #ratings-table td.team-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+      #ts-table thead th { z-index: 3; }
+      #ts-table thead th:nth-child(-n+3),
+      #ts-table tbody td:nth-child(-n+3) { position: sticky; z-index: 2; }
+      #ts-table thead th:nth-child(-n+3) { z-index: 4; background: var(--card2); }
+      #ts-table tbody td:nth-child(-n+3) { background: var(--bg); }
+      #ts-table th:nth-child(1), #ts-table td:nth-child(1) { left: 0;   min-width: 28px; width: 28px; }
+      #ts-table th:nth-child(2), #ts-table td:nth-child(2) { left: 28px; min-width: 30px; }
+      #ts-table th:nth-child(3), #ts-table td:nth-child(3) { left: 58px; box-shadow: 1px 0 0 var(--line); }
+      #ts-table td.team-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; white-space: nowrap; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     thead th {
       background: var(--card2); color: var(--muted);
-      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 9px 10px; border-bottom: 1px solid var(--line);
       cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1;
     }
     thead th:hover { color: var(--ink); }
     thead th.sort-asc::after  { content: " ↑"; color: var(--t1); }
     thead th.sort-desc::after { content: " ↓"; color: var(--t1); }
-    tbody tr { border-bottom: 1px solid #1a2235; }
+    tbody tr { border-bottom: 1px solid #1a2235; cursor: pointer; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--card2); }
-    tbody td { padding: 8px 12px; vertical-align: middle; }
+    tbody td { padding: 7px 10px; vertical-align: middle; }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    td.rk  { color: var(--muted); text-align: right; }
-    td.logo-cell img { width: 28px; height: 28px; object-fit: contain; display: block; }
+    td.rk  { color: var(--muted); text-align: right; min-width: 36px; }
+    td.logo-cell img { width: 26px; height: 26px; object-fit: contain; display: block; }
     td.team-name { font-weight: 700; }
-    .pos { color: #16A34A; font-weight: 700; }
-    .neg { color: #DC2626; font-weight: 700; }
-    .def-good { color: #16A34A; font-weight: 700; } /* low def is good */
-    .def-bad  { color: #DC2626; font-weight: 700; }
-
-    /* ── top-1 card ─────────────────────────────────────────────────── */
-    .top1-card {
-      display: flex; align-items: center; gap: 18px;
-      background: var(--card); border: 1px solid var(--line);
-      border-radius: 18px; padding: 18px 24px; margin-bottom: 16px;
-    }
-    .top1-card img { width: 58px; height: 58px; object-fit: contain; }
-
-    /* ── filters ────────────────────────────────────────────────────── */
-    .filters {
-      display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
-      margin-bottom: 14px;
-    }
+    .good { color: #16A34A; font-weight: 700; }
+    .bad  { color: #DC2626; font-weight: 700; }
+    .grp-sep { border-left: 1px solid var(--line) !important; }
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
     .filters .form-group { flex: 1; min-width: 140px; }
-    .filters .form-group.narrow { flex: 0 0 120px; }
-    .count-label { color: var(--muted); font-size: 0.8rem; margin-bottom: 12px; }
+    .filters .form-group.narrow { flex: 0 0 110px; }
+    .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
+    .col-toggle { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .col-toggle button {
+      background: var(--card2); border: 1px solid var(--line); border-radius: 8px;
+      color: var(--muted); font-family: inherit; font-size: .78rem; font-weight: 700;
+      padding: 5px 13px; cursor: pointer; transition: background .12s, color .12s;
+    }
+    .col-toggle button.active { background: var(--t1); border-color: var(--t1); color: #fff; }
+
+    /* ── team card modal (mirrors player-stats) ─────────────────────────── */
+    .pc-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.72); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .pc-overlay.open { display: flex; }
+    .pc-modal {
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+      width: min(680px, 95vw); max-height: 90vh; overflow-y: auto; position: relative; padding: 0;
+    }
+    .pc-close {
+      position: absolute; top: 14px; right: 16px;
+      background: var(--card2); border: 1px solid var(--line); border-radius: 50%;
+      width: 32px; height: 32px; font-size: 1.1rem; line-height: 32px; text-align: center;
+      cursor: pointer; color: var(--muted); z-index: 10;
+    }
+    .pc-close:hover { color: var(--ink); }
+    .pc-header {
+      display: flex; gap: 20px; align-items: center; padding: 26px 28px 20px;
+      border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5;
+      background: var(--card); border-top-left-radius: 20px; border-top-right-radius: 20px;
+    }
+    .pc-logo-lg { width: 78px; height: 78px; object-fit: contain; flex-shrink: 0; }
+    .pc-identity { flex: 1; min-width: 0; }
+    .pc-name { font-size: 1.35rem; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .pc-team { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); }
+    .pc-bio { display: flex; gap: 0; border-bottom: 1px solid var(--line); }
+    .pc-bio-item { flex: 1; text-align: center; padding: 14px 10px; border-right: 1px solid var(--line); }
+    .pc-bio-item:last-child { border-right: none; }
+    .pc-bio-val { font-size: 1.05rem; font-weight: 800; }
+    .pc-bio-lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+    .pc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 20px 28px 24px; }
+    .pc-stat-col { display: flex; flex-direction: column; gap: 4px; }
+    .pc-stat-col:first-child { padding-right: 20px; border-right: 1px solid var(--line); }
+    .pc-stat-col:last-child  { padding-left: 20px; }
+    .pc-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1a2235; }
+    .pc-stat-row:last-child { border-bottom: none; }
+    .pc-stat-lbl { font-size: .8rem; color: var(--muted); }
+    .pc-stat-val { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pc-stat-val.good { color: #16A34A; }
+    .pc-stat-val.bad  { color: #DC2626; }
+    .pc-col-hdr { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -71,7 +107,7 @@
   <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
   <a href="index.html"        data-page="index.html">Home</a>
   <a href="prediction.html"   data-page="prediction.html">Predictor</a>
-  <a href="net-ratings.html"  data-page="net-ratings.html">Net Ratings</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Team Stats</a>
   <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
@@ -80,14 +116,12 @@
 
 <div class="container">
 
-  <h2>Net Ratings</h2>
+  <h2>Team Stats</h2>
   <p class="page-sub">
-    Opponent-adjusted efficiency for every Division&nbsp;I team.
-    Net rating is points scored minus points allowed per 100 possessions, adjusted for opponent strength.
-    Click any column header to sort.
+    Box, shooting and four-factor stats for every Division&nbsp;I team, plus
+    opponent-adjusted net ratings, pace and strength of schedule. Toggle game
+    scope and stat group; click any team for shot zones and density.
   </p>
-
-  <div id="top1-card" class="top1-card" style="display:none"></div>
 
   <div class="filters">
     <div class="form-group narrow">
@@ -104,32 +138,37 @@
     </div>
     <div class="form-group narrow">
       <label for="min-games">Min games</label>
-      <input type="number" id="min-games" value="15" min="1" max="40" step="1">
+      <input type="number" id="min-games" value="20" min="1" max="40" step="1">
     </div>
   </div>
 
-  <div class="count-label" id="count-label"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+    <div class="col-toggle" style="margin-bottom:0">
+      <button class="active" id="grp-ratings"  onclick="setGroup('ratings')">Ratings</button>
+      <button id="grp-shooting" onclick="setGroup('shooting')">Shooting</button>
+      <button id="grp-four"     onclick="setGroup('four')">Four Factors</button>
+      <button id="grp-box"      onclick="setGroup('box')">Box</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each team's percentile rank vs. all D-I teams">
+        <button class="active" id="ts-btn-raw" onclick="setDisplay('raw')">Raw</button>
+        <button id="ts-btn-pct" onclick="setDisplay('pct')">Percentile</button>
+      </div>
+      <div class="col-toggle" style="margin-bottom:0">
+        <button class="active" id="sc-all"  onclick="setScope('all')">All games</button>
+        <button id="sc-reg"  onclick="setScope('reg')">Regular</button>
+        <button id="sc-post" onclick="setScope('post')">Postseason</button>
+        <button id="sc-conf" onclick="setScope('conf')">Conference</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="count-label" id="count-label">Loading…</div>
 
   <div class="tbl-wrap">
-    <table id="ratings-table">
-      <thead>
-        <tr>
-          <th class="sort-desc" data-col="rank"       data-dir="asc">Rk</th>
-          <th>                                                        </th><!-- logo -->
-          <th data-col="team"      data-dir="asc">Team</th>
-          <th data-col="conf"      data-dir="asc">Conf</th>
-          <th>Record</th>
-          <th data-col="net_eff"   data-dir="desc">Net</th>
-          <th data-col="off_eff"   data-dir="desc">Off</th>
-          <th data-col="def_eff"   data-dir="asc" >Def</th>
-          <th data-col="sos"       data-dir="desc">SOS</th>
-          <th data-col="pace"      data-dir="desc">Pace</th>
-          <th data-col="home_court" data-dir="desc">Home</th>
-          <!-- Form column hidden until the new season starts (offseason ratings have no recent form). -->
-          <!-- <th data-col="form"      data-dir="desc">Form</th> -->
-        </tr>
-      </thead>
-      <tbody id="ratings-body"></tbody>
+    <table id="ts-table">
+      <thead id="ts-head"></thead>
+      <tbody id="ts-body"></tbody>
     </table>
   </div>
 
@@ -139,29 +178,132 @@
 
 </div>
 
+<!-- ── Team card modal ──────────────────────────────────────────────────── -->
+<div class="pc-overlay" id="pc-overlay" onclick="closePc(event)">
+  <div class="pc-modal" id="pc-modal">
+    <div class="pc-close" onclick="closeModal()">✕</div>
+
+    <div class="pc-header">
+      <img id="pc-logo" class="pc-logo-lg" src="" alt="" onerror="this.style.opacity=0">
+      <div class="pc-identity">
+        <div class="pc-name" id="pc-name"></div>
+        <div class="pc-team">
+          <span id="pc-conf"></span>
+          <span style="color:var(--line)">·</span>
+          <span id="pc-record"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pc-bio" id="pc-bio"></div>
+
+    <div class="pc-stats">
+      <div class="pc-stat-col">
+        <div class="pc-col-hdr">Offense</div>
+        <div id="pc-off"></div>
+      </div>
+      <div class="pc-stat-col">
+        <div class="pc-col-hdr">Defense</div>
+        <div id="pc-def"></div>
+      </div>
+    </div>
+
+    <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
+      <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
+      <div id="pc-charts" style="display:none">
+        <div class="pc-col-hdr" style="margin-bottom:6px">Zone Efficiency</div>
+        <div id="pc-chart-zone"></div>
+        <div class="pc-col-hdr" style="margin:16px 0 6px">Shot Density</div>
+        <div id="pc-chart-density"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script src="js/common.js"></script>
+<script src="js/zone-chart.js"></script>
 <script>
-const TOOLTIPS = {
-  net_eff:    "Net rating: points scored minus points allowed per 100 possessions, adjusted for opponent strength. Higher is better.",
-  off_eff:    "Offensive rating: points scored per 100 possessions, adjusted for the defenses faced. Higher is better.",
-  def_eff:    "Defensive rating: points allowed per 100 possessions, adjusted for the offenses faced. Lower is better.",
-  sos:        "Strength of schedule: average net rating of opponents faced. Higher = tougher slate.",
-  pace:       "Average possessions per game.",
-  home_court: "Points this team's home court is worth in a prediction.",
-  form:       "Opponent-adjusted margin over the last 5 games. Positive = playing above their rating.",
+// ── Column definitions ──────────────────────────────────────────────────────
+// pct: stored 0-1, display ×100.  signed: show +/-.  dir: default sort.
+const COL_GROUPS = {
+  ratings: [
+    { key:"net_eff",   label:"Net",  dir:"desc", signed:true, dec:1, tip:"Net rating: points scored minus allowed per 100 possessions, adjusted for opponent strength." },
+    { key:"off_eff",   label:"Off",  dir:"desc", dec:1, tip:"Offensive rating: points scored per 100 possessions, adjusted for defenses faced." },
+    { key:"def_eff",   label:"Def",  dir:"asc",  dec:1, tip:"Defensive rating: points allowed per 100 possessions, adjusted for offenses faced. Lower is better." },
+    { key:"pace",      label:"Pace", dir:"desc", dec:1, tip:"Possessions per game (this scope)." },
+    { key:"sos",       label:"SOS",  dir:"desc", signed:true, dec:1, tip:"Strength of schedule: average net rating of opponents faced." },
+    { key:"home_court",label:"Home", dir:"desc", signed:true, dec:1, tip:"Points this team's home court is worth in a prediction." },
+  ],
+  shooting: [
+    { key:"ts",   label:"TS%",   dir:"desc", pct:true, tip:"True shooting%: PTS / (2 × (FGA + 0.44×FTA))." },
+    { key:"efg",  label:"eFG%",  dir:"desc", pct:true, tip:"Effective FG%: (FGM + 0.5×3PM) / FGA." },
+    { key:"fg",   label:"FG%",   dir:"desc", pct:true, tip:"Field goal percentage." },
+    { key:"fg3",  label:"3P%",   dir:"desc", pct:true, tip:"Three-point percentage." },
+    { key:"ft",   label:"FT%",   dir:"desc", pct:true, tip:"Free throw percentage." },
+    { key:"par3", label:"3PAr",  dir:"desc", pct:true, tip:"Three-point attempt rate: 3PA / FGA." },
+    { key:"ftr",  label:"FTr",   dir:"desc", pct:true, tip:"Free throw rate: FTA / FGA." },
+    { key:"opp_efg", label:"D eFG%", dir:"asc", pct:true, sep:true, tip:"Opponent eFG% allowed. Lower is better." },
+    { key:"opp_fg3", label:"D 3P%",  dir:"asc", pct:true, tip:"Opponent 3P% allowed. Lower is better." },
+  ],
+  four: [
+    { key:"efg",  label:"eFG%", dir:"desc", pct:true, tip:"Effective FG% (offense)." },
+    { key:"tovp", label:"TOV%", dir:"asc",  dec:1, tip:"Turnover rate: turnovers per 100 possessions. Lower is better." },
+    { key:"orbp", label:"ORB%", dir:"desc", dec:1, tip:"Offensive rebound rate: ORB / (ORB + opponent DRB)." },
+    { key:"ftr",  label:"FTr",  dir:"desc", pct:true, tip:"Free throw rate: FTA / FGA." },
+    { key:"opp_efg",  label:"D eFG%", dir:"asc",  pct:true, sep:true, tip:"Opponent eFG% allowed. Lower is better." },
+    { key:"opp_tovp", label:"D TOV%", dir:"desc", dec:1, tip:"Opponent turnover rate forced per 100 possessions. Higher is better." },
+    { key:"drbp",     label:"DRB%",   dir:"desc", dec:1, tip:"Defensive rebound rate: DRB / (DRB + opponent ORB)." },
+    { key:"opp_ftr",  label:"D FTr",  dir:"asc",  pct:true, tip:"Opponent free throw rate allowed. Lower is better." },
+  ],
+  box: [
+    { key:"ppg", label:"PPG", dir:"desc", dec:1, tip:"Points per game." },
+    { key:"rpg", label:"RPG", dir:"desc", dec:1, tip:"Rebounds per game." },
+    { key:"apg", label:"APG", dir:"desc", dec:1, tip:"Assists per game." },
+    { key:"spg", label:"SPG", dir:"desc", dec:1, tip:"Steals per game." },
+    { key:"bpg", label:"BPG", dir:"desc", dec:1, tip:"Blocks per game." },
+    { key:"tpg", label:"TOV", dir:"asc",  dec:1, tip:"Turnovers per game. Lower is better." },
+    { key:"astp",   label:"AST%",  dir:"desc", dec:1, sep:true, tip:"Assist rate: share of made field goals that were assisted." },
+    { key:"ast_to", label:"A:TO",  dir:"desc", dec:2, tip:"Assist-to-turnover ratio." },
+  ],
 };
 
+const SCOPES = ["all", "reg", "post", "conf"];
+const SCOPE_FILE = {
+  all:  "team-stats-all.json",
+  reg:  "team-stats.json",
+  post: "team-stats-post.json",
+  conf: "team-stats-conf.json",
+};
+const SCOPE_BTN = { all:"sc-all", reg:"sc-reg", post:"sc-post", conf:"sc-conf" };
+// Default Min games per scope — teams play far fewer post/conf games.
+const SCOPE_MIN_GAMES = { all:20, reg:20, post:1, conf:10 };
+
+let TS = { all:null, reg:null, post:null, conf:null };
 let allRows  = [];
-let NR_META  = null;
-let sortCol  = "rank";
-let sortDir  = "asc"; // asc = rank 1 first
+let META     = null;
+let curScope = "all";
+let colGroup = "ratings";
+let displayMode = "raw";   // "raw" | "pct" — percentile ranks vs. all D-I teams
+let sortCol  = "net_eff";
+let sortDir  = "desc";
 let SEASON   = null;
-let handlersBound = false; // guard so sort/filter listeners bind only once
+let CUR_SEASON = null;   // newest season — only it has shot data
+let handlersBound = false;
 
 function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
+// Identity columns always shown before the active stat group.
+const IDENTITY = ["rank", "logo", "team", "conf", "record"];
+
+function activeCols() { return COL_GROUPS[colGroup]; }
+function colByKey(k) {
+  for (const g of Object.values(COL_GROUPS)) { const c = g.find(x=>x.key===k); if (c) return c; }
+  return null;
+}
+
 async function init() {
-  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  const seasons = await loadJSON("data/seasons.json").catch(()=>null);
   const sSel = document.getElementById("season-sel");
   if (seasons?.length) {
     seasons.forEach(s => {
@@ -169,85 +311,120 @@ async function init() {
       o.value = s; o.textContent = seasonLabel(s);
       sSel.appendChild(o);
     });
-    SEASON = seasons[0];
+    SEASON = seasons[0]; CUR_SEASON = seasons[0];
   } else {
-    SEASON = new Date().getFullYear();
+    SEASON = new Date().getFullYear(); CUR_SEASON = SEASON;
   }
   sSel.value = SEASON;
-  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); reload(); });
+  sSel.addEventListener("change", () => { SEASON = parseInt(sSel.value); TS = {all:null,reg:null,post:null,conf:null}; PCT_SORTED = {}; reload(); });
   await reload();
 }
 
+async function loadScope(scope) {
+  if (TS[scope]) return TS[scope];
+  const data = await loadJSON(`data/${SEASON}/${SCOPE_FILE[scope]}`).catch(()=>null);
+  TS[scope] = data?.team_stats || [];
+  if (data?.meta) META = data.meta;
+  return TS[scope];
+}
+
 async function reload() {
-  allRows = []; NR_META = null;
-  const data = await loadJSON(`data/${SEASON}/net-ratings.json`);
-  if (!data?.net_ratings) {
+  document.getElementById("count-label").textContent = "Loading…";
+  document.getElementById("min-games").value = SCOPE_MIN_GAMES[curScope] ?? 0;
+  allRows = await loadScope(curScope);
+  if (!allRows.length) {
     document.getElementById("count-label").textContent = "Data not found for this season.";
+    document.getElementById("ts-body").innerHTML = "";
     return;
   }
 
-  allRows  = data.net_ratings;
-  NR_META  = data.meta;
-
-  // Populate conference dropdown
-  const confs = [...new Set(allRows.map(r => r.conf).filter(Boolean))].sort();
+  // Conference dropdown
+  const confs = [...new Set(allRows.map(r=>r.conf).filter(Boolean))].sort();
   const sel = document.getElementById("conf-sel");
+  const prev = sel.value;
   sel.innerHTML = '<option value="">All conferences</option>';
-  confs.forEach(c => {
-    const o = document.createElement("option");
-    o.value = o.textContent = c;
-    sel.appendChild(o);
-  });
+  confs.forEach(c => { const o=document.createElement("option"); o.value=o.textContent=c; sel.appendChild(o); });
+  if (confs.includes(prev)) sel.value = prev;
 
-  // Add tooltips to header
-  const ths = document.querySelectorAll("thead th[data-col]");
-  ths.forEach(th => {
-    const col = th.dataset.col;
-    if (TOOLTIPS[col]) th.title = TOOLTIPS[col];
-  });
-
-  // Sort/filter handlers — bind exactly once. reload() runs on every season
-  // switch, so re-binding here would stack duplicate listeners and make each
-  // click toggle the sort direction multiple times (it would appear stuck).
   if (!handlersBound) {
-    document.querySelectorAll("thead th[data-col]").forEach(th => {
-      th.addEventListener("click", () => {
-        const col = th.dataset.col;
-        if (sortCol === col) {
-          sortDir = sortDir === "asc" ? "desc" : "asc";
-        } else {
-          sortCol = col;
-          sortDir = th.dataset.dir || "desc";
-        }
-        updateSortHeaders();
-        render();
-      });
-    });
-
-    ["search", "conf-sel", "min-games"].forEach(id =>
-      document.getElementById(id).addEventListener("input", render)
-    );
+    ["search","conf-sel","min-games"].forEach(id =>
+      document.getElementById(id).addEventListener("input", render));
     handlersBound = true;
   }
 
+  buildHead();
   render();
   buildFooter();
 }
 
-function filtered() {
-  const search  = document.getElementById("search").value.toLowerCase().trim();
-  const conf    = document.getElementById("conf-sel").value;
-  const minG    = parseInt(document.getElementById("min-games").value) || 0;
+async function setScope(scope) {
+  if (scope === curScope) return;
+  const rows = await loadScope(scope);
+  if (!rows.length) {   // e.g. early season / no postseason — revert
+    alert("No team data for this scope yet.");
+    return;
+  }
+  curScope = scope;
+  SCOPES.forEach(s => document.getElementById(SCOPE_BTN[s]).classList.toggle("active", s===scope));
+  reload();
+}
 
+function setGroup(g) {
+  colGroup = g;
+  ["ratings","shooting","four","box"].forEach(x =>
+    document.getElementById("grp-"+x).classList.toggle("active", x===g));
+  // Keep sort if the column is still visible; else default to the group's first col.
+  if (!activeCols().some(c=>c.key===sortCol) && !IDENTITY.includes(sortCol)) {
+    sortCol = activeCols()[0].key; sortDir = activeCols()[0].dir;
+  }
+  buildHead();
+  render();
+}
+
+function buildHead() {
+  const head = document.getElementById("ts-head");
+  const ths = [
+    `<th data-col="rank" data-dir="asc">Rk</th>`,
+    `<th></th>`,
+    `<th data-col="team" data-dir="asc">Team</th>`,
+    `<th data-col="conf" data-dir="asc">Conf</th>`,
+    `<th>Record</th>`,
+  ];
+  activeCols().forEach(c => {
+    ths.push(`<th data-col="${c.key}" data-dir="${c.dir}" title="${c.tip||''}" class="${c.sep?'grp-sep':''}">${c.label}</th>`);
+  });
+  head.innerHTML = `<tr>${ths.join("")}</tr>`;
+
+  head.querySelectorAll("th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+      else { sortCol = col; sortDir = th.dataset.dir || "desc"; }
+      updateSortHeaders(); render();
+    });
+  });
+  updateSortHeaders();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll("#ts-head th").forEach(th => {
+    th.classList.remove("sort-asc","sort-desc");
+    if (th.dataset.col === sortCol) th.classList.add(sortDir==="asc"?"sort-asc":"sort-desc");
+  });
+}
+
+function filtered() {
+  const search = document.getElementById("search").value.toLowerCase().trim();
+  const conf   = document.getElementById("conf-sel").value;
+  const minG   = parseInt(document.getElementById("min-games").value) || 0;
   return allRows.filter(r =>
     (!search || r.team?.toLowerCase().includes(search)) &&
     (!conf   || r.conf === conf) &&
-    (r.games == null || r.games >= minG)
-  );
+    (r.games == null || r.games >= minG));
 }
 
 function sorted(rows) {
-  return [...rows].sort((a, b) => {
+  return [...rows].sort((a,b) => {
     const av = a[sortCol], bv = b[sortCol];
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
@@ -257,77 +434,247 @@ function sorted(rows) {
   });
 }
 
-function pct(v, decimals = 1, signed = false) {
+// Format a value for a column.
+function fmtCol(r, c) {
+  const v = r[c.key];
   if (v == null) return "—";
-  const s = Math.abs(v).toFixed(decimals);
-  if (!signed) return s;
-  return v >= 0 ? `+${s}` : `-${s}`;
+  if (c.pct)    return (v*100).toFixed(c.dec ?? 1);
+  if (c.signed) return (v>=0?"+":"−") + Math.abs(v).toFixed(c.dec ?? 1);
+  return v.toFixed(c.dec ?? 1);
+}
+function cellClass(r, c) {
+  if (c.key === "net_eff" || c.key === "sos" || c.key === "home_court") {
+    const v = r[c.key]; return v>0?"good":v<0?"bad":"";
+  }
+  return "";
 }
 
-function render() {
-  const rows = sorted(filtered());
-  document.getElementById("count-label").textContent =
-    `${rows.length} of ${allRows.length} teams`;
+// ── Percentile mode ─────────────────────────────────────────────────────────
+// Ranks each team against the FULL D-I pool for the current scope (not the
+// filtered view), so a percentile holds regardless of conference/search
+// filters. A column's `dir` says which direction is better ("desc" = higher).
+let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 
-  // Top-1 card
-  const top1Card = document.getElementById("top1-card");
-  if (rows.length > 0) {
-    const top = rows[0];
-    const nr = allRows.find(r => r.rank === 1) || allRows[0]; // overall #1
-    top1Card.style.display = "flex";
-    top1Card.innerHTML = `
-      <img src="${logoUrl(nr.team_id)}" alt="${nr.team}" onerror="this.style.opacity=0">
-      <div style="flex:1">
-        <div style="color:var(--muted);font-size:.74rem;letter-spacing:.08em;font-weight:700">#1 NET RATING</div>
-        <div style="font-size:1.3rem;font-weight:900">${nr.team}</div>
-        <div style="color:var(--muted);font-size:.85rem">${nr.record ?? ""} · ${nr.conf ?? ""}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:2rem;font-weight:900;color:${nr.net_eff >= 0 ? '#16A34A' : '#DC2626'}">${pct(nr.net_eff, 1, true)}</div>
-        <div style="color:var(--muted);font-size:.74rem;letter-spacing:.06em;font-weight:700">NET / 100</div>
-      </div>`;
-  } else {
-    top1Card.style.display = "none";
+function buildPctSorted(scope) {
+  const pool = TS[scope] || [];
+  const keys = new Set();
+  Object.values(COL_GROUPS).forEach(g => g.forEach(c => keys.add(c.key)));
+  const sortedByKey = {};
+  keys.forEach(k => {
+    const vals = [];
+    for (const r of pool) {
+      const x = r[k];
+      if (x != null && !isNaN(x)) vals.push(+x);
+    }
+    vals.sort((a, b) => a - b);
+    sortedByKey[k] = vals;
+  });
+  PCT_SORTED[scope] = sortedByKey;
+}
+
+// first index i with arr[i] >= x  (count of values strictly < x)
+function _lowerBound(arr, x) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; }
+  return lo;
+}
+// first index i with arr[i] > x
+function _upperBound(arr, x) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; }
+  return lo;
+}
+// Percentile 0–100 where 100 = best. higherBetter flips for "lower is better"
+// stats (defense, turnovers). Leader → 100, worst → 0.
+function pctRank(key, val, higherBetter) {
+  const arr = (PCT_SORTED[curScope] || {})[key];
+  if (!arr || arr.length < 2 || val == null || isNaN(val)) return null;
+  const n = arr.length;
+  const below = _lowerBound(arr, val);
+  const above = n - _upperBound(arr, val);
+  return 100 * (higherBetter ? below : above) / (n - 1);
+}
+// Diverging colour band: red (0, worst) → amber (50) → green (100, best).
+function pctColor(p) {
+  const hue = (p / 100) * 130;
+  return { bg: `hsla(${hue},70%,42%,0.20)`, fg: `hsl(${hue},75%,72%)` };
+}
+
+function setDisplay(mode) {
+  displayMode = mode;
+  document.getElementById("ts-btn-raw").classList.toggle("active", mode === "raw");
+  document.getElementById("ts-btn-pct").classList.toggle("active", mode === "pct");
+  render();
+}
+
+function cellHTML(r, c) {
+  if (displayMode === "pct") {
+    const pr = pctRank(c.key, r[c.key], c.dir === "desc");
+    if (pr == null) return `<td class="num ${c.sep?'grp-sep':''}">—</td>`;
+    const { bg, fg } = pctColor(pr);
+    return `<td class="num ${c.sep?'grp-sep':''}" style="background:${bg};color:${fg};font-weight:700">${Math.round(pr)}</td>`;
   }
+  return `<td class="num ${cellClass(r,c)} ${c.sep?'grp-sep':''}">${fmtCol(r,c)}</td>`;
+}
 
-  const tbody = document.getElementById("ratings-body");
-  tbody.innerHTML = rows.map(r => {
-    const netC = r.net_eff > 0 ? "pos" : r.net_eff < 0 ? "neg" : "";
-    const sosC = r.sos > 0 ? "pos" : r.sos < 0 ? "neg" : "";
-    const defC = r.def_eff != null && r.def_eff < 100 ? "def-good" : r.def_eff > 105 ? "def-bad" : "";
-    return `<tr>
+let _rows = [];
+function render() {
+  if (displayMode === "pct" && !PCT_SORTED[curScope]) buildPctSorted(curScope);
+  _rows = sorted(filtered());
+  document.getElementById("count-label").textContent =
+    `${_rows.length} of ${allRows.length} teams`
+    + (displayMode === "pct" ? " · percentile vs. all D-I teams (100 = best)" : "");
+
+  const body = document.getElementById("ts-body");
+  body.innerHTML = _rows.map((r,i) => {
+    const cells = activeCols().map(c => cellHTML(r,c)).join("");
+    return `<tr onclick="openModal(_rows[${i}])">
       <td class="rk num">${r.rank ?? "—"}</td>
-      <td class="logo-cell"><img src="${logoUrl(r.team_id)}" alt="${r.team}" onerror="this.style.opacity=0"></td>
-      <td class="team-name">${r.team}</td>
+      <td class="logo-cell"><img src="${logoUrl(r.team_id)}" alt="" onerror="this.style.opacity=0"></td>
+      <td class="team-name">${r.team ?? "—"}</td>
       <td style="color:var(--muted)">${r.conf ?? "—"}</td>
       <td style="color:var(--muted)">${r.record ?? "—"}</td>
-      <td class="num ${netC}">${pct(r.net_eff, 1, true)}</td>
-      <td class="num">${pct(r.off_eff, 1)}</td>
-      <td class="num ${defC}">${pct(r.def_eff, 1)}</td>
-      <td class="num ${sosC}">${pct(r.sos, 1, true)}</td>
-      <td class="num">${pct(r.pace, 1)}</td>
-      <td class="num">${pct(r.home_court, 1, true)}</td>
+      ${cells}
     </tr>`;
   }).join("");
 }
 
-function updateSortHeaders() {
-  document.querySelectorAll("thead th").forEach(th => {
-    th.classList.remove("sort-asc", "sort-desc");
-    if (th.dataset.col === sortCol) {
-      th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
-    }
-  });
+function buildFooter() {
+  if (!META) return;
+  document.getElementById("footer-cap").textContent =
+    `Built ${META.built_at?.slice(0,10)} · ${META.season} season · ${allRows.length} teams. `
+    + `Ratings are opponent-adjusted and re-solved for the selected game scope; `
+    + `Defense / TOV% — lower is better.`;
 }
 
-function buildFooter() {
-  const meta = NR_META;
-  if (!meta) return;
-  const cap = document.getElementById("footer-cap");
-  cap.textContent =
-    `Built ${meta.built_at?.slice(0,10)} · ${meta.season} season · ${allRows.length} teams. `
-    + `Lower Defense = better.`;
+// ── Shot chart helpers (ported from player-stats.html) ───────────────────────
+const HOOP_Y=5.25, THREE_R=22.146, CORNER_X=21.65, X_RANGE=[-26,26], Y_RANGE=[-2.5,31];
+function scArcPts(cx,cy,r,t0,t1,n=80){const xs=[],ys=[];for(let i=0;i<n;i++){const t=(t0+(t1-t0)*i/(n-1))*Math.PI/180;xs.push(cx+r*Math.cos(t));ys.push(cy+r*Math.sin(t));}return{x:xs,y:ys};}
+function scCourtTraces(lc="#3C4456"){
+  const S=[],ln=(x0,y0,x1,y1)=>S.push({x:[x0,x1],y:[y0,y1]}),arc=(cx,cy,r,t0,t1)=>S.push(scArcPts(cx,cy,r,t0,t1));
+  ln(-25,0,25,0);ln(-25,0,-25,31);ln(25,0,25,31);
+  ln(-3,4,3,4);arc(0,HOOP_Y,0.75,0,360);ln(0,4,0,4.5);arc(0,HOOP_Y,4,0,180);
+  ln(-6,0,-6,19);ln(6,0,6,19);ln(-6,19,6,19);arc(0,19,6,0,180);arc(0,19,6,180,360);
+  const junc=HOOP_Y+Math.sqrt(THREE_R**2-CORNER_X**2);
+  const ang=Math.atan2(junc-HOOP_Y,CORNER_X)*180/Math.PI;
+  ln(-CORNER_X,0,-CORNER_X,junc);ln(CORNER_X,0,CORNER_X,junc);arc(0,HOOP_Y,THREE_R,ang,180-ang);
+  return S.map(s=>({type:"scatter",x:s.x,y:s.y,mode:"lines",line:{color:lc,width:1.6},hoverinfo:"skip",showlegend:false}));
 }
+const SC_LAYOUT={paper_bgcolor:"#0B0E14",plot_bgcolor:"#0B0E14",height:400,margin:{l:10,r:10,t:10,b:10},showlegend:false,dragmode:false,
+  xaxis:{range:X_RANGE,visible:false,scaleanchor:"y",scaleratio:1,constrain:"domain"},yaxis:{range:Y_RANGE,visible:false,constrain:"domain"}};
+const SC_CFG={displaylogo:false,staticPlot:true};
+let PZB=null;
+async function ensureZoneBaselines(){ if(!PZB) PZB=await loadJSON("data/zone-baselines.json"); return PZB; }
+function scRenderZone(divEl,zoneData){ ZoneChart.render(divEl,zoneData,{zones:PZB?.zones,baselines:PZB?.baselines,minAtt:5}); }
+function scGetXY(shots){
+  const mx=[],my=[],hx=[],hy=[];
+  for(let i=0;i<shots.length;i+=5){
+    const px=shots[i+1]/10,py=shots[i+2]/10;
+    if(shots[i+3]){mx.push(px);my.push(py);}else{hx.push(px);hy.push(py);}
+  }
+  return{mx,my,hx,hy};
+}
+function scRenderDensity(divEl,mx,my,hx,hy){
+  const allX=[...mx,...hx],allY=[...my,...hy];
+  const traces=[
+    {type:"histogram2dcontour",x:allX,y:allY,colorscale:"YlOrRd",showscale:false,ncontours:20,
+     opacity:1.0,hoverinfo:"skip",contours:{coloring:"fill",showlines:false},
+     xbins:{start:-26,end:26,size:2.5},ybins:{start:-2.5,end:31,size:2.5},zmin:0},
+    ...scCourtTraces("rgba(255,255,255,0.85)"),
+  ];
+  Plotly.react(divEl,traces,{...SC_LAYOUT,plot_bgcolor:"#F0E8D5"},SC_CFG);
+}
+function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
+const SHOT_CACHE={};
+async function loadTeamShots(teamName){
+  if(SHOT_CACHE[teamName]) return SHOT_CACHE[teamName];
+  const data=await loadJSON(`data/shots/${slugify(teamName)}.json`).catch(()=>null);
+  if(data) SHOT_CACHE[teamName]=data;
+  return data;
+}
+
+// ── Team card modal ──────────────────────────────────────────────────────────
+const _v = (val,c)=>val==null?"—":fmtCol({[c.key]:val},c);
+function modalRow(lbl,val,cls){
+  return `<div class="pc-stat-row"><span class="pc-stat-lbl">${lbl}</span>
+    <span class="pc-stat-val ${cls||""}">${val}</span></div>`;
+}
+function pctStr(v){ return v==null?"—":(v*100).toFixed(1)+"%"; }
+function numStr(v,d=1){ return v==null?"—":v.toFixed(d); }
+
+function openModal(r) {
+  document.getElementById("pc-logo").src = logoUrl(r.team_id);
+  document.getElementById("pc-name").textContent = r.team ?? "—";
+  document.getElementById("pc-conf").textContent = r.conf ?? "";
+  document.getElementById("pc-record").textContent = r.record ?? "";
+
+  // Ratings strip
+  const sgn = v => v==null ? "—" : (v>=0?"+":"−")+Math.abs(v).toFixed(1);
+  document.getElementById("pc-bio").innerHTML = [
+    { val: sgn(r.net_eff), lbl:"Net" },
+    { val: numStr(r.off_eff), lbl:"Off" },
+    { val: numStr(r.def_eff), lbl:"Def" },
+    { val: numStr(r.pace),    lbl:"Pace" },
+  ].map(b=>`<div class="pc-bio-item"><div class="pc-bio-val">${b.val}</div><div class="pc-bio-lbl">${b.lbl}</div></div>`).join("");
+
+  document.getElementById("pc-off").innerHTML = [
+    modalRow("PPG",  numStr(r.ppg)),
+    modalRow("eFG%", pctStr(r.efg)),
+    modalRow("TS%",  pctStr(r.ts)),
+    modalRow("3PAr", pctStr(r.par3)),
+    modalRow("FTr",  pctStr(r.ftr)),
+    modalRow("ORB%", numStr(r.orbp)),
+    modalRow("TOV%", numStr(r.tovp)),
+    modalRow("AST%", numStr(r.astp)),
+    modalRow("A:TO", numStr(r.ast_to,2)),
+  ].join("");
+  document.getElementById("pc-def").innerHTML = [
+    modalRow("Opp PPP",  numStr(r.opp_ppp)),
+    modalRow("Opp eFG%", pctStr(r.opp_efg)),
+    modalRow("Opp 3P%",  pctStr(r.opp_fg3)),
+    modalRow("DRB%",     numStr(r.drbp)),
+    modalRow("TOV% Forced", numStr(r.opp_tovp)),
+    modalRow("Opp FTr",  pctStr(r.opp_ftr)),
+    modalRow("SOS",      sgn(r.sos)),
+    modalRow("Home",     sgn(r.home_court)),
+  ].join("");
+
+  document.getElementById("pc-overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  // Shot charts — only the live season has shot-coordinate data
+  const chartSection = document.getElementById("pc-chart-section");
+  const chartStatus  = document.getElementById("pc-chart-status");
+  const chartsWrap   = document.getElementById("pc-charts");
+  if (SEASON !== CUR_SEASON) {
+    chartSection.style.display = "none";
+  } else {
+    chartSection.style.display = "block";
+    chartStatus.textContent = "Loading shot data…";
+    chartsWrap.style.display = "none";
+    loadTeamShots(r.team).then(async td => {
+      if (!td || !td.shots) { chartStatus.textContent = "Shot data not available."; return; }
+      const zoneData = ZoneChart.computeZones(td.shots, ()=>true);
+      if (!zoneData.length) { chartStatus.textContent = "No shot attempts found."; return; }
+      const {mx,my,hx,hy} = scGetXY(td.shots);
+      await ensureZoneBaselines();
+      chartStatus.textContent = "";
+      chartsWrap.style.display = "block";
+      scRenderZone(document.getElementById("pc-chart-zone"), zoneData);
+      scRenderDensity(document.getElementById("pc-chart-density"), mx,my,hx,hy);
+    });
+  }
+}
+
+function closeModal() {
+  document.getElementById("pc-overlay").classList.remove("open");
+  document.body.style.overflow = "";
+  const z = document.getElementById("pc-chart-zone");
+  const d = document.getElementById("pc-chart-density");
+  if (window.Plotly) Plotly.purge(d);
+  z.innerHTML = "";
+}
+function closePc(e) { if (e.target === document.getElementById("pc-overlay")) closeModal(); }
 
 document.addEventListener("DOMContentLoaded", init);
 </script>
