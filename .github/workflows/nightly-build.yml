@@ -61,7 +61,7 @@ jobs:
       - name: Build postseason bracket + leaders
         run: python build_postseason.py
 
-      # ── Commit & push → triggers Netlify deploy ──────────────────────────
+      # ── Commit & push → triggers Cloudflare Pages deploy ─────────────────
 
       - name: Commit updated site/data
         run: |
