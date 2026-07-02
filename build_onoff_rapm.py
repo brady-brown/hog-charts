@@ -121,6 +121,14 @@ for _scope_suffix, _scope_pbp in assist_share_scopes.items():
         f"assist_share_{SEASON}{_scope_suffix}.csv", index=False)
     print(f"  assist_share_{SEASON}{_scope_suffix}.csv — {_scope_pbp['game_id'].nunique()} games")
 
+# The full (all-season-type) PBP feed is only needed for the assisted-FG tables
+# above. Free it before the memory-heavy on/off + RAPM passes below — retaining
+# it for the whole run OOM-kills the 7 GB GitHub-hosted nightly runner.
+del raw_play_by_play_full, assist_share_scopes, _scope_pbp
+del _is_regular, _is_postseason, _is_conference
+import gc as _gc
+_gc.collect()
+
 
 # ---------------------------------------------------------------------------
 # Box-score prior RAPM helper

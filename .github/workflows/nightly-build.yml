@@ -53,7 +53,7 @@ jobs:
         run: python build_lineups.py
 
       - name: Build on/off + RAPM CSVs
-        run: python build_onoff_rapm.py
+        run: python -u build_onoff_rapm.py
 
       - name: Build site JSON
         run: python build_site.py
