@@ -13,14 +13,14 @@
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
     /* Mobile: pin rank + logo + team to the left while stats scroll. */
     @media (max-width: 700px) {
-      #ts-table thead th { z-index: 3; }
-      #ts-table thead th:nth-child(-n+3),
+      #ts-table thead tr:not(.grp-row) th { z-index: 3; }
+      #ts-table thead tr:not(.grp-row) th:nth-child(-n+3),
       #ts-table tbody td:nth-child(-n+3) { position: sticky; z-index: 2; }
-      #ts-table thead th:nth-child(-n+3) { z-index: 4; background: var(--card2); }
+      #ts-table thead tr:not(.grp-row) th:nth-child(-n+3) { z-index: 4; background: var(--card2); }
       #ts-table tbody td:nth-child(-n+3) { background: var(--bg); }
-      #ts-table th:nth-child(1), #ts-table td:nth-child(1) { left: 0;   min-width: 28px; width: 28px; }
-      #ts-table th:nth-child(2), #ts-table td:nth-child(2) { left: 28px; min-width: 30px; }
-      #ts-table th:nth-child(3), #ts-table td:nth-child(3) { left: 58px; box-shadow: 1px 0 0 var(--line); }
+      #ts-table thead tr:not(.grp-row) th:nth-child(1), #ts-table td:nth-child(1) { left: 0;   min-width: 28px; width: 28px; }
+      #ts-table thead tr:not(.grp-row) th:nth-child(2), #ts-table td:nth-child(2) { left: 28px; min-width: 30px; }
+      #ts-table thead tr:not(.grp-row) th:nth-child(3), #ts-table td:nth-child(3) { left: 58px; box-shadow: 1px 0 0 var(--line); }
       #ts-table td.team-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
     }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
@@ -33,6 +33,8 @@
     thead th:hover { color: var(--ink); }
     thead th.sort-asc::after  { content: " ↑"; color: var(--t1); }
     thead th.sort-desc::after { content: " ↓"; color: var(--t1); }
+    thead tr.grp-row th { height: 22px; box-sizing: border-box; padding: 3px 10px; font-size: .62rem; cursor: default; }
+    thead tr.col-hdr-row th { top: 22px; }
     tbody tr { border-bottom: 1px solid #1a2235; cursor: pointer; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--card2); }
@@ -99,6 +101,8 @@
     .pc-stat-val.good { color: #16A34A; }
     .pc-stat-val.bad  { color: #DC2626; }
     .pc-col-hdr { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+    .pc-col-hdr-sub { font-weight: 500; text-transform: none; letter-spacing: 0; opacity: .7; }
+    .pc-bio-caption { text-align: center; font-size: .68rem; color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .05em; }
   </style>
 </head>
 <body>
@@ -196,14 +200,15 @@
     </div>
 
     <div class="pc-bio" id="pc-bio"></div>
+    <div class="pc-bio-caption">Opponent-adjusted, per 100 possessions</div>
 
     <div class="pc-stats">
       <div class="pc-stat-col">
-        <div class="pc-col-hdr">Offense</div>
+        <div class="pc-col-hdr">Offense <span class="pc-col-hdr-sub">· Box Score (raw)</span></div>
         <div id="pc-off"></div>
       </div>
       <div class="pc-stat-col">
-        <div class="pc-col-hdr">Defense</div>
+        <div class="pc-col-hdr">Defense <span class="pc-col-hdr-sub">· Box Score (raw)</span></div>
         <div id="pc-def"></div>
       </div>
     </div>
@@ -228,12 +233,14 @@
 // pct: stored 0-1, display ×100.  signed: show +/-.  dir: default sort.
 const COL_GROUPS = {
   ratings: [
-    { key:"net_eff",   label:"Net",  dir:"desc", signed:true, dec:1, tip:"Net rating: points scored minus allowed per 100 possessions, adjusted for opponent strength." },
-    { key:"off_eff",   label:"Off",  dir:"desc", dec:1, tip:"Offensive rating: points scored per 100 possessions, adjusted for defenses faced." },
-    { key:"def_eff",   label:"Def",  dir:"asc",  dec:1, tip:"Defensive rating: points allowed per 100 possessions, adjusted for offenses faced. Lower is better." },
-    { key:"pace",      label:"Pace", dir:"desc", dec:1, tip:"Possessions per game (this scope)." },
-    { key:"sos",       label:"SOS",  dir:"desc", signed:true, dec:1, tip:"Strength of schedule: average net rating of opponents faced." },
-    { key:"home_court",label:"Home", dir:"desc", signed:true, dec:1, tip:"Points this team's home court is worth in a prediction." },
+    { key:"net_eff",   label:"Net",  dir:"desc", signed:true, dec:1, grp:"adj", tip:"Net rating: points scored minus allowed per 100 possessions, adjusted for opponent strength." },
+    { key:"off_eff",   label:"Off",  dir:"desc", dec:1, grp:"adj", tip:"Offensive rating: points scored per 100 possessions, adjusted for defenses faced." },
+    { key:"def_eff",   label:"Def",  dir:"asc",  dec:1, grp:"adj", tip:"Defensive rating: points allowed per 100 possessions, adjusted for offenses faced. Lower is better." },
+    { key:"sos",       label:"SOS",  dir:"desc", signed:true, dec:1, grp:"adj", tip:"Strength of schedule: average net rating of opponents faced." },
+    { key:"home_court",label:"Home", dir:"desc", signed:true, dec:1, grp:"adj", tip:"Points this team's home court is worth in a prediction." },
+    { key:"ppp",       label:"PPP",     dir:"desc", dec:1, grp:"raw", sep:true, tip:"Points scored per 100 possessions — raw box score, not adjusted for schedule strength." },
+    { key:"opp_ppp",   label:"Opp PPP", dir:"asc",  dec:1, grp:"raw", tip:"Points allowed per 100 possessions — raw box score, not adjusted for schedule strength. Lower is better." },
+    { key:"pace",      label:"Pace",    dir:"desc", dec:1, grp:"raw", tip:"Possessions per game (this scope)." },
   ],
   shooting: [
     { key:"ts",   label:"TS%",   dir:"desc", pct:true, tip:"True shooting%: PTS / (2 × (FGA + 0.44×FTA))." },
@@ -381,19 +388,38 @@ function setGroup(g) {
   render();
 }
 
+const GRP_LABEL = { adj: "Schedule Adjusted", raw: "No Adjustment" };
+
 function buildHead() {
   const head = document.getElementById("ts-head");
-  const ths = [
+  const cols = activeCols();
+  const hasGroups = cols.some(c => c.grp);
+
+  const identityThs = [
     `<th data-col="rank" data-dir="asc">Rk</th>`,
     `<th></th>`,
     `<th data-col="team" data-dir="asc">Team</th>`,
     `<th data-col="conf" data-dir="asc">Conf</th>`,
     `<th>Record</th>`,
   ];
-  activeCols().forEach(c => {
-    ths.push(`<th data-col="${c.key}" data-dir="${c.dir}" title="${c.tip||''}" class="${c.sep?'grp-sep':''}">${c.label}</th>`);
-  });
-  head.innerHTML = `<tr>${ths.join("")}</tr>`;
+  const statThs = cols.map(c =>
+    `<th data-col="${c.key}" data-dir="${c.dir}" title="${c.tip||''}" class="${c.sep?'grp-sep':''}">${c.label}</th>`);
+
+  if (hasGroups) {
+    const grpThs = [];
+    for (let i = 0; i < cols.length; ) {
+      const g = cols[i].grp;
+      let span = 0;
+      while (i + span < cols.length && cols[i+span].grp === g) span++;
+      grpThs.push(`<th colspan="${span}" class="grp-hdr${cols[i].sep ? ' grp-sep' : ''}">${GRP_LABEL[g] || ""}</th>`);
+      i += span;
+    }
+    head.innerHTML =
+      `<tr class="grp-row"><th colspan="5"></th>${grpThs.join("")}</tr>` +
+      `<tr class="col-hdr-row">${identityThs.join("")}${statThs.join("")}</tr>`;
+  } else {
+    head.innerHTML = `<tr>${identityThs.join("")}${statThs.join("")}</tr>`;
+  }
 
   head.querySelectorAll("th[data-col]").forEach(th => {
     th.addEventListener("click", () => {
@@ -618,6 +644,7 @@ function openModal(r) {
   ].map(b=>`<div class="pc-bio-item"><div class="pc-bio-val">${b.val}</div><div class="pc-bio-lbl">${b.lbl}</div></div>`).join("");
 
   document.getElementById("pc-off").innerHTML = [
+    modalRow("PPP (raw)",  numStr(r.ppp)),
     modalRow("PPG",  numStr(r.ppg)),
     modalRow("eFG%", pctStr(r.efg)),
     modalRow("TS%",  pctStr(r.ts)),
@@ -629,7 +656,7 @@ function openModal(r) {
     modalRow("A:TO", numStr(r.ast_to,2)),
   ].join("");
   document.getElementById("pc-def").innerHTML = [
-    modalRow("Opp PPP",  numStr(r.opp_ppp)),
+    modalRow("Opp PPP (raw)",  numStr(r.opp_ppp)),
     modalRow("Opp eFG%", pctStr(r.opp_efg)),
     modalRow("Opp 3P%",  pctStr(r.opp_fg3)),
     modalRow("DRB%",     numStr(r.drbp)),
