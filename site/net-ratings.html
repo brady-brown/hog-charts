@@ -50,6 +50,32 @@
     .filters .form-group { flex: 1; min-width: 140px; }
     .filters .form-group.narrow { flex: 0 0 110px; }
     .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
+    /* custom-table builder */
+    .custom-bar {
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--card2); border: 1px solid var(--line);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .custom-bar .cb-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .custom-bar .cb-add { flex: 1; min-width: 220px; }
+    .cb-hint { color: var(--muted); font-size: .8rem; }
+    .cb-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .cb-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+      padding: 5px 6px 5px 10px; font-size: .82rem; font-weight: 600;
+    }
+    .cb-chip img { width: 18px; height: 18px; }
+    .cb-chip .cb-x {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: .95rem; line-height: 1; padding: 0 3px;
+    }
+    .cb-chip .cb-x:hover { color: var(--t1); }
+    .cb-clear {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: .78rem; font-weight: 700; text-decoration: underline; padding: 0;
+    }
+    .cb-clear:hover { color: var(--t1); }
     .col-toggle { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .col-toggle button {
       background: var(--card2); border: 1px solid var(--line); border-radius: 8px;
@@ -146,6 +172,19 @@
     </div>
   </div>
 
+  <!-- Custom table builder: hand-pick teams to compare (hidden until "Custom" mode) -->
+  <div class="custom-bar" id="custom-bar" style="display:none">
+    <div class="cb-row">
+      <div class="form-group cb-add">
+        <label for="custom-add">Add team</label>
+        <select id="custom-add"><option value="">Search a team to add…</option></select>
+      </div>
+      <div class="cb-hint" id="cb-count" style="padding-bottom:9px">No teams added yet.</div>
+      <button type="button" class="cb-clear" id="cb-clear" style="padding-bottom:11px;display:none">Clear all</button>
+    </div>
+    <div class="cb-chips" id="cb-chips"></div>
+  </div>
+
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
     <div class="col-toggle" style="margin-bottom:0">
       <button class="active" id="grp-ratings"  onclick="setGroup('ratings')">Ratings</button>
@@ -154,6 +193,10 @@
       <button id="grp-box"      onclick="setGroup('box')">Box</button>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="col-toggle" style="margin-bottom:0" title="Browse the full leaderboard, or hand-pick teams to compare">
+        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
+        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
+      </div>
       <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each team's percentile rank vs. all D-I teams">
         <button class="active" id="ts-btn-raw" onclick="setDisplay('raw')">Raw</button>
         <button id="ts-btn-pct" onclick="setDisplay('pct')">Percentile</button>
@@ -294,6 +337,9 @@ let colGroup = "ratings";
 let displayMode = "raw";   // "raw" | "pct" — percentile ranks vs. all D-I teams
 let sortCol  = "net_eff";
 let sortDir  = "desc";
+let tableMode = "browse";  // "browse" | "custom" — custom = only hand-picked teams
+let customPicks = [];      // team_ids (in pick order) shown in custom mode
+let prevSortCol = "net_eff", prevSortDir = "desc";
 let SEASON   = null;
 let CUR_SEASON = null;   // newest season — only it has shot data
 let handlersBound = false;
@@ -353,15 +399,88 @@ async function reload() {
   confs.forEach(c => { const o=document.createElement("option"); o.value=o.textContent=c; sel.appendChild(o); });
   if (confs.includes(prev)) sel.value = prev;
 
+  populateCustomAdd();
+
   if (!handlersBound) {
     ["search","conf-sel","min-games"].forEach(id =>
       document.getElementById(id).addEventListener("input", render));
+    const addSel = document.getElementById("custom-add");
+    addSel.addEventListener("change", () => {
+      if (addSel.value) { addCustomPick(addSel.value); addSel.value = ""; }
+    });
+    document.getElementById("cb-clear").addEventListener("click", clearCustomPicks);
     handlersBound = true;
   }
 
   buildHead();
   render();
   buildFooter();
+}
+
+// ── Custom-table mode ───────────────────────────────────────────────────────
+// Fill the "Add team" picker with every team in the current scope (searchable
+// via common.js). Options carry team_id as value.
+function populateCustomAdd() {
+  const sel = document.getElementById("custom-add");
+  if (!sel) return;
+  const opts = [...allRows]
+    .sort((a, b) => (a.team || "").localeCompare(b.team || ""))
+    .map(r => `<option value="${r.team_id}">${r.team}${r.conf ? " ("+r.conf+")" : ""}</option>`)
+    .join("");
+  sel.innerHTML = `<option value="">Search a team to add…</option>` + opts;
+  renderCustomChips();
+}
+
+function setMode(mode) {
+  if (mode === tableMode) return;
+  tableMode = mode;
+  document.getElementById("mode-browse").classList.toggle("active", mode === "browse");
+  document.getElementById("mode-custom").classList.toggle("active", mode === "custom");
+  document.querySelector(".filters").style.display = mode === "custom" ? "none" : "";
+  document.getElementById("custom-bar").style.display = mode === "custom" ? "" : "none";
+  if (mode === "custom") {
+    prevSortCol = sortCol; prevSortDir = sortDir;
+    sortCol = "_pick"; sortDir = "asc";      // preserve pick order by default
+  } else {
+    sortCol = prevSortCol; sortDir = prevSortDir;
+  }
+  buildHead();
+  render();
+}
+
+function addCustomPick(id) {
+  id = Number(id);
+  if (!id || customPicks.includes(id)) return;
+  customPicks.push(id);
+  renderCustomChips();
+  render();
+}
+function removeCustomPick(id) {
+  customPicks = customPicks.filter(x => x !== Number(id));
+  renderCustomChips();
+  render();
+}
+function clearCustomPicks() {
+  customPicks = [];
+  renderCustomChips();
+  render();
+}
+function renderCustomChips() {
+  const byId = new Map(allRows.map(r => [r.team_id, r]));
+  const chips = document.getElementById("cb-chips");
+  chips.innerHTML = customPicks.map(id => {
+    const r = byId.get(id);
+    const name = r ? r.team : `#${id}`;
+    return `<span class="cb-chip">
+      <img src="${logoUrl(id)}" alt="" onerror="this.style.display='none'">
+      ${name}
+      <button type="button" class="cb-x" title="Remove" onclick="removeCustomPick(${id})">✕</button>
+    </span>`;
+  }).join("");
+  const n = customPicks.length;
+  document.getElementById("cb-count").textContent =
+    n ? `${n} team${n === 1 ? "" : "s"} selected` : "No teams added yet.";
+  document.getElementById("cb-clear").style.display = n ? "" : "none";
 }
 
 async function setScope(scope) {
@@ -440,6 +559,13 @@ function updateSortHeaders() {
 }
 
 function filtered() {
+  // Custom mode ignores every qualification filter — just the hand-picked teams,
+  // in pick order.
+  if (tableMode === "custom") {
+    const byId = new Map(allRows.map(r => [r.team_id, r]));
+    return customPicks.map(id => byId.get(id)).filter(Boolean);
+  }
+
   const search = document.getElementById("search").value.toLowerCase().trim();
   const conf   = document.getElementById("conf-sel").value;
   const minG   = parseInt(document.getElementById("min-games").value) || 0;
@@ -450,6 +576,7 @@ function filtered() {
 }
 
 function sorted(rows) {
+  if (sortCol === "_pick") return rows;   // custom mode: keep selection order
   return [...rows].sort((a,b) => {
     const av = a[sortCol], bv = b[sortCol];
     if (av == null && bv == null) return 0;
@@ -548,7 +675,11 @@ function render() {
   if (displayMode === "pct" && !PCT_SORTED[curScope]) buildPctSorted(curScope);
   _rows = sorted(filtered());
   document.getElementById("count-label").textContent =
-    `${_rows.length} of ${allRows.length} teams`
+    (tableMode === "custom"
+      ? (customPicks.length
+          ? `Custom table · ${_rows.length} team${_rows.length === 1 ? "" : "s"}`
+          : "Custom table · add teams above to compare")
+      : `${_rows.length} of ${allRows.length} teams`)
     + (displayMode === "pct" ? " · percentile vs. all D-I teams (100 = best)" : "");
 
   const body = document.getElementById("ts-body");

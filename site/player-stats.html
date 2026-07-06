@@ -85,6 +85,33 @@
     }
     .add-filter-btn:hover { border-color: var(--t1); color: var(--t1); }
 
+    /* custom-table builder */
+    .custom-bar {
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--card2); border: 1px solid var(--line);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .custom-bar .cb-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .custom-bar .cb-add { flex: 1; min-width: 220px; }
+    .cb-hint { color: var(--muted); font-size: .8rem; }
+    .cb-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .cb-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+      padding: 5px 6px 5px 10px; font-size: .82rem; font-weight: 600;
+    }
+    .cb-chip img { width: 18px; height: 18px; border-radius: 3px; }
+    .cb-chip .cb-x {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: .95rem; line-height: 1; padding: 0 3px;
+    }
+    .cb-chip .cb-x:hover { color: var(--t1); }
+    .cb-clear {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: .78rem; font-weight: 700; text-decoration: underline; padding: 0;
+    }
+    .cb-clear:hover { color: var(--t1); }
+
     /* column group separators */
     .grp-sep { border-left: 1px solid var(--line) !important; }
 
@@ -251,6 +278,19 @@
     </div>
   </div>
 
+  <!-- Custom table builder: hand-pick players to compare (hidden until "Custom" mode) -->
+  <div class="custom-bar" id="custom-bar" style="display:none">
+    <div class="cb-row">
+      <div class="form-group cb-add">
+        <label for="custom-add">Add player</label>
+        <select id="custom-add"><option value="">Search a player to add…</option></select>
+      </div>
+      <div class="cb-hint" id="cb-count" style="padding-bottom:9px">No players added yet.</div>
+      <button type="button" class="cb-clear" id="cb-clear" style="padding-bottom:11px;display:none">Clear all</button>
+    </div>
+    <div class="cb-chips" id="cb-chips"></div>
+  </div>
+
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
     <div class="col-toggle" style="margin-bottom:0">
       <button class="active" onclick="setGroup('box')">Box Score</button>
@@ -258,6 +298,10 @@
       <button onclick="setGroup('rapm')">RAPM</button>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="col-toggle" style="margin-bottom:0" title="Browse the full leaderboard, or hand-pick players to compare">
+        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
+        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
+      </div>
       <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each player's percentile rank vs. all qualified D-I players">
         <button class="active" id="ps-btn-raw" onclick="setDisplay('raw')">Raw</button>
         <button id="ps-btn-pct" onclick="setDisplay('pct')">Percentile</button>
@@ -409,6 +453,9 @@ let sortDir    = "desc";
 let colGroup   = "box";
 let curScope   = "all";
 let displayMode = "raw";   // "raw" | "pct" — percentile ranks vs. all qualified D-I players
+let tableMode  = "browse"; // "browse" | "custom" — custom = only hand-picked players
+let customPicks = [];      // athlete_ids (in pick order) shown in custom mode
+let prevSortCol = "ppg", prevSortDir = "desc"; // restore sort when leaving custom mode
 let SEASON     = null;
 let CUR_SEASON = null;   // newest/live season — only it has shot data
 let HAS_ONOFF  = true;   // false for historical seasons / postseason with no on/off computed
@@ -474,6 +521,76 @@ function populateFilterDropdowns() {
   fill("conf-sel",  [...new Set(allPlayers.map(p => p.conf).filter(Boolean))].sort(), "All conferences");
   fill("team-sel",  [...new Set(allPlayers.map(p => p.t).filter(Boolean))].sort(),    "All teams");
   fill("class-sel", [...new Set(allPlayers.map(p => p.exp).filter(Boolean))].sort(),  "All classes");
+  populateCustomAdd();
+}
+
+// Fill the "Add player" picker with every player in the current scope
+// (searchable via common.js). Options carry the athlete_id as value.
+function populateCustomAdd() {
+  const sel = document.getElementById("custom-add");
+  if (!sel) return;
+  const opts = [...allPlayers]
+    .sort((a, b) => (a.n || "").localeCompare(b.n || ""))
+    .map(p => `<option value="${p.id}">${p.n} — ${p.t || "?"}</option>`)
+    .join("");
+  sel.innerHTML = `<option value="">Search a player to add…</option>` + opts;
+  renderCustomChips();   // refresh chip labels for the current scope's names
+}
+
+// ── Custom-table mode ───────────────────────────────────────────────────────
+function setMode(mode) {
+  if (mode === tableMode) return;
+  tableMode = mode;
+  document.getElementById("mode-browse").classList.toggle("active", mode === "browse");
+  document.getElementById("mode-custom").classList.toggle("active", mode === "custom");
+  document.querySelector(".filters").style.display = mode === "custom" ? "none" : "";
+  document.getElementById("custom-bar").style.display = mode === "custom" ? "" : "none";
+  if (mode === "custom") {
+    prevSortCol = sortCol; prevSortDir = sortDir;
+    sortCol = "_rank"; sortDir = "asc";      // preserve pick order by default
+  } else {
+    sortCol = prevSortCol; sortDir = prevSortDir;
+  }
+  buildHead();
+  render();
+}
+
+function addCustomPick(id) {
+  id = Number(id);
+  if (!id || customPicks.includes(id)) return;
+  customPicks.push(id);
+  renderCustomChips();
+  render();
+}
+
+function removeCustomPick(id) {
+  customPicks = customPicks.filter(x => x !== Number(id));
+  renderCustomChips();
+  render();
+}
+
+function clearCustomPicks() {
+  customPicks = [];
+  renderCustomChips();
+  render();
+}
+
+function renderCustomChips() {
+  const byId = new Map(allPlayers.map(p => [p.id, p]));
+  const chips = document.getElementById("cb-chips");
+  chips.innerHTML = customPicks.map(id => {
+    const p = byId.get(id);
+    const name = p ? p.n : `#${id}`;
+    return `<span class="cb-chip">
+      <img src="${playerUrl(id)}" alt="" onerror="this.style.display='none'">
+      ${name}
+      <button type="button" class="cb-x" title="Remove" onclick="removeCustomPick(${id})">✕</button>
+    </span>`;
+  }).join("");
+  const n = customPicks.length;
+  document.getElementById("cb-count").textContent =
+    n ? `${n} player${n === 1 ? "" : "s"} selected` : "No players added yet.";
+  document.getElementById("cb-clear").style.display = n ? "" : "none";
 }
 
 async function init() {
@@ -544,6 +661,13 @@ async function reload() {
     document.getElementById("add-stat-filter")
       .addEventListener("click", () => { addStatFilterRow(); });
     ensureStatFilterRow();   // start with one empty row so the control is visible
+
+    // Custom-table picker: choosing an option adds that player, then resets the box.
+    const addSel = document.getElementById("custom-add");
+    addSel.addEventListener("change", () => {
+      if (addSel.value) { addCustomPick(addSel.value); addSel.value = ""; }
+    });
+    document.getElementById("cb-clear").addEventListener("click", clearCustomPicks);
     handlersBound = true;
   }
 
@@ -695,6 +819,13 @@ function activeStatFilters() {
 }
 
 function filtered() {
+  // Custom mode ignores every qualification filter — just the hand-picked list,
+  // in pick order (min games/MPG don't apply so any player can be compared).
+  if (tableMode === "custom") {
+    const byId = new Map(allPlayers.map(p => [p.id, p]));
+    return customPicks.map(id => byId.get(id)).filter(Boolean);
+  }
+
   const q     = document.getElementById("search").value.toLowerCase().trim();
   const conf  = document.getElementById("conf-sel").value;
   const team  = document.getElementById("team-sel").value;
@@ -928,7 +1059,11 @@ function render() {
 
   _currentRows = sorted(filtered().map((p, i) => ({ ...p, _rank: i + 1 })));
   document.getElementById("count-label").textContent =
-    `${_currentRows.length} of ${allPlayers.length} players`
+    (tableMode === "custom"
+      ? (customPicks.length
+          ? `Custom table · ${_currentRows.length} player${_currentRows.length === 1 ? "" : "s"}`
+          : "Custom table · add players above to compare")
+      : `${_currentRows.length} of ${allPlayers.length} players`)
     + (displayMode === "pct"
         ? " · percentile vs. all qualified D-I players (100 = best)" : "");
 
