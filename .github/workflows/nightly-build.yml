@@ -58,6 +58,9 @@ jobs:
       - name: Build site JSON
         run: python build_site.py
 
+      - name: Build Coaches Suite scout JSON
+        run: python build_scout.py
+
       - name: Build postseason bracket + leaders
         run: python build_postseason.py
 

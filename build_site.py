@@ -351,7 +351,7 @@ TEAM_STATS_OUTPUT_COLS = [
     "games", "pace",
     "ppg", "rpg", "apg", "spg", "bpg", "tpg",
     "fg", "fg3", "ft", "efg", "ts", "par3", "ftr",
-    "opp_efg", "opp_fg3", "opp_ftr",
+    "opp_efg", "opp_fg3", "opp_par3", "opp_ftr",
     "tovp", "opp_tovp", "orbp", "drbp", "astp", "ast_to",
     "ppp", "opp_ppp",
 ]
@@ -407,9 +407,10 @@ def build_team_stats_json(csv_path, identity_df, net_ratings_csv_path, scope):
     df["par3"] = np.round(_sdiv(df["tpa"], df["fga"]), 3)
     df["ftr"]  = np.round(_sdiv(df["fta"], df["fga"]), 3)
     # Defensive shooting allowed
-    df["opp_efg"] = np.round(_sdiv(df["opp_fgm"] + 0.5 * df["opp_tpm"], df["opp_fga"]), 3)
-    df["opp_fg3"] = np.round(_sdiv(df["opp_tpm"], df["opp_tpa"]), 3)
-    df["opp_ftr"] = np.round(_sdiv(df["opp_fta"], df["opp_fga"]), 3)
+    df["opp_efg"]  = np.round(_sdiv(df["opp_fgm"] + 0.5 * df["opp_tpm"], df["opp_fga"]), 3)
+    df["opp_fg3"]  = np.round(_sdiv(df["opp_tpm"], df["opp_tpa"]), 3)
+    df["opp_par3"] = np.round(_sdiv(df["opp_tpa"], df["opp_fga"]), 3)
+    df["opp_ftr"]  = np.round(_sdiv(df["opp_fta"], df["opp_fga"]), 3)
 
     # Four-factor / rate stats — stored as percentages already (no ×100)
     df["tovp"]     = np.round(100 * _sdiv(df["tov"], df["poss"]), 1)
@@ -872,7 +873,35 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     return json_records
 
 
+def load_boxscore_jerseys(season):
+    """{str(athlete_id): jersey} from the player boxscore — season-accurate.
+
+    The roster-endpoint bios (fetch_all_player_bios) return the CURRENT roster,
+    so any player who has since left comes back with jn=None. The player
+    boxscore carries the jersey worn in each game this season (~99% coverage),
+    so it fills those gaps and corrects mid-fetch roster churn.
+    """
+    try:
+        import sportsdataverse.mbb as mbb
+        pbox = mbb.load_mbb_player_boxscore(seasons=[season]).to_pandas()
+        j = pbox.dropna(subset=["athlete_id", "athlete_jersey"]).copy()
+        j["athlete_id"] = j["athlete_id"].astype(float).astype("int64").astype(str)
+        j["athlete_jersey"] = j["athlete_jersey"].astype(str)
+        return (j.groupby("athlete_id")["athlete_jersey"]
+                  .agg(lambda s: s.mode().iloc[0]).to_dict())
+    except Exception as exc:
+        print(f"  [warn] boxscore jerseys unavailable: {exc}")
+        return {}
+
+
 all_player_bios = fetch_all_player_bios(current_player_stats_csv_path)
+
+# Overlay season-accurate jerseys from the boxscore (authoritative for the
+# season) over the roster-endpoint values, which miss departed players.
+_boxscore_jerseys = load_boxscore_jerseys(SEASON)
+for _aid, _jersey in _boxscore_jerseys.items():
+    all_player_bios.setdefault(_aid, {})["jn"] = _jersey
+print(f"  → jerseys overlaid from boxscore for {len(_boxscore_jerseys)} players")
 
 # One JSON per scope. on/off and RAPM come from the regular-season pipeline, so
 # the overall on/off CSV is attached to reg + all (it's a season metric); the

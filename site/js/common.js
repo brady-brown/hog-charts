@@ -54,7 +54,8 @@ function fmtPct(v, decimals = 1) {
 function markActiveNav() {
   const page = location.pathname.replace(/\/$/, "").split("/").pop() || "index.html";
   document.querySelectorAll("nav a[data-page]").forEach(a => {
-    if (a.dataset.page === page) a.classList.add("active");
+    // data-page may list several pages (a hub + its sub-pages) space-separated.
+    if (a.dataset.page.split(/\s+/).includes(page)) a.classList.add("active");
   });
 }
 

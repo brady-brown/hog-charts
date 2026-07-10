@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scout Report | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <style>
+    /* Scout-report layout — reuses site tokens (--card,--line,--ink,--muted,--t1). */
+    .sc-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:12px 0 20px; }
+    .sc-controls label { font-size:.8rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .sc-controls select { min-width:260px; }
+    .sc-team-head { display:flex; align-items:center; gap:14px; margin:8px 0 4px; }
+    .sc-team-head img { width:52px; height:52px; object-fit:contain; }
+    .sc-team-head h1 { margin:0; font-size:1.5rem; }
+    .sc-team-head .sc-sub { color:var(--muted); font-size:.85rem; }
+
+    .sc-section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 18px 6px; margin:18px 0; }
+    .sc-section > h2 { margin:0 0 2px; font-size:1.1rem; }
+    .sc-section > .sc-blurb { color:var(--muted); font-size:.85rem; margin:0 0 12px; }
+    .sc-subhead { font-weight:700; font-size:.95rem; margin:16px 0 6px; }
+
+    .sc-cols { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    @media (max-width:760px){ .sc-cols { grid-template-columns:1fr; } .sc-scorer-grid { grid-template-columns:1fr !important; } }
+
+    .sc-scorer-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .sc-scorer { border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .sc-scorer .sc-scorer-name { font-weight:700; }
+    .sc-scorer .sc-scorer-sub { color:var(--muted); font-size:.8rem; margin-bottom:8px; }
+    .sc-zone-wrap { max-width:280px; margin:0 auto; }
+
+    .tier { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.72rem; font-weight:800; letter-spacing:.02em; white-space:nowrap; }
+    .pos-cell, .up { color:#e0533b; }        /* worse for the opponent / attack = red accent */
+    .neg { color:#3a9d6e; }
+
+    .sc-empty { color:var(--muted); font-size:.85rem; padding:8px 0; }
+    #sc-status { color:var(--muted); padding:24px 0; }
+    /* scout tables have no total row — drop the base last-row emphasis */
+    .sc-section .breakdown-table tr:last-child td { font-weight:normal; padding-top:8px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+  <a href="index.html"        data-page="index.html">Home</a>
+  <a href="scout-report.html" data-page="scout-report.html">Scout</a>
+  <a href="prediction.html"   data-page="prediction.html">Predictor</a>
+  <a href="net-ratings.html"  data-page="net-ratings.html">Team Stats</a>
+  <a href="player-stats.html" data-page="player-stats.html">Player Stats</a>
+  <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
+  <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
+  <a href="postseason.html"   data-page="postseason.html">Postseason</a>
+</nav>
+
+<div class="container">
+
+  <h1 style="margin-bottom:2px">Scout</h1>
+  <p class="caption" style="margin-top:0">Scout can be used to form gameplans and inform fans of what patterns will emerge on the court.</p>
+
+  <div class="sc-controls">
+    <label for="sc-team">Opponent</label>
+    <select id="sc-team"></select>
+  </div>
+
+  <div id="sc-status">Loading…</div>
+  <div id="sc-report" style="display:none"></div>
+
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/zone-chart.js"></script>
+<script>
+// ── state ────────────────────────────────────────────────────────────────────
+let SEASON = null;
+let INDEX = [];              // [{tid,name,slug}]
+let PZB = null;              // zone baselines
+const SHOT_CACHE = {};
+
+// ── formatting helpers ───────────────────────────────────────────────────────
+const N = (v,d=1)=> v==null||isNaN(v) ? "—" : Number(v).toFixed(d);
+const PCT = (v,d=1)=> v==null||isNaN(v) ? "—" : (v*100).toFixed(d)+"%";
+const SGN = (v,d=1)=> v==null||isNaN(v) ? "—" : (v>=0?"+":"−")+Math.abs(v).toFixed(d);
+const SHARE = v => v==null||isNaN(v) ? "—" : (v*100).toFixed(1)+"%";
+
+// tier → color band (placeholder palette; tier TEXT comes from the data)
+function tierStyle(t){
+  const base = (t||"").replace(/\s*\*$/,"").toUpperCase();
+  const map = {
+    "DON'T LEAVE":"#c0392b", "CLOSE OUT":"#d97e28", "RESPECT":"#c9a227",
+    "SAG OFF":"#3a9d6e", "IGNORE":"#6b7280"
+  };
+  const c = map[base] || "#6b7280";
+  return `background:${c}22;color:${c};border:1px solid ${c}66`;
+}
+
+// ── generic table builder ────────────────────────────────────────────────────
+// cols: [{label, get:(row)=>cellHTML, num:true?}]
+function table(cols, rows, emptyMsg){
+  if(!rows || !rows.length) return `<div class="sc-empty">${emptyMsg||"No data."}</div>`;
+  const head = cols.map(c=>`<th${c.num?' class="num"':''}>${c.label}</th>`).join("");
+  const body = rows.map(r=>"<tr>"+cols.map(c=>{
+    const v = c.get(r);
+    return `<td${c.num?' class="num"':''}>${v==null?"—":v}</td>`;
+  }).join("")+"</tr>").join("");
+  return `<div class="tbl-wrap"><table class="breakdown-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+const jerseyName = r => (r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"") + (r.name ?? r.n ?? "—");
+
+// ── shot data (for zone charts) ──────────────────────────────────────────────
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+async function loadShots(teamName){
+  if(SHOT_CACHE[teamName]) return SHOT_CACHE[teamName];
+  const d = await loadJSON(`data/shots/${slugify(teamName)}.json`).catch(()=>null);
+  if(d) SHOT_CACHE[teamName]=d;
+  return d;
+}
+async function ensureBaselines(){ if(!PZB) PZB = await loadJSON("data/zone-baselines.json").catch(()=>null); return PZB; }
+function renderZone(el, zoneData){ ZoneChart.render(el, zoneData, {zones:PZB?.zones, baselines:PZB?.baselines, minAtt:5, compact:true}); }
+
+// ── board renderers ──────────────────────────────────────────────────────────
+function boardThreat(rows){
+  return table([
+    {label:"Player", get:r=>jerseyName(r)},
+    {label:"Tier", get:r=> r.tier ? `<span class="tier" style="${tierStyle(r.tier)}">${r.tier}</span>` : "—"},
+    {label:"Gravity", num:true, get:r=>N(r.gravity,0)},
+    {label:"3PA/G", num:true, get:r=>N(r.tpa_pg,1)},
+    {label:"3P%",   num:true, get:r=>PCT(r.tp_pct)},
+    {label:"3PA",   num:true, get:r=>r.tpa},
+  ], rows);
+}
+function boardUsage(rows){
+  rows = (rows||[]).filter(r=>(r.mpg??0) > 15);   // rotation only — >15 MPG
+  return table([
+    {label:"Player", get:r=>(r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"")+(r.n??"—")},
+    {label:"Pos", get:r=>r.pos??"—"},
+    {label:"MPG", num:true, get:r=>N(r.mpg)},
+    {label:"PPG", num:true, get:r=>N(r.ppg)},
+    {label:"USG%",num:true, get:r=>N(r.usg)},
+    {label:"AST%",num:true, get:r=>N(r.astp)},
+    {label:"TOV%",num:true, get:r=>N(r.tovp)},
+    {label:"Ast'd%",num:true, get:r=>N(r.astdp)},
+  ], rows);
+}
+function boardAttack(rows){
+  return table([
+    {label:"Player", get:r=>jerseyName(r)},
+    {label:"Pos", get:r=>r.pos??"—"},
+    {label:"Ht",  get:r=>r.ht??"—"},
+    {label:"MPG", num:true, get:r=>N(r.mpg)},
+    {label:"DRtg On",  num:true, get:r=>N(r.drtg_on)},
+    {label:"DRtg Off", num:true, get:r=>N(r.drtg_off)},
+    {label:"On−Off",num:true, get:r=>`<span class="${r.def_onoff>0?'up':'neg'}">${SGN(r.def_onoff)}</span>`},
+    {label:"Def Poss", num:true, get:r=>r.def_poss},
+  ], rows);
+}
+function boardFouls(rows){
+  return table([
+    {label:"Player", get:r=>jerseyName(r)},
+    {label:"Pos", get:r=>r.pos??"—"},
+    {label:"MPG", num:true, get:r=>N(r.mpg)},
+    {label:"Fouls/100", num:true, get:r=>N(r.fouls_per100,2)},
+    {label:"Fouls", num:true, get:r=>r.fouls},
+    {label:"Def Poss", num:true, get:r=>r.def_poss},
+  ], rows);
+}
+function boardRebound(rows){
+  return table([
+    {label:"Player", get:r=>(r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"")+(r.name??"—")},
+    {label:"Pos", get:r=>r.pos??"—"},
+    {label:"Ht",  get:r=>r.ht??"—"},
+    {label:"ORB%",num:true, get:r=>N(r.orbp)},
+    {label:"DRB%",num:true, get:r=>N(r.drbp)},
+    {label:"TRB%",num:true, get:r=>N(r.trbp)},
+    {label:"Reb/100", num:true, get:r=>N(r.reb_per100)},
+  ], rows);
+}
+function macroQualTable(rows){
+  return table([
+    {label:"Area", get:r=>r.zone},
+    {label:"Att", num:true, get:r=>r.att},
+    {label:"FG%", num:true, get:r=>PCT(r.fg_pct)},
+    {label:"Baseline", num:true, get:r=>PCT(r.baseline)},
+    {label:"PPS", num:true, get:r=>N(r.pps,2)},
+    {label:"PPS±", num:true, get:r=>SGN(r.pps_vs_base,2)},
+  ], rows);
+}
+function macroFreqTable(rows){
+  return table([
+    {label:"Area", get:r=>r.zone},
+    {label:"Share", num:true, get:r=>SHARE(r.share)},
+    {label:"D-I Avg", num:true, get:r=>SHARE(r.lg_share)},
+    {label:"vs Avg", num:true, get:r=>SGN(r.delta*100)+" pts"},
+  ], rows);
+}
+function formTable(rows){
+  return table([
+    {label:"Area", get:r=>r.band},
+    {label:"Season", num:true, get:r=>SHARE(r.share)},
+    {label:"Recent", num:true, get:r=>SHARE(r.share_recent)},
+    {label:"PPS", num:true, get:r=>N(r.pps,2)},
+    {label:"Recent PPS", num:true, get:r=>N(r.pps_recent,2)},
+    {label:"Δ PPS", num:true, get:r=>SGN(r.pps_delta,2)},
+  ], rows);
+}
+function directionalMini(rows){
+  return table([
+    {label:"Side", get:r=>r.side},
+    {label:"Share", num:true, get:r=>SHARE(r.share)},
+    {label:"FG%", num:true, get:r=>PCT(r.fg_pct)},
+    {label:"PPS", num:true, get:r=>N(r.pps,2)},
+  ], rows);
+}
+
+// ── render one team's whole report ───────────────────────────────────────────
+async function renderReport(entry){
+  const status = document.getElementById("sc-status");
+  const wrap = document.getElementById("sc-report");
+  status.style.display="block"; status.textContent="Loading…"; wrap.style.display="none";
+
+  const rep = await loadJSON(`data/${SEASON}/scout/${entry.slug}.json`).catch(()=>null);
+  if(!rep){ status.textContent="Report unavailable."; return; }
+
+  const section = (h,blurb,body)=>`
+    <section class="sc-section">
+      <h2>${h}</h2>
+      <p class="sc-blurb">${blurb}</p>
+      ${body}
+    </section>`;
+
+  let html = `
+    <div class="sc-team-head">
+      <img src="${logoUrl(entry.tid)}" alt="" onerror="this.style.opacity=0">
+      <div>
+        <h1>${rep.team}</h1>
+        <div class="sc-sub">Through ${rep.generated ?? ""}</div>
+      </div>
+    </div>`;
+
+  // 1 — three-point threat
+  html += section("Three-Point Threats", "Who to guard beyond the arc, ranked by shooting gravity.", boardThreat(rep.three_point_threat));
+
+  // 2 — usage / who runs the offense
+  html += section("Who Runs the Offense", "Usage, playmaking, and how often each player's makes are assisted.", boardUsage(rep.usage_board));
+
+  // 3 — offense: shot diet + shot quality (+ team zone chart)
+  html += section("Offense — Where They Shoot", "Shot diet and shot quality by area, against the Division I average.", `
+    <div id="sc-off-zone" class="sc-zone-wrap"></div>
+    <div class="sc-cols">
+      <div><div class="sc-subhead">Shot Diet</div>${macroFreqTable(rep.offense.macro_freq)}</div>
+      <div><div class="sc-subhead">Shot Quality</div>${macroQualTable(rep.offense.macro_qual)}</div>
+    </div>`);
+
+  // 4 — top scorers (per-man)
+  html += section("Top Scorers", "Shot chart, quality by area, and which side each scorer favors.",
+    `<div class="sc-scorer-grid" id="sc-scorers"></div>`);
+
+  // 5 — defense: shots forced + shots allowed
+  html += section("Defense — What They Give Up", "Where this defense forces shots, and where opponents make them pay.", `
+    <div class="sc-cols">
+      <div><div class="sc-subhead">Shots Forced</div>${macroFreqTable(rep.defense.macro_freq)}</div>
+      <div><div class="sc-subhead">Shots Allowed</div>${macroQualTable(rep.defense.macro_qual)}</div>
+    </div>`);
+
+  // 6 — who to attack
+  html += section("Who to Attack", "Defenders the team gives up the most points with on the floor.", boardAttack(rep.attack_board));
+
+  // 7 — foul trouble
+  html += section("Foul Trouble", "Who fouls the most per 100 defensive possessions.", boardFouls(rep.foul_board));
+
+  // 8 — box-out / rebounding
+  html += section("The Glass", "Who to box out — rebounding rates and volume.", boardRebound(rep.rebound_board));
+
+  // 9 — recent form
+  html += section("Recent Form", `Season shot mix and quality vs. the last ${rep.form.n_recent_games} games.`, formTable(rep.form.table));
+
+  wrap.innerHTML = html;
+  status.style.display="none"; wrap.style.display="block";
+
+  // charts (current-season shot coords)
+  await ensureBaselines();
+  const shots = await loadShots(rep.team);
+  if(shots && shots.shots && PZB){
+    const off = ZoneChart.computeZones(shots.shots, ()=>true);
+    if(off.length) renderZone(document.getElementById("sc-off-zone"), off);
+
+    // per-scorer zone charts, matched by name → player_index in the shots file
+    const grid = document.getElementById("sc-scorers");
+    grid.innerHTML = rep.top_scorers.map((p,i)=>`
+      <div class="sc-scorer">
+        <div class="sc-scorer-name">${(p.jn!=null?`#${p.jn} `:"")}${p.n}</div>
+        <div class="sc-scorer-sub">${N(p.ppg)} PPG · ${N(p.usg)} USG% · ${p.n_fga} FGA</div>
+        <div class="sc-zone-wrap" id="sc-scorer-zone-${i}"></div>
+        <div class="sc-subhead">By Side</div>
+        ${directionalMini(p.directional)}
+      </div>`).join("");
+    rep.top_scorers.forEach((p,i)=>{
+      const pi = shots.players.indexOf(p.n);
+      if(pi<0) return;
+      const zd = ZoneChart.computeZones(shots.shots, (g,idx)=> idx===pi);
+      if(zd.length) renderZone(document.getElementById(`sc-scorer-zone-${i}`), zd);
+    });
+  } else {
+    // no shot coords (past season / missing file) — drop the scorer charts gracefully
+    const grid = document.getElementById("sc-scorers");
+    if(grid) grid.innerHTML = rep.top_scorers.map(p=>`
+      <div class="sc-scorer">
+        <div class="sc-scorer-name">${(p.jn!=null?`#${p.jn} `:"")}${p.n}</div>
+        <div class="sc-scorer-sub">${N(p.ppg)} PPG · ${N(p.usg)} USG%</div>
+        <div class="sc-subhead">By Side</div>
+        ${directionalMini(p.directional)}
+      </div>`).join("");
+  }
+}
+
+// ── init ─────────────────────────────────────────────────────────────────────
+async function init(){
+  // common.js auto-runs nav + select enhancement on DOMContentLoaded.
+  const seasons = await loadJSON("data/seasons.json").catch(()=>null);
+  SEASON = (seasons && seasons.length) ? seasons[0] : new Date().getFullYear();
+
+  INDEX = await loadJSON(`data/${SEASON}/scout/scout-index.json`).catch(()=>null);
+  const sel = document.getElementById("sc-team");
+  if(!INDEX || !INDEX.length){ document.getElementById("sc-status").textContent="Scout data unavailable."; return; }
+
+  INDEX.sort((a,b)=>a.name.localeCompare(b.name));
+  sel.innerHTML = INDEX.map(t=>`<option value="${t.slug}">${t.name}</option>`).join("");
+  if(window.enhanceAllSelects) enhanceAllSelects();
+
+  const params = new URLSearchParams(location.search);
+  const initial = INDEX.find(t=>t.slug===params.get("team"))
+               || INDEX.find(t=>/arkansas razor/i.test(t.name))
+               || INDEX[0];
+  sel.value = initial.slug;
+  sel.addEventListener("change", ()=>{
+    const e = INDEX.find(t=>t.slug===sel.value);
+    if(e){ history.replaceState(null,"",`?team=${e.slug}`); renderReport(e); }
+  });
+  renderReport(initial);
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
