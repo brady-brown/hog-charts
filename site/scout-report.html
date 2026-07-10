@@ -8,12 +8,13 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
   <link rel="apple-touch-icon" href="img/logo.png">
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <style>
     /* Scout-report layout — reuses site tokens (--card,--line,--ink,--muted,--t1). */
-    .sc-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:12px 0 20px; }
+    /* wide boards must scroll inside their own box, never widen the page */
+    .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%; }
+    .sc-controls { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; margin:12px 0 20px; }
     .sc-controls label { font-size:.8rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
-    .sc-controls select { min-width:260px; }
+    .sc-controls select { width:100%; max-width:340px; }
     .sc-team-head { display:flex; align-items:center; gap:14px; margin:8px 0 4px; }
     .sc-team-head img { width:52px; height:52px; object-fit:contain; }
     .sc-team-head h1 { margin:0; font-size:1.5rem; }
@@ -25,6 +26,7 @@
     .sc-subhead { font-weight:700; font-size:.95rem; margin:16px 0 6px; }
 
     .sc-cols { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .sc-cols > div { min-width:0; }   /* let child tables scroll instead of widening the column */
     @media (max-width:760px){ .sc-cols { grid-template-columns:1fr; } .sc-scorer-grid { grid-template-columns:1fr !important; } }
 
     .sc-scorer-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
