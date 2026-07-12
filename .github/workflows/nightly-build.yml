@@ -55,6 +55,9 @@ jobs:
       - name: Build on/off + RAPM CSVs
         run: python -u build_onoff_rapm.py
 
+      - name: Build points-responsible tables
+        run: python build_points_resp.py
+
       - name: Build site JSON
         run: python build_site.py
 

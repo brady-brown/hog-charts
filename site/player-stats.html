@@ -403,6 +403,7 @@ const COL_GROUPS = {
     { key:"ts",    label:"TS%",   dir:"desc", tip:"True shooting%: PTS / (2 × (FGA + 0.44×FTA))", pct:true },
     { key:"efg",   label:"eFG%",  dir:"desc", tip:"Effective FG%: (FGM + 0.5×3PM) / FGA", pct:true },
     { key:"usg",   label:"USG%",  dir:"desc", tip:"Usage rate: share of team possessions used while on floor" },
+    { key:"resp",  label:"Resp%", dir:"desc", pct:true, tip:"Points responsible: of the points the team scores while the player is on the floor, the share he scored (every made FG + FT) or assisted. Regular season, from play-by-play + on-court stints." },
     { key:"astp",  label:"AST%",  dir:"desc", tip:"Assist%: share of teammates' made field goals the player assisted while on the floor. Computed from actual on-court stints where lineup data allows, otherwise a season estimate." },
     { key:"tovp",  label:"TOV%",  dir:"asc",  tip:"Turnover%: turnovers per 100 individual possessions used (lower is better)" },
     { key:"orbp",  label:"ORB%",  dir:"desc", tip:"Offensive rebound%: share of available offensive rebounds grabbed while on the floor. On-court (stint-based) where lineup data allows, else season estimate." },
@@ -751,12 +752,12 @@ const STAT_FILTER_GROUPS = [
                        ["fgmpg","FGM/g"],["fgapg","FGA/g"],["ftmpg","FTM/g"],["ftapg","FTA/g"]]],
   ["Shooting %", [["ts","TS%"],["efg","eFG%"],["fg","FG%"],["fg3","3P%"],["ft","FT%"],
                   ["par3","3PAr"],["ftr","FTr"]]],
-  ["Advanced", [["usg","USG%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
+  ["Advanced", [["usg","USG%"],["resp","Resp%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
                 ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["astdp","Ast'd%"],["on_off","On/Off"]]],
   ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
 ];
 // Stats stored as 0-1 fractions; a threshold of "40" should mean 40%.
-const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr"]);
+const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr","resp"]);
 // Filter keys whose data lives in player-impact.json (lazy-loaded).
 const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp"]);
 // Stats where a LOWER value is better (matters for percentile-rank thresholds).
@@ -1223,6 +1224,7 @@ async function openModal(p) {
     { lbl:"TS%",   val: p.ts   != null ? (p.ts*100).toFixed(1)+"%"  : "—" },
     { lbl:"eFG%",  val: p.efg  != null ? (p.efg*100).toFixed(1)+"%" : "—" },
     { lbl:"USG%",  val: pc1(p.usg) },
+    { lbl:"Resp%", val: p.resp != null ? (p.resp*100).toFixed(1)+"%" : "—" },
     { lbl:"AST%",  val: pc1(p.astp) },
     { lbl:"TOV%",  val: pc1(p.tovp) },
     { lbl:"ORB%",  val: pc1(p.orbp) },

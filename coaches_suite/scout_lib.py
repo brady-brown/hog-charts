@@ -139,8 +139,22 @@ def load_data(season, root="."):
         fouls = pf.groupby("athlete_id_1").size().rename("fouls")
     except Exception:
         fouls = pd.Series(dtype="int64", name="fouls")
+
+    # points-responsible table (regular-season scored+assisted share of on-court
+    # team points), precomputed by build_points_resp.py from the full PBP feed +
+    # presence_full so the site and this engine report identical numbers.
+    try:
+        points_resp = pd.read_csv(os.path.join(root, f"points_resp_{season}.csv"))
+        points_resp["athlete_id"] = points_resp["athlete_id"].astype("Int64")
+        points_resp["team_id"] = points_resp["team_id"].astype("Int64")
+    except Exception:
+        points_resp = pd.DataFrame(columns=["athlete_id", "team_id", "pts_scored",
+                                            "pts_ast", "on_court_pts", "scored_pct",
+                                            "assist_pct", "resp_pct"])
+
     return {"shots": shots, "box": box, "names": names,
-            "pstats": pstats, "impact": impact, "onoff": onoff, "fouls": fouls}
+            "pstats": pstats, "impact": impact, "onoff": onoff,
+            "fouls": fouls, "points_resp": points_resp}
 
 
 def team_shots(data, tid):
@@ -387,7 +401,7 @@ def _load_baselines(path):
 
 
 # ── 4. Who to attack (defensive on/off — available early season, unlike RAPM) ─
-def attack_board(data, tid, name, min_mpg=10.0, min_def_poss=150):
+def attack_board(data, tid, name, min_mpg=0.0, min_def_poss=0):
     """Rank the opponent's rotation by defensive on/off.
 
     def_onoff = drtg_on - drtg_off  (points allowed per 100 poss with the player
@@ -430,7 +444,7 @@ def attack_board(data, tid, name, min_mpg=10.0, min_def_poss=150):
 
 
 # ── 5. Usage / ball-handling (how heliocentric is the offense) ────────────────
-def usage_board(data, tid, name, min_mpg=8.0):
+def usage_board(data, tid, name, min_mpg=0.0):
     """Rotation ranked by usage %, with assist / turnover / assisted-FG context.
 
     usg   = share of team possessions a player uses while on court (heliocentrism)
@@ -447,8 +461,54 @@ def usage_board(data, tid, name, min_mpg=8.0):
     return team.sort_values("usg", ascending=False).reset_index(drop=True)
 
 
+# ── 5b. Points responsible (scored + assisted share of ON-COURT team points) ──
+def points_responsible_board(data, tid, name):
+    """Share of the team's on-court points each player is directly responsible for.
+
+    For every stint a player is on the floor, what share of the points his team
+    scores does he SCORE (every made FG + FT) or ASSIST (the FG value of baskets
+    he set up)?  denominator = the team's points scored WHILE HE WAS ON THE FLOOR.
+
+    A player can't assist his own make, so scored and assisted never double-count
+    for one player.  Blind spot: a pass that only draws a shooting foul earns no
+    assist.  Regular season only (see build_points_resp.py), which also computes
+    the identical table the Player Stats page merges, so the two always agree.
+    """
+    pr = data.get("points_resp")
+    if pr is None or pr.empty:
+        return pd.DataFrame()
+
+    tm = pr[pr["team_id"] == tid].copy()
+    if tm.empty:
+        return pd.DataFrame()
+
+    # names / jersey / position from player-stats (jerseys already backfilled in
+    # build_scout from the boxscore, so bench players resolve too)
+    ps = data["pstats"]
+    meta = (ps.dropna(subset=["id"]).drop_duplicates("id")
+              .set_index("id")[[c for c in ("n", "jn", "pos") if c in ps.columns]])
+    fallback = data["names"]["athlete_display_name"]
+
+    rows = []
+    for _, r in tm.iterrows():
+        aid = r["athlete_id"]
+        m = meta.loc[aid] if aid in meta.index else None
+        nm = (m["n"] if m is not None and pd.notna(m.get("n")) else fallback.get(aid))
+        rows.append(dict(
+            name=nm,
+            jn=(m["jn"] if m is not None else None),
+            pos=(m["pos"] if m is not None else None),
+            pts_scored=int(r["pts_scored"]), pts_ast=int(r["pts_ast"]),
+            pts_resp=int(r["pts_scored"] + r["pts_ast"]),
+            on_court_pts=int(r["on_court_pts"]),
+            scored_pct=float(r["scored_pct"]), assist_pct=float(r["assist_pct"]),
+            resp_pct=float(r["resp_pct"])))
+    out = pd.DataFrame(rows)
+    return out.sort_values("resp_pct", ascending=False).reset_index(drop=True)
+
+
 # ── 6b. Foul-trouble sheet (fouls per possession, from full PBP) ──────────────
-def foul_board(data, tid, name, min_def_poss=150, min_mpg=8.0):
+def foul_board(data, tid, name, min_def_poss=0, min_mpg=0.0):
     """Rotation ranked by personal fouls committed per 100 defensive possessions.
 
     High rate = attack him to put him in foul trouble.  Fouls come from the
@@ -484,7 +544,7 @@ def foul_board(data, tid, name, min_def_poss=150, min_mpg=8.0):
 
 
 # ── 6c. Box-out board (who crashes the glass) ─────────────────────────────────
-def rebound_board(data, tid, name, min_mpg=8.0):
+def rebound_board(data, tid, name, min_mpg=0.0):
     """Rotation ranked by offensive-rebound % — the players you have to box out.
 
     ORB% / DRB% / TRB% are share-of-available-rebounds rates (already in
@@ -522,7 +582,7 @@ def rebound_board(data, tid, name, min_mpg=8.0):
 
 
 # ── 7. Individual scoring — top scorers & their shots ─────────────────────────
-def top_scorers(data, tid, name, n=6, min_mpg=8.0):
+def top_scorers(data, tid, name, n=6, min_mpg=0.0):
     """The team's top-`n` scorers by PPG (rotation only) — for per-player charts."""
     ps = data["pstats"]
     team = ps[ps["t"] == name].copy()

@@ -160,6 +160,7 @@ def build_team_report(data, tid, name, baselines, jmap):
         },
         "attack_board": _records(SL.attack_board(data, tid, name)),
         "usage_board": _records(SL.usage_board(data, tid, name)),
+        "points_responsible": _records(SL.points_responsible_board(data, tid, name)),
         "foul_board": _records(SL.foul_board(data, tid, name)),
         "rebound_board": _records(SL.rebound_board(data, tid, name)),
         "top_scorers": scorer_rows,

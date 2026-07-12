@@ -559,6 +559,7 @@ PLAYER_STATS_COLUMN_RENAME_MAP = {
     "adv_src":               "advsrc",
     "bpm":                   "bpm",
     "on_off":                "on_off",
+    "resp_pct":              "resp",
 }
 
 
@@ -566,7 +567,8 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
                              min_games_played=8, min_mpg=8,
                              min_onoff_possessions=200, label="",
                              team_context_csv_path=None, stint_csv_path=None,
-                             assist_share_csv_path=None):
+                             assist_share_csv_path=None, min_team_games=0,
+                             points_resp_csv_path=None):
     """Read a player-stats CSV, compute derived stats, and return JSON records.
 
     Derived stats added here (not in build_player_stats.py):
@@ -831,14 +833,32 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     else:
         player_stats_df["on_off"] = None
 
+    # --- Points responsible (regular-season on-court scored+assisted share) ---
+    # Precomputed by build_points_resp.py; a season-level rate, so it is merged
+    # onto the regular and all-games scopes (they share the same player pool).
+    if points_resp_csv_path and os.path.exists(points_resp_csv_path):
+        resp_df = pd.read_csv(points_resp_csv_path,
+                              usecols=["athlete_id", "team_id", "resp_pct"])
+        player_stats_df = player_stats_df.merge(
+            resp_df, on=["athlete_id", "team_id"], how="left")
+    else:
+        player_stats_df["resp_pct"] = None
+
     # --- Filter ---
+    # `min_team_games` keeps every player whose TEAM appeared in >= N games
+    # (a team's game count ≈ the most games any one of its players played),
+    # which drops non-D-I opponents that only surface a handful of times while
+    # still showing deep-bench players on real teams. Per-player min_gp/min_mpg
+    # stay available but are set to 0 for the scopes that use the team gate.
+    team_games = player_stats_df.groupby("team_id")["games_played"].transform("max")
     player_stats_df = player_stats_df[
         (player_stats_df["games_played"] >= min_games_played)
         & (player_stats_df["mpg"].fillna(0) >= min_mpg)
+        & (team_games.fillna(0) >= min_team_games)
     ].copy()
 
     # --- Round ---
-    shooting_pct_cols = ["ts_pct", "3par", "ftr", "efg_pct", "fg_pct", "3pt_pct", "ft_pct"]
+    shooting_pct_cols = ["ts_pct", "3par", "ftr", "efg_pct", "fg_pct", "3pt_pct", "ft_pct", "resp_pct"]
     rate_avg_cols     = ["mpg", "points_avg", "reb_avg", "ast_avg", "steal_avg",
                          "blocks_avg", "to_avg", "on_off", "usg", "bpm",
                          "ast_pct", "tov_pct", "orb_pct", "drb_pct", "trb_pct",
@@ -913,28 +933,38 @@ _exists = lambda path: path if os.path.exists(path) else None
 # stint_csv supplies on-court box totals for the stint-based advanced rates; it
 # may only be used where its games match the scope (regular & conference), so
 # all/post pass None and fall back to the season approximation.
+# Points-responsible on-court rate (build_points_resp.py): regular-season table
+# for the regular + all-games scopes; a conference-games table for the conf scope.
+points_resp_csv      = os.path.join(PROJECT_ROOT, f"points_resp_{SEASON}.csv")
+points_resp_conf_csv = os.path.join(PROJECT_ROOT, f"points_resp_conf_{SEASON}.csv")
+
 PLAYER_STATS_SCOPE_SPECS = [
     # (stats_csv, onoff_csv, stint_csv, team_context_csv, assist_share_csv,
-    #  min_gp, min_mpg, min_onoff_poss, output_json, label)
+    #  min_gp, min_mpg, min_onoff_poss, min_team_games, points_resp_csv, output_json, label)
+    # Regular & all-games: no per-player minimum — show every player whose team
+    # played >= 20 games (drops non-D-I opponents, keeps deep-bench players).
+    # Conf/post keep per-player minimums (their team game counts are too low for
+    # a 20-game team gate, so it stays 0 there).
     (f"player_stats_{SEASON}.csv",      onoff_overall_csv, onoff_overall_csv, f"team_context_{SEASON}.csv",      f"assist_share_{SEASON}.csv",
-     8, 8, 200, "player-stats.json",      "(regular)"),
+     0, 0, 200, 20, points_resp_csv, "player-stats.json",      "(regular)"),
     (f"player_stats_all_{SEASON}.csv",  onoff_overall_csv, None,              f"team_context_all_{SEASON}.csv",  f"assist_share_{SEASON}_all.csv",
-     8, 8, 200, "player-stats-all.json",  "(all games)"),
+     0, 0, 200, 20, points_resp_csv, "player-stats-all.json",  "(all games)"),
     (f"player_stats_post_{SEASON}.csv", None,              None,              f"team_context_post_{SEASON}.csv", f"assist_share_{SEASON}_post.csv",
-     1, 1, 200, "player-stats-post.json", "(postseason)"),
+     1, 1, 200, 0, None, "player-stats-post.json", "(postseason)"),
     (f"player_stats_conf_{SEASON}.csv", onoff_conf_csv,    onoff_conf_csv,    f"team_context_conf_{SEASON}.csv", f"assist_share_{SEASON}_conf.csv",
-     4, 8, 100, "player-stats-conf.json", "(conference)"),
+     4, 8, 100, 0, points_resp_conf_csv, "player-stats-conf.json", "(conference)"),
 ]
 
-for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, assist_share_csv, min_gp, min_mpg, min_op, out_json, label in PLAYER_STATS_SCOPE_SPECS:
+for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, assist_share_csv, min_gp, min_mpg, min_op, min_tg, points_resp_path, out_json, label in PLAYER_STATS_SCOPE_SPECS:
     records = build_player_stats_json(
         os.path.join(PROJECT_ROOT, stats_csv_name),
         _exists(onoff_csv) if onoff_csv else None,
         bios_dict=all_player_bios, min_games_played=min_gp, min_mpg=min_mpg,
-        min_onoff_possessions=min_op, label=label,
+        min_onoff_possessions=min_op, label=label, min_team_games=min_tg,
         team_context_csv_path=os.path.join(PROJECT_ROOT, team_ctx_name),
         stint_csv_path=_exists(stint_csv) if stint_csv else None,
         assist_share_csv_path=_exists(os.path.join(PROJECT_ROOT, assist_share_csv)),
+        points_resp_csv_path=points_resp_path,
     )
     if records is not None:
         write_json({"players": records, "meta": build_metadata}, out_json)

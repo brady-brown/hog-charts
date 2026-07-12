@@ -137,7 +137,7 @@ function boardThreat(rows){
   ], rows);
 }
 function boardUsage(rows){
-  rows = (rows||[]).filter(r=>(r.mpg??0) > 15);   // rotation only — >15 MPG
+  rows = (rows||[]).slice().sort((a,b)=>(b.usg??-1)-(a.usg??-1));
   return table([
     {label:"Player", get:r=>(r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"")+(r.n??"—")},
     {label:"Pos", get:r=>r.pos??"—"},
@@ -148,6 +148,18 @@ function boardUsage(rows){
     {label:"TOV%",num:true, get:r=>N(r.tovp)},
     {label:"Ast'd%",num:true, get:r=>N(r.astdp)},
   ], rows);
+}
+function boardPointsResp(rows){
+  return table([
+    {label:"Player", get:r=>(r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"")+(r.name??"—")},
+    {label:"Pos", get:r=>r.pos??"—"},
+    {label:"Resp%", num:true, get:r=>SHARE(r.resp_pct)},
+    {label:"Scored%", num:true, get:r=>SHARE(r.scored_pct)},
+    {label:"Assist%", num:true, get:r=>SHARE(r.assist_pct)},
+    {label:"Pts Scored", num:true, get:r=>r.pts_scored},
+    {label:"Pts Assisted", num:true, get:r=>r.pts_ast},
+    {label:"On-Court Pts", num:true, get:r=>r.on_court_pts},
+  ], rows, "No play-by-play scoring data for this season.");
 }
 function boardAttack(rows){
   return table([
@@ -249,6 +261,9 @@ async function renderReport(entry){
 
   // 2 — usage / who runs the offense
   html += section("Who Runs the Offense", "Usage, playmaking, and how often each player's makes are assisted.", boardUsage(rep.usage_board));
+
+  // 2b — points responsible (scored + assisted share of team points)
+  html += section("Points Responsible", "Of the points the team scores while a player is on the floor, the share he scored or assisted. Overlaps across players (a scorer and his passer both get credit), so it sums past 100%.", boardPointsResp(rep.points_responsible));
 
   // 3 — offense: shot diet + shot quality (+ team zone chart)
   html += section("Offense — Where They Shoot", "Shot diet and shot quality by area, against the Division I average.", `
