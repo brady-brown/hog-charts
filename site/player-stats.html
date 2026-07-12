@@ -39,6 +39,8 @@
     tbody tr:hover { background: var(--card2); }
     tbody td { padding: 7px 10px; vertical-align: middle; }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    /* sub-threshold players: their percentiles are unreliable, so blur them */
+    td.ps-pct-blur { filter: blur(3px); opacity: 0.55; cursor: help; user-select: none; }
     td.rk  { color: var(--muted); text-align: right; min-width: 36px; }
     .player-cell { display: flex; align-items: center; gap: 10px; }
     .player-cell img {
@@ -902,6 +904,12 @@ function onOffClass(val) {
 const PCT_EXCLUDE = new Set(["gp", "poss"]);
 let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 
+// Percentiles are computed against players with a real sample only: at least
+// PCT_MIN_GP games AND PCT_MIN_MPG minutes per game. Players below that don't
+// enter the pool, and their own percentiles are blurred out (they'd be noise).
+const PCT_MIN_GP = 10, PCT_MIN_MPG = 10;
+const pctQualified = p => (p.gp ?? 0) >= PCT_MIN_GP && (p.mpg ?? 0) >= PCT_MIN_MPG;
+
 function buildPctSorted(scope) {
   const pool = PS[scope];
   const keys = new Set();
@@ -912,6 +920,7 @@ function buildPctSorted(scope) {
   keys.forEach(k => {
     const vals = [];
     for (const p of (pool || [])) {
+      if (!pctQualified(p)) continue;
       const x = p[k];
       if (x != null && !isNaN(x)) vals.push(+x);
     }
@@ -977,6 +986,9 @@ function rowHTML(p, idx) {
       const pr = pctRank(c.key, p[c.key], c.dir === "desc");
       if (pr == null) return `<td class="num"><span style="color:var(--muted)">—</span></td>`;
       const { bg, fg } = pctColor(pr);
+      // Below the sample threshold → blur the percentile (kept out of the pool).
+      if (!pctQualified(p))
+        return `<td class="num ps-pct-blur" title="Not enough games/minutes for a reliable percentile (min ${PCT_MIN_GP} GP & ${PCT_MIN_MPG} MPG)" style="color:${fg};font-weight:700">${Math.round(pr)}</td>`;
       return `<td class="num" style="background:${bg};color:${fg};font-weight:700">${Math.round(pr)}</td>`;
     }
     const signed = c.signed || c.key === "on_off";
