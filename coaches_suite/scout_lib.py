@@ -124,7 +124,12 @@ def load_data(season, root="."):
                 .set_index("athlete_id"))
 
     site = os.path.join(root, "site", "data", str(season))
-    pstats = pd.DataFrame(_find_rows(json.load(open(os.path.join(site, "player-stats.json")))))
+    # Use the ALL-games player stats (regular + postseason) so every board's
+    # PPG / USG% / rebound% etc. matches the Player Stats page, which defaults to
+    # the "All games" scope. (player-stats.json is the regular-season-only scope.)
+    _ps_all = os.path.join(site, "player-stats-all.json")
+    _ps_path = _ps_all if os.path.exists(_ps_all) else os.path.join(site, "player-stats.json")
+    pstats = pd.DataFrame(_find_rows(json.load(open(_ps_path))))
     impact = pd.DataFrame(_find_rows(json.load(open(os.path.join(site, "player-impact.json")))))
     # defensive on/off (drtg_on / drtg_off) — available early season, unlike RAPM
     onoff = pd.read_csv(os.path.join(root, f"mbb_onoff_{season}_v2.csv"),

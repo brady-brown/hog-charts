@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scout Report | Hog Charts</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -39,6 +40,11 @@
     .pos-cell, .up { color:#e0533b; }        /* worse for the opponent / attack = red accent */
     .neg { color:#3a9d6e; }
 
+    /* clickable player rows / scorer names → open the shared player card */
+    tr.sc-clickable { cursor:pointer; }
+    tr.sc-clickable:hover td { background:var(--card2); }
+    .sc-scorer-name.sc-clickable { cursor:pointer; }
+    .sc-scorer-name.sc-clickable:hover { text-decoration:underline; }
     .sc-empty { color:var(--muted); font-size:.85rem; padding:8px 0; }
     #sc-status { color:var(--muted); padding:24px 0; }
     /* scout tables have no total row — drop the base last-row emphasis */
@@ -76,12 +82,51 @@
 
 <script src="js/common.js"></script>
 <script src="js/zone-chart.js"></script>
+<script src="js/player-card.js"></script>
 <script>
 // ── state ────────────────────────────────────────────────────────────────────
 let SEASON = null;
 let INDEX = [];              // [{tid,name,slug}]
 let PZB = null;              // zone baselines
 const SHOT_CACHE = {};
+
+// Full player rows (Player Stats data) so a board row can open the shared player
+// card. Loaded once for the season, RAPM merged from player-impact, then indexed
+// by athlete id and — per rendered team — by display name (board rows carry the
+// name, not the id).
+let PLAYERS_BY_ID = new Map();   // id -> full row (+RAPM)
+let HAS_ONOFF = false;
+let NAME2ID = {};                // display name -> id, rebuilt for the current team
+const PID = r => NAME2ID[(r && (r.name ?? r.n)) ?? ""] ?? null;
+
+async function ensurePlayers(){
+  if(PLAYERS_BY_ID.size) return;
+  const [stats, impact] = await Promise.all([
+    loadJSON(`data/${SEASON}/player-stats-all.json`).catch(()=>null),
+    loadJSON(`data/${SEASON}/player-impact.json`).catch(()=>null),
+  ]);
+  const rows = stats?.players || [];
+  const IMPACT_FIELDS = ["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp","poss"];
+  const imp = new Map((impact?.players || []).map(ip => [ip.id, ip]));
+  rows.forEach(p => {
+    const ip = imp.get(p.id);
+    IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
+    PLAYERS_BY_ID.set(p.id, p);
+  });
+  HAS_ONOFF = rows.some(p => p.on_off != null);
+}
+
+// Rebuild the name->id lookup for one team so board rows resolve to a full row.
+function indexTeamPlayers(tid){
+  NAME2ID = {};
+  PLAYERS_BY_ID.forEach(p => { if(p.tid === tid && p.n != null) NAME2ID[p.n] = p.id; });
+}
+
+function openCard(id){
+  const p = PLAYERS_BY_ID.get(id);
+  if(!p) return;
+  PlayerCard.open(p, {season:SEASON, curSeason:SEASON, hasOnOff:HAS_ONOFF});
+}
 
 // ── formatting helpers ───────────────────────────────────────────────────────
 const N = (v,d=1)=> v==null||isNaN(v) ? "—" : Number(v).toFixed(d);
@@ -102,17 +147,33 @@ function tierStyle(t){
 
 // ── generic table builder ────────────────────────────────────────────────────
 // cols: [{label, get:(row)=>cellHTML, num:true?}]
-function table(cols, rows, emptyMsg){
+// pid (optional): row -> athlete id; when it resolves, the row opens the player
+// card on click.
+function table(cols, rows, emptyMsg, pid=PID){
   if(!rows || !rows.length) return `<div class="sc-empty">${emptyMsg||"No data."}</div>`;
   const head = cols.map(c=>`<th${c.num?' class="num"':''}>${c.label}</th>`).join("");
-  const body = rows.map(r=>"<tr>"+cols.map(c=>{
-    const v = c.get(r);
-    return `<td${c.num?' class="num"':''}>${v==null?"—":v}</td>`;
-  }).join("")+"</tr>").join("");
+  const body = rows.map(r=>{
+    const id = pid ? pid(r) : null;
+    const attr = id!=null ? ` class="sc-clickable" onclick="openCard(${id})" title="View player card"` : "";
+    return `<tr${attr}>`+cols.map(c=>{
+      const v = c.get(r);
+      return `<td${c.num?' class="num"':''}>${v==null?"—":v}</td>`;
+    }).join("")+"</tr>";
+  }).join("");
   return `<div class="tbl-wrap"><table class="breakdown-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 const jerseyName = r => (r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</span> `:"") + (r.name ?? r.n ?? "—");
+
+// Top-scorer card heading — clickable (opens the player card) when the name
+// resolves to a full player row for this team.
+function scorerName(p){
+  const id = PID(p);
+  const label = `${(p.jn!=null?`#${p.jn} `:"")}${p.n}`;
+  return id!=null
+    ? `<div class="sc-scorer-name sc-clickable" onclick="openCard(${id})" title="View player card">${label}</div>`
+    : `<div class="sc-scorer-name">${label}</div>`;
+}
 
 // ── shot data (for zone charts) ──────────────────────────────────────────────
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
@@ -240,6 +301,10 @@ async function renderReport(entry){
   const rep = await loadJSON(`data/${SEASON}/scout/${entry.slug}.json`).catch(()=>null);
   if(!rep){ status.textContent="Report unavailable."; return; }
 
+  // full player rows for this team, so board rows can open the player card
+  await ensurePlayers();
+  indexTeamPlayers(rep.tid);
+
   const section = (h,blurb,body)=>`
     <section class="sc-section">
       <h2>${h}</h2>
@@ -310,7 +375,7 @@ async function renderReport(entry){
     const grid = document.getElementById("sc-scorers");
     grid.innerHTML = rep.top_scorers.map((p,i)=>`
       <div class="sc-scorer">
-        <div class="sc-scorer-name">${(p.jn!=null?`#${p.jn} `:"")}${p.n}</div>
+        ${scorerName(p)}
         <div class="sc-scorer-sub">${N(p.ppg)} PPG · ${N(p.usg)} USG% · ${p.n_fga} FGA</div>
         <div class="sc-zone-wrap" id="sc-scorer-zone-${i}"></div>
         <div class="sc-subhead">By Side</div>
@@ -327,7 +392,7 @@ async function renderReport(entry){
     const grid = document.getElementById("sc-scorers");
     if(grid) grid.innerHTML = rep.top_scorers.map(p=>`
       <div class="sc-scorer">
-        <div class="sc-scorer-name">${(p.jn!=null?`#${p.jn} `:"")}${p.n}</div>
+        ${scorerName(p)}
         <div class="sc-scorer-sub">${N(p.ppg)} PPG · ${N(p.usg)} USG%</div>
         <div class="sc-subhead">By Side</div>
         ${directionalMini(p.directional)}
