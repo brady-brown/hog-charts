@@ -251,6 +251,7 @@
 <!-- Player card modal markup + styles are injected by js/player-card.js -->
 
 <script src="js/common.js"></script>
+<script src="js/percentile.js"></script>
 <script src="js/zone-chart.js"></script>
 <script src="js/player-card.js"></script>
 <script>
@@ -780,54 +781,17 @@ const PCT_MIN_GP = 10, PCT_MIN_MPG = 10;
 const pctQualified = p => (p.gp ?? 0) >= PCT_MIN_GP && (p.mpg ?? 0) >= PCT_MIN_MPG;
 
 function buildPctSorted(scope) {
-  const pool = PS[scope];
   const keys = new Set();
   // Table columns (for display mode) plus every filterable stat (for %ile thresholds).
   Object.values(COL_GROUPS).forEach(g => g.forEach(c => { if (!PCT_EXCLUDE.has(c.key)) keys.add(c.key); }));
   STAT_FILTER_KEYS.forEach(k => { if (!PCT_EXCLUDE.has(k)) keys.add(k); });
-  const sortedByKey = {};
-  keys.forEach(k => {
-    const vals = [];
-    for (const p of (pool || [])) {
-      if (!pctQualified(p)) continue;
-      const x = p[k];
-      if (x != null && !isNaN(x)) vals.push(+x);
-    }
-    vals.sort((a, b) => a - b);
-    sortedByKey[k] = vals;
-  });
-  PCT_SORTED[scope] = sortedByKey;
+  PCT_SORTED[scope] = Percentile.buildPools(PS[scope], [...keys], pctQualified);
 }
 
-// first index i with arr[i] >= x  (count of values strictly < x)
-function _lowerBound(arr, x) {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; }
-  return lo;
-}
-// first index i with arr[i] > x
-function _upperBound(arr, x) {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; }
-  return lo;
-}
-
-// Percentile 0–100 where 100 = best. higherBetter flips for "lower is better"
-// stats (turnovers). Leader → 100, worst → 0.
-function pctRank(key, val, higherBetter) {
-  const arr = (PCT_SORTED[curScope] || {})[key];
-  if (!arr || arr.length < 2 || val == null || isNaN(val)) return null;
-  const n = arr.length;
-  const below = _lowerBound(arr, val);        // strictly less
-  const above = n - _upperBound(arr, val);    // strictly greater
-  return 100 * (higherBetter ? below : above) / (n - 1);
-}
-
-// Diverging colour band: red (0, worst) → amber (50) → green (100, best).
-function pctColor(p) {
-  const hue = (p / 100) * 130;   // 0 = red, 130 = green
-  return { bg: `hsla(${hue},70%,42%,0.20)`, fg: `hsl(${hue},75%,72%)` };
-}
+// Thin wrappers over the shared Percentile module (js/percentile.js).
+const pctRank = (key, val, higherBetter) =>
+  Percentile.rank((PCT_SORTED[curScope] || {})[key], val, higherBetter);
+const pctColor = p => Percentile.color(p);
 
 function setDisplay(mode) {
   displayMode = mode;
