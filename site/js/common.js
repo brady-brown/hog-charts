@@ -3,6 +3,17 @@
 const logoUrl   = (id) => `https://a.espncdn.com/i/teamlogos/ncaa/500/${id}.png`;
 const playerUrl = (id) => `https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/${id}.png`;
 
+// Team/player name → URL slug. MUST stay identical to the Python slugify() in
+// build_site.py / build_scout.py — per-team JSON filenames depend on it.
+function slugify(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+// Season end-year → display label, e.g. 2026 → "2025–26".
+function seasonLabel(s) {
+  return `${s - 1}–${String(s).slice(2)}`;
+}
+
 // fetch() wrapper — returns parsed JSON or null on error
 async function loadJSON(path) {
   try {

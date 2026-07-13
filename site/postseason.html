@@ -260,7 +260,6 @@ let teamIdByName = {};        // team name → team_id for logos
 let playerSort = { col: "pts", dir: "desc" };
 let teamSort   = { col: "best_round_rank", dir: "desc" };
 
-function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
 async function init() {
   const seasons = await loadJSON("data/seasons.json").catch(() => null);

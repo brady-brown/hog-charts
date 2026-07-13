@@ -196,7 +196,6 @@ function scorerName(p){
 }
 
 // ── shot data (for zone charts) ──────────────────────────────────────────────
-function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 async function loadShots(teamName){
   if(SHOT_CACHE[teamName]) return SHOT_CACHE[teamName];
   const d = await loadJSON(`data/shots/${slugify(teamName)}.json`).catch(()=>null);

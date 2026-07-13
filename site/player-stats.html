@@ -335,7 +335,6 @@ let HAS_ONOFF  = true;   // false for historical seasons / postseason with no on
 let handlersBound = false; // guard so filter listeners bind only once
 let IMPACT_MODAL_CACHE = {}; // cross-loaded impact data, keyed by "${SEASON}-${scope}"
 
-function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 function activeScope() { return PS[curScope]; }
 
 // Advanced columns, minus On/Off when this season has none computed.

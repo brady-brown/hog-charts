@@ -338,7 +338,6 @@ let SEASON   = null;
 let CUR_SEASON = null;   // newest season — only it has shot data
 let handlersBound = false;
 
-function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
 // Identity columns always shown before the active stat group.
 const IDENTITY = ["rank", "logo", "team", "conf", "record"];
@@ -738,7 +737,6 @@ function scRenderDensity(divEl,mx,my,hx,hy){
     .then(Plotly=>Plotly.react(divEl,traces,{...SC_LAYOUT,plot_bgcolor:"#F0E8D5"},SC_CFG))
     .catch(()=>{});
 }
-function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 const SHOT_CACHE={};
 async function loadTeamShots(teamName){
   if(SHOT_CACHE[teamName]) return SHOT_CACHE[teamName];

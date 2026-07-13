@@ -148,7 +148,6 @@ let sortDir  = "desc";
 let SEASON   = null;
 let curSlug  = null;
 
-function seasonLabel(s) { return `${s-1}–${String(s).slice(2)}`; }
 
 async function init() {
   const seasons = await loadJSON("data/seasons.json").catch(() => null);

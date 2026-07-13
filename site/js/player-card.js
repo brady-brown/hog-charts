@@ -188,7 +188,6 @@
       .catch(() => {});
   }
   const TEAM_SHOT_CACHE = {};
-  function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
   async function loadTeamShots(teamName) {
     if (TEAM_SHOT_CACHE[teamName]) return TEAM_SHOT_CACHE[teamName];
     const data = await loadJSON(`data/shots/${slugify(teamName)}.json`);
