@@ -15,6 +15,24 @@ async function loadJSON(path) {
   }
 }
 
+// Lazy-load Plotly (4.6MB) on first use instead of eagerly in every <head>.
+// Only the shot-density chart needs it, and only after a card/modal opens.
+// Returns a promise resolving to window.Plotly; caches so it loads once.
+let _plotlyPromise = null;
+function ensurePlotly() {
+  if (window.Plotly) return Promise.resolve(window.Plotly);
+  if (_plotlyPromise) return _plotlyPromise;
+  _plotlyPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.plot.ly/plotly-2.35.2.min.js";
+    s.charset = "utf-8";
+    s.onload = () => resolve(window.Plotly);
+    s.onerror = () => { _plotlyPromise = null; reject(new Error("Plotly failed to load")); };
+    document.head.appendChild(s);
+  });
+  return _plotlyPromise;
+}
+
 // Show an error banner inside any element
 function showError(el, msg) {
   if (typeof el === "string") el = document.getElementById(el);

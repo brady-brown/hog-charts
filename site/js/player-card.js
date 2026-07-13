@@ -175,7 +175,6 @@
     return { mx, my, hx, hy };
   }
   function renderDensity(divEl, mx, my, hx, hy) {
-    if (!window.Plotly) return;
     const allX = [...mx, ...hx], allY = [...my, ...hy];
     const traces = [
       { type: "histogram2dcontour", x: allX, y: allY, colorscale: "YlOrRd", showscale: false, ncontours: 20,
@@ -183,7 +182,10 @@
         xbins: { start: -26, end: 26, size: 2.5 }, ybins: { start: -2.5, end: 31, size: 2.5 }, zmin: 0 },
       ...courtTraces("rgba(255,255,255,0.85)"),
     ];
-    Plotly.react(divEl, traces, { ...SC_LAYOUT, plot_bgcolor: "#F0E8D5" }, SC_CFG);
+    // Plotly loads on demand (see ensurePlotly in common.js); degrade quietly if blocked.
+    ensurePlotly()
+      .then(Plotly => Plotly.react(divEl, traces, { ...SC_LAYOUT, plot_bgcolor: "#F0E8D5" }, SC_CFG))
+      .catch(() => {});
   }
   const TEAM_SHOT_CACHE = {};
   function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }

@@ -8,7 +8,6 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
   <link rel="apple-touch-icon" href="img/logo.png">
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
   <style>
     .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
     /* Mobile: pin rank + logo + team to the left while stats scroll. */
@@ -734,7 +733,10 @@ function scRenderDensity(divEl,mx,my,hx,hy){
      xbins:{start:-26,end:26,size:2.5},ybins:{start:-2.5,end:31,size:2.5},zmin:0},
     ...scCourtTraces("rgba(255,255,255,0.85)"),
   ];
-  Plotly.react(divEl,traces,{...SC_LAYOUT,plot_bgcolor:"#F0E8D5"},SC_CFG);
+  // Plotly loads on demand (see ensurePlotly in common.js); degrade quietly if blocked.
+  ensurePlotly()
+    .then(Plotly=>Plotly.react(divEl,traces,{...SC_LAYOUT,plot_bgcolor:"#F0E8D5"},SC_CFG))
+    .catch(()=>{});
 }
 function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 const SHOT_CACHE={};
