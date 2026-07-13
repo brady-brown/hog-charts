@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glossary | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    /* Glossary layout — one card per site section, dt/dd pairs per term.
+       Every dt has an id so other pages can deep-link (glossary.html#g-usg). */
+    .gl-section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin:18px 0; }
+    .gl-section > h2 { margin:0 0 12px; font-size:1.1rem; }
+    .gl-section dl { margin:0; }
+    .gl-section dt { font-weight:700; padding-top:12px; scroll-margin-top:80px; }
+    .gl-section dt:first-of-type { padding-top:0; }
+    .gl-section dd { margin:2px 0 0; color:var(--muted); font-size:.9rem; line-height:1.5; }
+    /* unfilled entries render as a muted dash until the copy is written */
+    .gl-section dd:empty::before { content:"—"; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+
+  <h1>Glossary</h1>
+  <!-- TODO(copy): optional one-line intro under the h1 -->
+
+  <section class="gl-section" id="gl-core">
+    <h2>Core Terms</h2>
+    <dl>
+      <dt id="g-possession">Possession</dt>              <dd><!-- TODO(copy) --></dd>
+      <dt id="g-per100">Per-100 Stats</dt>              <dd><!-- TODO(copy) --></dd>
+      <dt id="g-pace">Pace</dt>                          <dd><!-- TODO(copy) --></dd>
+      <dt id="g-ortg">ORtg (Offensive Rating)</dt>       <dd><!-- TODO(copy) --></dd>
+      <dt id="g-drtg">DRtg (Defensive Rating)</dt>       <dd><!-- TODO(copy) --></dd>
+      <dt id="g-net">Net Rating</dt>                     <dd><!-- TODO(copy) --></dd>
+      <dt id="g-fg">FG% / 3P% / FT%</dt>                 <dd><!-- TODO(copy) --></dd>
+      <dt id="g-efg">eFG% (Effective FG%)</dt>           <dd><!-- TODO(copy) --></dd>
+      <dt id="g-ts">TS% (True Shooting %)</dt>           <dd><!-- TODO(copy) --></dd>
+      <dt id="g-pps">PPS (Points Per Shot)</dt>          <dd><!-- TODO(copy) --></dd>
+      <dt id="g-baseline">Baseline / PPS±</dt>           <dd><!-- TODO(copy): NCAA per-zone FG% baseline; PPS± = PPS above/below it --></dd>
+      <dt id="g-3par">3PAr (3-Point Attempt Rate)</dt>   <dd><!-- TODO(copy) --></dd>
+      <dt id="g-ftr">FTr (Free-Throw Rate)</dt>          <dd><!-- TODO(copy) --></dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-player-stats">
+    <h2>Player Stats</h2>
+    <dl>
+      <dt id="g-box-per-game">PPG / RPG / APG / SPG / BPG / TOV / MPG / GP</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-usg">USG% (Usage)</dt>                   <dd><!-- TODO(copy) --></dd>
+      <dt id="g-resp">Resp% (Points Responsible)</dt>    <dd><!-- TODO(copy): scored+assisted share of on-court team points; regular season only --></dd>
+      <dt id="g-astp">AST% (Assist %)</dt>               <dd><!-- TODO(copy) --></dd>
+      <dt id="g-tovp">TOV% (Turnover %)</dt>             <dd><!-- TODO(copy) --></dd>
+      <dt id="g-rebp">ORB% / DRB% / TRB%</dt>            <dd><!-- TODO(copy) --></dd>
+      <dt id="g-stlblk">STL% / BLK%</dt>                 <dd><!-- TODO(copy) --></dd>
+      <dt id="g-astd">Ast'd% (Assisted %)</dt>           <dd><!-- TODO(copy): share of the player's OWN made FGs that were assisted --></dd>
+      <dt id="g-shot-diet">Rim% / Mid% / 3PA% (Shot Diet)</dt> <dd><!-- TODO(copy): share of FGA at the rim / mid-range / from three --></dd>
+      <dt id="g-onoff">On/Off</dt>                       <dd><!-- TODO(copy) --></dd>
+      <dt id="g-rapm">RAPM / Off RAPM / Def RAPM</dt>    <dd><!-- TODO(copy) --></dd>
+      <dt id="g-box-rapm">Box RAPM / Off Box / Def Box</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-rapm-poss">Poss (RAPM sample)</dt>       <dd><!-- TODO(copy) --></dd>
+      <dt id="g-percentiles">Percentile shading</dt>     <dd><!-- TODO(copy): percentiles shown for 10+ GP and 10+ MPG players; others blurred --></dd>
+      <dt id="g-scopes">Scopes (All / Regular / Postseason / Conference / Non-Conference)</dt> <dd><!-- TODO(copy) --></dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-team-stats">
+    <h2>Team Stats</h2>
+    <dl>
+      <dt id="g-team-net">Net / Off / Def</dt>           <dd><!-- TODO(copy) --></dd>
+      <dt id="g-sos">SOS (Strength of Schedule)</dt>     <dd><!-- TODO(copy) --></dd>
+      <dt id="g-home">Home</dt>                          <dd><!-- TODO(copy) --></dd>
+      <dt id="g-ppp">PPP / Opp PPP</dt>                  <dd><!-- TODO(copy) --></dd>
+      <dt id="g-four-factors">Four Factors (eFG% / TOV% / ORB% / FTr and D-versions)</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-defg">D eFG% / D 3P% / D TOV% / D FTr</dt> <dd><!-- TODO(copy): opponent versions of the same stats --></dd>
+      <dt id="g-ato">A:TO (Assist-to-Turnover)</dt>      <dd><!-- TODO(copy) --></dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-scout">
+    <h2>Scout</h2>
+    <dl>
+      <dt id="g-gravity">Gravity</dt>                    <dd><!-- TODO(copy): 0–100 blend of league 3PA/G volume percentile (55%) and 3P% accuracy percentile (45%) --></dd>
+      <dt id="g-tiers">Tiers (DON'T LEAVE / CLOSE OUT / RESPECT / SAG OFF / IGNORE)</dt> <dd><!-- TODO(copy): * marks a small sample (<15 3PA) --></dd>
+      <dt id="g-shot-diet-share">Shot Diet — Share / D-I Avg / vs Avg</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-shot-quality">Shot Quality — Att / FG% / Baseline / PPS / PPS±</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-scored-assist">Scored% / Assist% / On-Court Pts</dt> <dd><!-- TODO(copy): the two halves of Resp%, and its denominator --></dd>
+      <dt id="g-drtg-onoff">DRtg On / DRtg Off / On−Off</dt> <dd><!-- TODO(copy): points allowed per 100 with the player on vs. off; positive On−Off = defense is worse with him on --></dd>
+      <dt id="g-def-poss">Def Poss</dt>                  <dd><!-- TODO(copy): defensive possessions played — the sample size behind On−Off and Fouls/100 --></dd>
+      <dt id="g-fouls100">Fouls/100</dt>                 <dd><!-- TODO(copy): personal fouls per 100 defensive possessions --></dd>
+      <dt id="g-reb100">Reb/100</dt>                     <dd><!-- TODO(copy): total rebounds per 100 on-court possessions --></dd>
+      <dt id="g-by-side">By Side (Left / Center / Right)</dt> <dd><!-- TODO(copy) --></dd>
+      <dt id="g-recent-form">Recent Form (Season / Recent / Δ PPS)</dt> <dd><!-- TODO(copy): season vs. last-5-games shot mix and quality --></dd>
+      <dt id="g-small-sample">Small-sample filter</dt>   <dd><!-- TODO(copy): defense/foul boards hide players under a def-poss floor by default; toggle shows all --></dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-lineups">
+    <h2>Lineups</h2>
+    <!-- Seeded from the existing column tooltips on the Lineups page — edit freely. -->
+    <dl>
+      <dt id="g-lineup">Lineup</dt>       <dd>The players in this unit.</dd>
+      <dt id="g-lineup-poss">Poss</dt>    <dd>Possessions this lineup played together — the sample size. Bigger = more reliable.</dd>
+      <dt id="g-lineup-mins">Mins</dt>    <dd>Total minutes this lineup played together.</dd>
+      <dt id="g-lineup-net">NetRtg</dt>   <dd>Net rating: points scored minus points allowed per 100 possessions with this lineup on the floor. Higher is better.</dd>
+      <dt id="g-lineup-ortg">ORtg</dt>    <dd>Offensive rating: points scored per 100 possessions. Higher is better.</dd>
+      <dt id="g-lineup-drtg">DRtg</dt>    <dd>Defensive rating: points allowed per 100 possessions. Lower is better.</dd>
+      <dt id="g-lineup-per100">AST / TOV / REB / STL / BLK</dt> <dd>Assists, turnovers, rebounds, steals, and blocks per 100 possessions.</dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-shot-charts">
+    <h2>Shot Charts</h2>
+    <dl>
+      <dt id="g-zones">Zones</dt>                        <dd><!-- TODO(copy): the 14 court zones (restricted area, close mid, mid, three) --></dd>
+      <dt id="g-zone-colors">Zone colors</dt>            <dd><!-- TODO(copy): FG% in the zone vs. the D-I baseline for that zone --></dd>
+      <dt id="g-min-att">Minimum attempts</dt>           <dd><!-- TODO(copy): zones under the attempt floor are left uncolored --></dd>
+    </dl>
+  </section>
+
+  <section class="gl-section" id="gl-postseason">
+    <h2>Postseason</h2>
+    <dl>
+      <dt id="g-ptdiff">+/− (Point Differential)</dt>    <dd><!-- TODO(copy) --></dd>
+    </dl>
+  </section>
+
+  <!-- TODO(copy): Predictor section — tell me which factor labels from the
+       prediction breakdown you want defined and I'll add the dt/dd rows.
+  <section class="gl-section" id="gl-predictor">
+    <h2>Predictor</h2>
+    <dl></dl>
+  </section>
+  -->
+
+</div>
+
+<script src="js/common.js"></script>
+</body>
+</html>

@@ -50,6 +50,39 @@ function fmtPct(v, decimals = 1) {
   return v != null ? (Number(v) * 100).toFixed(decimals) : "—";
 }
 
+// ── Site navigation (single source of truth) ────────────────────────────────
+// The link list lives here so adding/renaming a page is a one-line edit instead
+// of touching every HTML file. Each page's <nav> ships with only the brand
+// anchor; populateNav() injects these links after it at load. data-page matches
+// markActiveNav()'s filename check (space-separated for a hub + its sub-pages).
+const NAV_LINKS = [
+  { href: "index.html",        label: "Home" },
+  { href: "scout-report.html", label: "Scout" },
+  { href: "prediction.html",   label: "Predictor" },
+  { href: "net-ratings.html",  label: "Team Stats" },
+  { href: "player-stats.html", label: "Player Stats" },
+  { href: "lineup-stats.html", label: "Lineups" },
+  { href: "shot-charts.html",  label: "Shot Charts" },
+  { href: "postseason.html",   label: "Postseason" },
+  { href: "glossary.html",     label: "Glossary" },
+];
+
+function populateNav() {
+  const nav = document.querySelector("nav");
+  if (!nav || nav.querySelector("a[data-page]")) return;   // absent or already built
+  const brand = nav.querySelector(".nav-brand");
+  const frag = document.createDocumentFragment();
+  NAV_LINKS.forEach(link => {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.dataset.page = link.page || link.href;
+    a.textContent = link.label;
+    frag.appendChild(a);
+  });
+  if (brand && brand.nextSibling) nav.insertBefore(frag, brand.nextSibling);
+  else nav.appendChild(frag);
+}
+
 // Mark the nav link for the current page active
 function markActiveNav() {
   const page = location.pathname.replace(/\/$/, "").split("/").pop() || "index.html";
@@ -208,6 +241,7 @@ function enhanceAllSelects(threshold = SS_THRESHOLD) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  populateNav();          // inject shared links before the nav is wrapped/marked
   buildResponsiveNav();
   markActiveNav();
   enhanceAllSelects();
