@@ -49,6 +49,15 @@
     #sc-status { color:var(--muted); padding:24px 0; }
     /* scout tables have no total row — drop the base last-row emphasis */
     .sc-section .breakdown-table tr:last-child td { font-weight:normal; padding-top:8px; }
+    /* consistent column gutters + no mid-cell wrapping; the base .breakdown-table
+       has zero horizontal padding, so column gaps were left to auto-layout and
+       cells wrapped on phones. Wide tables scroll inside .tbl-wrap instead. */
+    .sc-section .breakdown-table th, .sc-section .breakdown-table td { white-space:nowrap; padding-right:14px; }
+    .sc-section .breakdown-table th:last-child, .sc-section .breakdown-table td:last-child { padding-right:0; }
+    /* low-sample toggle under the gated boards */
+    .sc-gate { padding:8px 0 4px; }
+    .sc-gate a { color:var(--muted); font-size:.78rem; text-decoration:none; }
+    .sc-gate a:hover { color:var(--ink); text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -63,6 +72,7 @@
   <a href="lineup-stats.html" data-page="lineup-stats.html">Lineups</a>
   <a href="shot-charts.html"  data-page="shot-charts.html">Shot Charts</a>
   <a href="postseason.html"   data-page="postseason.html">Postseason</a>
+  <a href="glossary.html"     data-page="glossary.html">Glossary</a>
 </nav>
 
 <div class="container">
@@ -292,6 +302,41 @@ function directionalMini(rows){
   ], rows);
 }
 
+// ── low-sample gating (Who to Attack / Foul Trouble) ─────────────────────────
+// Rows under a defensive-possession floor are hidden by default (tiny samples
+// make On−Off and Fouls/100 explode); a per-section toggle shows everyone.
+// Floor adapts early season: 20% of the team leader's def poss, capped at 100.
+const GATES = {};    // key -> {elId, rows, build}
+let SHOW_ALL = {};   // key -> bool, reset on each report render
+
+function defPossFloor(rows){
+  const mx = Math.max(0, ...rows.map(r => r.def_poss || 0));
+  return Math.min(100, Math.ceil(mx * 0.2));
+}
+function gatedSection(key, rows, build){
+  const elId = `sc-gate-${key}`;
+  GATES[key] = {elId, rows: rows || [], build};
+  return `<div id="${elId}"></div>`;
+}
+function renderGate(key){
+  const g = GATES[key];
+  const el = document.getElementById(g.elId);
+  if(!el) return;
+  const floor = defPossFloor(g.rows);
+  const all = !!SHOW_ALL[key];
+  const kept = all ? g.rows : g.rows.filter(r => (r.def_poss || 0) >= floor);
+  const hidden = g.rows.length - kept.length;
+  let html = g.build(kept);
+  if(all || hidden > 0){
+    const label = all
+      ? "Hide small samples"
+      : `Show ${hidden} more (under ${floor} def. poss.)`;
+    html += `<div class="sc-gate"><a href="#" onclick="toggleGate('${key}');return false">${label}</a></div>`;
+  }
+  el.innerHTML = html;
+}
+function toggleGate(key){ SHOW_ALL[key] = !SHOW_ALL[key]; renderGate(key); }
+
 // ── render one team's whole report ───────────────────────────────────────────
 async function renderReport(entry){
   const status = document.getElementById("sc-status");
@@ -304,6 +349,7 @@ async function renderReport(entry){
   // full player rows for this team, so board rows can open the player card
   await ensurePlayers();
   indexTeamPlayers(rep.tid);
+  SHOW_ALL = {};   // gated boards start filtered on every report
 
   const section = (h,blurb,body)=>`
     <section class="sc-section">
@@ -350,10 +396,10 @@ async function renderReport(entry){
     </div>`);
 
   // 6 — who to attack
-  html += section("Who to Attack", "Defenders the team gives up the most points with on the floor.", boardAttack(rep.attack_board));
+  html += section("Who to Attack", "Defenders the team gives up the most points with on the floor.", gatedSection("attack", rep.attack_board, boardAttack));
 
   // 7 — foul trouble
-  html += section("Foul Trouble", "Who fouls the most per 100 defensive possessions.", boardFouls(rep.foul_board));
+  html += section("Foul Trouble", "Who fouls the most per 100 defensive possessions.", gatedSection("fouls", rep.foul_board, boardFouls));
 
   // 8 — box-out / rebounding
   html += section("The Glass", "Who to box out — rebounding rates and volume.", boardRebound(rep.rebound_board));
@@ -362,6 +408,7 @@ async function renderReport(entry){
   html += section("Recent Form", `Season shot mix and quality vs. the last ${rep.form.n_recent_games} games.`, formTable(rep.form.table));
 
   wrap.innerHTML = html;
+  renderGate("attack"); renderGate("fouls");
   status.style.display="none"; wrap.style.display="block";
 
   // charts (current-season shot coords)
