@@ -58,6 +58,9 @@ jobs:
       - name: Build points-responsible tables
         run: python build_points_resp.py
 
+      - name: Build shot-diet tables
+        run: python build_shot_diet.py
+
       - name: Build site JSON
         run: python build_site.py
 

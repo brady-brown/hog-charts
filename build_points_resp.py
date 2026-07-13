@@ -21,8 +21,9 @@ Two scopes match the player-stats scope masks exactly (game sets from the
 schedule): regular season and conference (regular league games only).
 
 Output (project root, consumed by build_site.py and build_scout.py):
-    points_resp_{SEASON}.csv       — regular season   (season_type 2, no conf tourney)
-    points_resp_conf_{SEASON}.csv  — conference        (regular league games)
+    points_resp_{SEASON}.csv          — regular season   (season_type 2, no conf tourney)
+    points_resp_conf_{SEASON}.csv     — conference        (regular league games)
+    points_resp_nonconf_{SEASON}.csv  — non-conference    (regular games, not league)
     each: athlete_id, team_id, pts_scored, pts_ast, on_court_pts,
           scored_pct, assist_pct, resp_pct
 
@@ -71,7 +72,8 @@ def _game_sets():
     reg_type2 = set(sched.loc[sched["season_type"] == 2, "game_id"].astype(int).unique())
     reg_games = reg_type2 - conf_tourney_ids
     conf_games = (conf_comp_ids - conf_tourney_ids) & reg_games
-    return reg_games, conf_games
+    nonconf_games = reg_games - conf_games
+    return reg_games, conf_games, nonconf_games
 
 
 def _scoring_frame():
@@ -134,11 +136,12 @@ def _scope_table(sc, pres, games):
 
 def main():
     print(f"Building points-responsible tables for {SEASON} …")
-    reg_games, conf_games = _game_sets()
-    print(f"  {len(reg_games):,} regular game IDs, {len(conf_games):,} conference game IDs")
+    reg_games, conf_games, nonconf_games = _game_sets()
+    print(f"  {len(reg_games):,} regular, {len(conf_games):,} conference, "
+          f"{len(nonconf_games):,} non-conference game IDs")
     sc = _scoring_frame()
     pres = _presence()
-    for suffix, games in (("", reg_games), ("_conf", conf_games)):
+    for suffix, games in (("", reg_games), ("_conf", conf_games), ("_nonconf", nonconf_games)):
         tbl = _scope_table(sc, pres, games)
         path = os.path.join(PROJECT_ROOT, f"points_resp{suffix}_{SEASON}.csv")
         tbl.to_csv(path, index=False)

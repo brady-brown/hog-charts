@@ -237,11 +237,21 @@ def aggregate_player_stats(player_game_rows_df):
 #   post → player_stats_post_{SEASON}.csv  (postseason only)
 #   conf → player_stats_conf_{SEASON}.csv  (regular-season conference games)
 # ---------------------------------------------------------------------------
+# Non-conference: regular-season games that are NOT conference league games (and
+# not conference tournaments, which is_regular_game already excludes). This is the
+# complement of the conference scope within the regular season — early-season
+# tournaments, buy games, rivalry non-league matchups, etc.
+played_boxscores_df["is_nonconf_game"] = (
+    played_boxscores_df["is_regular_game"]
+    & ~played_boxscores_df["game_id"].isin(conference_game_ids)
+)
+
 PLAYER_STAT_SCOPES = [
-    ("reg",  f"player_stats_{SEASON}.csv",      played_boxscores_df["is_regular_game"]),
-    ("all",  f"player_stats_all_{SEASON}.csv",  played_boxscores_df["season_type"].isin([2, 3])),
-    ("post", f"player_stats_post_{SEASON}.csv", played_boxscores_df["is_postseason"]),
-    ("conf", f"player_stats_conf_{SEASON}.csv", played_boxscores_df["is_conference_game"]),
+    ("reg",     f"player_stats_{SEASON}.csv",         played_boxscores_df["is_regular_game"]),
+    ("all",     f"player_stats_all_{SEASON}.csv",     played_boxscores_df["season_type"].isin([2, 3])),
+    ("post",    f"player_stats_post_{SEASON}.csv",    played_boxscores_df["is_postseason"]),
+    ("conf",    f"player_stats_conf_{SEASON}.csv",    played_boxscores_df["is_conference_game"]),
+    ("nonconf", f"player_stats_nonconf_{SEASON}.csv", played_boxscores_df["is_nonconf_game"]),
 ]
 
 for scope_name, output_filename, scope_mask in PLAYER_STAT_SCOPES:
@@ -411,12 +421,14 @@ team_boxscores_df["opponent_team_id"] = team_boxscores_df["opponent_team_id"].as
 # stats use the matching opponent totals.
 tc_is_conf_tourney = team_boxscores_df["game_id"].isin(conference_tournament_game_ids)
 tc_is_regular      = (team_boxscores_df["season_type"] == 2) & ~tc_is_conf_tourney
+tc_is_conference   = tc_is_regular & team_boxscores_df["game_id"].isin(conference_game_ids)
+tc_is_nonconf      = tc_is_regular & ~team_boxscores_df["game_id"].isin(conference_game_ids)
 TEAM_CONTEXT_SCOPES = [
-    ("reg",  f"team_context_{SEASON}.csv",      tc_is_regular),
-    ("all",  f"team_context_all_{SEASON}.csv",  team_boxscores_df["season_type"].isin([2, 3])),
-    ("post", f"team_context_post_{SEASON}.csv", (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
-    ("conf", f"team_context_conf_{SEASON}.csv",
-     tc_is_regular & team_boxscores_df["game_id"].isin(conference_game_ids)),
+    ("reg",     f"team_context_{SEASON}.csv",         tc_is_regular),
+    ("all",     f"team_context_all_{SEASON}.csv",     team_boxscores_df["season_type"].isin([2, 3])),
+    ("post",    f"team_context_post_{SEASON}.csv",    (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
+    ("conf",    f"team_context_conf_{SEASON}.csv",    tc_is_conference),
+    ("nonconf", f"team_context_nonconf_{SEASON}.csv", tc_is_nonconf),
 ]
 
 for scope_name, output_filename, scope_mask in TEAM_CONTEXT_SCOPES:
@@ -432,11 +444,11 @@ for scope_name, output_filename, scope_mask in TEAM_CONTEXT_SCOPES:
 # scope masks as the context files so the Team Stats site page lines up with
 # the player-stats scope toggle (All / Conf / Reg / Post).
 TEAM_STATS_SCOPES = [
-    ("reg",  f"team_stats_{SEASON}.csv",      tc_is_regular),
-    ("all",  f"team_stats_all_{SEASON}.csv",  team_boxscores_df["season_type"].isin([2, 3])),
-    ("post", f"team_stats_post_{SEASON}.csv", (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
-    ("conf", f"team_stats_conf_{SEASON}.csv",
-     tc_is_regular & team_boxscores_df["game_id"].isin(conference_game_ids)),
+    ("reg",     f"team_stats_{SEASON}.csv",         tc_is_regular),
+    ("all",     f"team_stats_all_{SEASON}.csv",     team_boxscores_df["season_type"].isin([2, 3])),
+    ("post",    f"team_stats_post_{SEASON}.csv",    (team_boxscores_df["season_type"] == 3) | tc_is_conf_tourney),
+    ("conf",    f"team_stats_conf_{SEASON}.csv",    tc_is_conference),
+    ("nonconf", f"team_stats_nonconf_{SEASON}.csv", tc_is_nonconf),
 ]
 for scope_name, output_filename, scope_mask in TEAM_STATS_SCOPES:
     scope_team_box_df = team_boxscores_df[scope_mask]

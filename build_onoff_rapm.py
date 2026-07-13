@@ -111,10 +111,11 @@ _is_regular    = raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE
 _is_postseason = raw_play_by_play_full["season_type"] == 3   # conf tourneys + NCAA + NIT
 _is_conference = raw_play_by_play_full["game_id"].isin(conference_game_id_set)
 assist_share_scopes = {
-    "":      raw_play_by_play_full[_is_regular],
-    "_all":  raw_play_by_play_full[_is_regular | _is_postseason],
-    "_post": raw_play_by_play_full[_is_postseason],
-    "_conf": raw_play_by_play_full[_is_regular & _is_conference],
+    "":         raw_play_by_play_full[_is_regular],
+    "_all":     raw_play_by_play_full[_is_regular | _is_postseason],
+    "_post":    raw_play_by_play_full[_is_postseason],
+    "_conf":    raw_play_by_play_full[_is_regular & _is_conference],
+    "_nonconf": raw_play_by_play_full[_is_regular & ~_is_conference],
 }
 for _scope_suffix, _scope_pbp in assist_share_scopes.items():
     _assisted_fg_share_table(_scope_pbp).to_csv(

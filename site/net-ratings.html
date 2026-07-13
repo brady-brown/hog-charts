@@ -207,6 +207,7 @@
         <button id="sc-reg"  onclick="setScope('reg')">Regular</button>
         <button id="sc-post" onclick="setScope('post')">Postseason</button>
         <button id="sc-conf" onclick="setScope('conf')">Conference</button>
+        <button id="sc-nonconf" onclick="setScope('nonconf')">Non-Conf</button>
       </div>
     </div>
   </div>
@@ -319,16 +320,17 @@ const COL_GROUPS = {
   ],
 };
 
-const SCOPES = ["all", "reg", "post", "conf"];
+const SCOPES = ["all", "reg", "post", "conf", "nonconf"];
 const SCOPE_FILE = {
   all:  "team-stats-all.json",
   reg:  "team-stats.json",
   post: "team-stats-post.json",
   conf: "team-stats-conf.json",
+  nonconf: "team-stats-nonconf.json",
 };
-const SCOPE_BTN = { all:"sc-all", reg:"sc-reg", post:"sc-post", conf:"sc-conf" };
-// Default Min games per scope — teams play far fewer post/conf games.
-const SCOPE_MIN_GAMES = { all:20, reg:20, post:1, conf:10 };
+const SCOPE_BTN = { all:"sc-all", reg:"sc-reg", post:"sc-post", conf:"sc-conf", nonconf:"sc-nonconf" };
+// Default Min games per scope — teams play far fewer post/conf/nonconf games.
+const SCOPE_MIN_GAMES = { all:20, reg:20, post:1, conf:10, nonconf:5 };
 
 let TS = { all:null, reg:null, post:null, conf:null };
 let allRows  = [];

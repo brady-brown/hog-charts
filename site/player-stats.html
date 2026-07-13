@@ -227,7 +227,7 @@
   <h2>Player Stats</h2>
   <p class="page-sub">
     Advanced stats for every Division&nbsp;I player. Toggle game scope —
-    All games (regular + postseason), Regular, Postseason, or Conference.
+    All games (regular + postseason), Regular, Postseason, Conference, or Non-Conf.
     On/Off = net rating differential when on vs. off the court (min 200 poss).
     Click any column to sort.
   </p>
@@ -314,6 +314,7 @@
         <button id="ps-btn-reg"  onclick="setScope('reg')">Regular</button>
         <button id="ps-btn-post" onclick="setScope('post')">Postseason</button>
         <button id="ps-btn-conf" onclick="setScope('conf')">Conference</button>
+        <button id="ps-btn-nonconf" onclick="setScope('nonconf')">Non-Conf</button>
       </div>
     </div>
   </div>
@@ -419,6 +420,9 @@ const COL_GROUPS = {
     { key:"ft",    label:"FT%",   dir:"desc", tip:"Free throw percentage", pct:true },
     { key:"par3",  label:"3PAr",  dir:"desc", tip:"Three-point attempt rate: 3PA / FGA", pct:true },
     { key:"ftr",   label:"FTr",   dir:"desc", tip:"Free throw rate: FTA / FGA", pct:true },
+    { key:"rimr",  label:"Rim%",  dir:"desc", tip:"Shot diet — share of the player's field-goal attempts taken at the rim (restricted area). From play-by-play shot locations; current season only." },
+    { key:"midr",  label:"Mid%",  dir:"desc", tip:"Shot diet — share of field-goal attempts that are mid-range two-pointers (everything between the rim and the arc). Current season only." },
+    { key:"thr3r", label:"3PA%",  dir:"desc", tip:"Shot diet — share of field-goal attempts taken from three. Rim% + Mid% + 3PA% sum to 100. Current season only." },
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
   ],
   // RAPM columns are merged in from player-impact.json (same model as the old
@@ -435,20 +439,22 @@ const COL_GROUPS = {
   ],
 };
 
-// Four game scopes. PS holds the loaded player array for each (null until first
+// Game scopes. PS holds the loaded player array for each (null until first
 // visited). "all" = regular + postseason; "reg" = regular only; "post" =
-// postseason only; "conf" = regular-season conference games.
-const SCOPES = ["all", "reg", "post", "conf"];
+// postseason only; "conf" = regular-season conference games; "nonconf" =
+// regular-season games that are NOT conference (early tourneys, buy games, etc.).
+const SCOPES = ["all", "reg", "post", "conf", "nonconf"];
 const SCOPE_FILE = {
   all:  "player-stats-all.json",
   reg:  "player-stats.json",
   post: "player-stats-post.json",
   conf: "player-stats-conf.json",
+  nonconf: "player-stats-nonconf.json",
 };
-const SCOPE_BTN = { all: "ps-btn-all", reg: "ps-btn-reg", post: "ps-btn-post", conf: "ps-btn-conf" };
+const SCOPE_BTN = { all: "ps-btn-all", reg: "ps-btn-reg", post: "ps-btn-post", conf: "ps-btn-conf", nonconf: "ps-btn-nonconf" };
 // Sensible default games/MPG floors per scope (postseason maxes out at ~6 games).
-const SCOPE_MIN_GP  = { all: 15, reg: 15, post: 1, conf: 8 };
-const SCOPE_MIN_MPG = { all: 15, reg: 15, post: 1, conf: 10 };
+const SCOPE_MIN_GP  = { all: 15, reg: 15, post: 1, conf: 8, nonconf: 5 };
+const SCOPE_MIN_MPG = { all: 15, reg: 15, post: 1, conf: 10, nonconf: 10 };
 
 let PS = { all: null, reg: null, post: null, conf: null };
 let allPlayers = [];
@@ -754,6 +760,7 @@ const STAT_FILTER_GROUPS = [
                        ["fgmpg","FGM/g"],["fgapg","FGA/g"],["ftmpg","FTM/g"],["ftapg","FTA/g"]]],
   ["Shooting %", [["ts","TS%"],["efg","eFG%"],["fg","FG%"],["fg3","3P%"],["ft","FT%"],
                   ["par3","3PAr"],["ftr","FTr"]]],
+  ["Shot diet", [["rimr","Rim%"],["midr","Mid%"],["thr3r","3PA%"]]],
   ["Advanced", [["usg","USG%"],["resp","Resp%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
                 ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["astdp","Ast'd%"],["on_off","On/Off"]]],
   ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
@@ -1248,6 +1255,9 @@ async function openModal(p) {
     { lbl:"FG%",   val: p.fg   != null ? (p.fg*100).toFixed(1)+"%"  : "—" },
     { lbl:"3P%",   val: p.fg3  != null ? (p.fg3*100).toFixed(1)+"%" : "—" },
     { lbl:"FT%",   val: p.ft   != null ? (p.ft*100).toFixed(1)+"%"  : "—" },
+    { lbl:"Rim%",  val: p.rimr  != null ? p.rimr.toFixed(1)+"%"  : "—" },
+    { lbl:"Mid%",  val: p.midr  != null ? p.midr.toFixed(1)+"%"  : "—" },
+    { lbl:"3PA%",  val: p.thr3r != null ? p.thr3r.toFixed(1)+"%" : "—" },
   ];
   if (HAS_ONOFF) {
     advStats.push({ lbl:"On/Off", val: p.on_off != null
