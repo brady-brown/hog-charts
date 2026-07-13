@@ -1,0 +1,26 @@
+/data/2026/*
+  Cache-Control: public, max-age=3600
+
+/data/2025/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/2024/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/2023/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/2022/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/2021/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/shots/*
+  Cache-Control: public, max-age=3600
+
+/data/seasons.json
+  Cache-Control: public, max-age=300
+
+/js/*
+  Cache-Control: public, max-age=3600

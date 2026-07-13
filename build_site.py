@@ -11,7 +11,8 @@ without a server-side database.
 
 Outputs (written into site/data/{SEASON}/):
     predictor.json          Teams + model coefficients for the game predictor page.
-    net-ratings.json        Efficiency leaderboard for every D-I team.
+    team-stats-*.json       Per-scope team efficiency + box/four-factor leaderboard
+                            (powers the Team Stats page; net-ratings.json retired).
     player-stats.json       Per-player overall season stats.
     player-stats-conf.json  Per-player conference-only stats.
     player-impact.json      RAPM + on/off impact hub (overall).
@@ -308,9 +309,11 @@ else:
 
 
 # ===========================================================================
-# 2. net-ratings.json
+# 2. net_ratings_df — team identity/record source for the team-stats section
+#    below. (No standalone net-ratings.json is written: the Team Stats page
+#    reads team-stats-*.json, which re-solves ratings per scope. Removed
+#    2026-07 as dead weight — see ARCHITECTURE_REVIEW.md A1.)
 # ===========================================================================
-print("\nBuilding net-ratings.json…")
 net_ratings_df = net_ratings_raw_df.copy()
 net_ratings_df["conf"] = net_ratings_df["team"].map(conference_label_map).fillna("")
 if "wins" in net_ratings_df.columns and "losses" in net_ratings_df.columns:
@@ -319,16 +322,6 @@ if "wins" in net_ratings_df.columns and "losses" in net_ratings_df.columns:
         + "–"
         + net_ratings_df["losses"].astype(int).astype(str)
     )
-wanted_net_rating_columns = [
-    "rank", "team", "team_id", "conf", "record", "games",
-    "net_eff", "off_eff", "def_eff", "off_rank", "def_rank",
-    "sos", "pace", "home_court", "form"
-]
-net_ratings_records = (
-    net_ratings_df[[c for c in wanted_net_rating_columns if c in net_ratings_df.columns]]
-    .to_dict("records")
-)
-write_json({"net_ratings": net_ratings_records, "meta": build_metadata}, "net-ratings.json")
 
 
 # ===========================================================================
@@ -1329,6 +1322,45 @@ built_season_years = sorted(
 write_json(built_season_years, "seasons.json", output_directory=ROOT_DATA_DIR)
 print(f"\nAvailable seasons: {built_season_years}")
 
+
+# ===========================================================================
+# _headers — Cloudflare Pages cache policy, generated from the season list.
+# ===========================================================================
+# Frozen past-season data never changes → cache immutable for a year. The live
+# (current) season is seasons[0]; it (and seasons.json, which decides *which*
+# season is live) rebuild nightly → short cache so viewers pick up new games.
+# Generating this from built_season_years means the immutable/short boundary
+# advances automatically each November when a new current season starts.
+#
+# NOTE: Cloudflare Pages *merges* every matching rule's headers (joined with
+# commas), it does not pick the most specific one. So the rules below must NOT
+# overlap — we enumerate the live season explicitly rather than using a broad
+# /data/* fallback that would double up on the frozen-season paths.
+def write_cloudflare_headers(season_years):
+    live_season = season_years[0] if season_years else None
+    long_cache = "  Cache-Control: public, max-age=31536000, immutable"
+    hour_cache = "  Cache-Control: public, max-age=3600"
+    lines = []
+    for year in season_years:
+        if year == live_season:
+            lines += [f"/data/{year}/*", hour_cache, ""]        # rebuilt nightly
+        else:
+            lines += [f"/data/{year}/*", long_cache, ""]        # frozen
+    # Shared current-season shot files (rebuilt nightly).
+    lines += ["/data/shots/*", hour_cache, ""]
+    # seasons.json must never be cached long — it names the live season.
+    lines += ["/data/seasons.json", "  Cache-Control: public, max-age=300", ""]
+    # Shared JS.
+    lines += ["/js/*", hour_cache, ""]
+    headers_path = os.path.join(PROJECT_ROOT, "site", "_headers")
+    with open(headers_path, "w") as headers_file:
+        headers_file.write("\n".join(lines).rstrip() + "\n")
+    frozen = [y for y in season_years if y != live_season]
+    print(f"  {'_headers':<35s} (immutable: {frozen}; live: {live_season})")
+
+
+write_cloudflare_headers(built_season_years)
+
 print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 
 
@@ -1358,9 +1390,8 @@ print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 # teams_json_records           list    List of team dicts written into predictor.json.
 # wanted_team_columns          list    Columns kept from teams_ratings_df.
 #
-# --- net-ratings.json section ---
+# --- net_ratings_df (team identity source; no JSON written) ---
 # net_ratings_df               DataFrame  Net ratings with conf column and record string added.
-# net_ratings_records          list    to_dict("records") output.
 #
 # --- Player bios ---
 # ESPN_ROSTER_URL_TEMPLATE     str     URL pattern for ESPN's team roster API.
