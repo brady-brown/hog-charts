@@ -98,7 +98,6 @@ const SHOT_CACHE = {};
 let PLAYERS_BY_ID = new Map();   // id -> full row (+RAPM)
 let HAS_ONOFF = false;
 let NAME2ID = {};                // display name -> id, rebuilt for the current team
-const PID = r => NAME2ID[(r && (r.name ?? r.n)) ?? ""] ?? null;
 
 async function ensurePlayers(){
   if(PLAYERS_BY_ID.size) return;
@@ -129,6 +128,29 @@ function openCard(id){
   PlayerCard.open(p, {season:SEASON, curSeason:SEASON, hasOnOff:HAS_ONOFF});
 }
 
+// ── deferred player-card wiring (B2) ─────────────────────────────────────────
+// The 3.8MB player payload loads in the background so the report paints first.
+// Board rows / scorer names ship with a data-pname attribute; they resolve to a
+// player id and become clickable only once PLAYERS_PROMISE (the current team's
+// load) settles. Clicking earlier awaits it.
+let CUR_TID = null;
+let PLAYERS_PROMISE = Promise.resolve();
+const escAttr = s => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
+function markClickable(){
+  document.querySelectorAll("#sc-report [data-pname]").forEach(el => {
+    if(NAME2ID[el.dataset.pname] != null && !el.classList.contains("sc-clickable")){
+      el.classList.add("sc-clickable");
+      el.title = "View player card";
+    }
+  });
+}
+async function openCardByName(name){
+  await PLAYERS_PROMISE;
+  const id = NAME2ID[name];
+  if(id != null) openCard(id);
+}
+
 // ── formatting helpers ───────────────────────────────────────────────────────
 const N = (v,d=1)=> v==null||isNaN(v) ? "—" : Number(v).toFixed(d);
 const PCT = (v,d=1)=> v==null||isNaN(v) ? "—" : (v*100).toFixed(d)+"%";
@@ -150,12 +172,12 @@ function tierStyle(t){
 // cols: [{label, get:(row)=>cellHTML, num:true?}]
 // pid (optional): row -> athlete id; when it resolves, the row opens the player
 // card on click.
-function table(cols, rows, emptyMsg, pid=PID){
+function table(cols, rows, emptyMsg){
   if(!rows || !rows.length) return `<div class="sc-empty">${emptyMsg||"No data."}</div>`;
   const head = cols.map(c=>`<th${c.num?' class="num"':''}>${c.label}</th>`).join("");
   const body = rows.map(r=>{
-    const id = pid ? pid(r) : null;
-    const attr = id!=null ? ` class="sc-clickable" onclick="openCard(${id})" title="View player card"` : "";
+    const nm = r && (r.name ?? r.n);
+    const attr = nm ? ` data-pname="${escAttr(nm)}"` : "";
     return `<tr${attr}>`+cols.map(c=>{
       const v = c.get(r);
       return `<td${c.num?' class="num"':''}>${v==null?"—":v}</td>`;
@@ -169,11 +191,9 @@ const jerseyName = r => (r.jn!=null?`<span style="color:var(--muted)">#${r.jn}</
 // Top-scorer card heading — clickable (opens the player card) when the name
 // resolves to a full player row for this team.
 function scorerName(p){
-  const id = PID(p);
   const label = `${(p.jn!=null?`#${p.jn} `:"")}${p.n}`;
-  return id!=null
-    ? `<div class="sc-scorer-name sc-clickable" onclick="openCard(${id})" title="View player card">${label}</div>`
-    : `<div class="sc-scorer-name">${label}</div>`;
+  const nm = p.name ?? p.n;
+  return `<div class="sc-scorer-name" data-pname="${escAttr(nm)}">${label}</div>`;
 }
 
 // ── shot data (for zone charts) ──────────────────────────────────────────────
@@ -325,6 +345,7 @@ function renderGate(key){
     html += `<div class="sc-gate"><a href="#" onclick="toggleGate('${key}');return false">${label}</a></div>`;
   }
   el.innerHTML = html;
+  markClickable();   // re-mark the freshly rendered rows (no-op until players load)
 }
 function toggleGate(key){ SHOW_ALL[key] = !SHOW_ALL[key]; renderGate(key); }
 
@@ -337,9 +358,12 @@ async function renderReport(entry){
   const rep = await loadJSON(`data/${SEASON}/scout/${entry.slug}.json`).catch(()=>null);
   if(!rep){ status.textContent="Report unavailable."; return; }
 
-  // full player rows for this team, so board rows can open the player card
-  await ensurePlayers();
-  indexTeamPlayers(rep.tid);
+  // Player rows (~3.8MB) load in the BACKGROUND so the report paints first;
+  // board rows / scorer names become clickable once they resolve (B2).
+  CUR_TID = rep.tid;
+  PLAYERS_PROMISE = ensurePlayers().then(() => {
+    if(CUR_TID === rep.tid) indexTeamPlayers(rep.tid);
+  });
   SHOW_ALL = {};   // gated boards start filtered on every report
 
   const section = (h,blurb,body)=>`
@@ -401,6 +425,9 @@ async function renderReport(entry){
   wrap.innerHTML = html;
   renderGate("attack"); renderGate("fouls");
   status.style.display="none"; wrap.style.display="block";
+  // Light up clickable rows/names once players finish loading and the whole
+  // report DOM (incl. gated boards + scorer cards) exists.
+  PLAYERS_PROMISE.then(() => { if(CUR_TID === rep.tid) markClickable(); });
 
   // charts (current-season shot coords)
   await ensureBaselines();
@@ -436,11 +463,20 @@ async function renderReport(entry){
         ${directionalMini(p.directional)}
       </div>`).join("");
   }
+
+  // scorer cards render after the shot-data awaits above — re-mark once players
+  // are loaded so their names are clickable too.
+  PLAYERS_PROMISE.then(() => { if(CUR_TID === rep.tid) markClickable(); });
 }
 
 // ── init ─────────────────────────────────────────────────────────────────────
 async function init(){
   // common.js auto-runs nav + select enhancement on DOMContentLoaded.
+  // One delegated listener handles every clickable board row / scorer name.
+  document.getElementById("sc-report").addEventListener("click", e => {
+    const el = e.target.closest("[data-pname]");
+    if(el) openCardByName(el.dataset.pname);
+  });
   const seasons = await loadJSON("data/seasons.json").catch(()=>null);
   SEASON = (seasons && seasons.length) ? seasons[0] : new Date().getFullYear();
 
