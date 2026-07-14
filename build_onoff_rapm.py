@@ -53,19 +53,20 @@ REGULAR_SEASON_TYPE = 2   # sportsdataverse code for regular season (1=pre, 3=po
 print("Loading play-by-play...")
 # Keep the full feed (all season types) for the assisted-FG share tables below;
 # the on/off + RAPM pipeline itself only ever uses the regular-season subset.
-raw_play_by_play_full = mbb.load_mbb_pbp(seasons=SEASON, return_as_pandas=True)
+from hoglib import feeds  # feeds cached by build_ingest.py (step 0)
+raw_play_by_play_full = feeds.load_pbp(SEASON)
 raw_play_by_play = raw_play_by_play_full[raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
 print("Loading player box scores...")
-raw_player_boxscores = mbb.load_mbb_player_boxscore(seasons=SEASON, return_as_pandas=True)
+raw_player_boxscores = feeds.load_player_box(SEASON)
 raw_player_boxscores = raw_player_boxscores[raw_player_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
 print("Loading team box scores...")
-raw_team_boxscores = mbb.load_mbb_team_boxscore(seasons=SEASON, return_as_pandas=True)
+raw_team_boxscores = feeds.load_team_box(SEASON)
 raw_team_boxscores = raw_team_boxscores[raw_team_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
 
 print("Loading schedule...")
-schedule_df = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
+schedule_df = feeds.load_schedule(SEASON)
 schedule_df = schedule_df[schedule_df["season_type"] == REGULAR_SEASON_TYPE]
 conference_game_id_set = set(schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"])
 

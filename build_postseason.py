@@ -116,7 +116,8 @@ def parse_region_and_round(notes_headline):
 # 1. Load schedule and isolate the NCAA tournament
 # ---------------------------------------------------------------------------
 print(f"Loading {SEASON} schedule…")
-schedule_df = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
+from hoglib import feeds  # cached by build_ingest.py (step 0)
+schedule_df = feeds.load_schedule(SEASON)
 
 tournament_games_df = schedule_df[
     (schedule_df["season_type"] == 3)
@@ -315,7 +316,7 @@ if tournament_game_ids:
     if os.path.exists(offline_boxscore_csv):
         raw_boxscores_df = pd.read_csv(offline_boxscore_csv, low_memory=False)
     else:
-        raw_boxscores_df = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
+        raw_boxscores_df = feeds.load_player_box(SEASON)
 
     raw_boxscores_df["game_id"] = raw_boxscores_df["game_id"].astype(int)
     tournament_box_df = raw_boxscores_df[

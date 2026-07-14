@@ -46,7 +46,8 @@ GAME_METADATA_COLUMNS = ["game_id", "home_team_id", "away_team_id"]
 # Load full play-by-play
 # ---------------------------------------------------------------------------
 print(f"Loading {SEASON} PBP data...")
-raw_play_by_play = mbb.load_mbb_pbp(seasons=[SEASON], return_as_pandas=True)
+from hoglib import feeds  # cached by build_ingest.py (step 0)
+raw_play_by_play = feeds.load_pbp(SEASON)
 
 # Determine the date column name (varies between sportsdataverse versions).
 date_column_name = "game_date" if "game_date" in raw_play_by_play.columns else "date"
@@ -98,7 +99,7 @@ shots_with_game_info_df["_date_col"] = date_column_name    # store the column na
 # Load player box scores (for athlete name + team lookup)
 # ---------------------------------------------------------------------------
 print(f"Loading boxscore data...")
-raw_player_boxscores = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
+raw_player_boxscores = feeds.load_player_box(SEASON)
 
 player_boxscore_columns = ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
 player_identity_df = raw_player_boxscores[

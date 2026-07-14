@@ -48,9 +48,10 @@ SEASON = detect_season()
 # Load raw data
 # ---------------------------------------------------------------------------
 print("Loading data...")
-play_by_play_df = mbb.load_mbb_pbp(seasons=SEASON,          return_as_pandas=True)
-player_box_df   = mbb.load_mbb_player_boxscore(seasons=SEASON, return_as_pandas=True)
-schedule_df     = mbb.load_mbb_schedule(seasons=SEASON,      return_as_pandas=True)
+from hoglib import feeds
+play_by_play_df = feeds.load_pbp(SEASON)          # cached by build_ingest.py (step 0)
+player_box_df   = feeds.load_player_box(SEASON)
+schedule_df     = feeds.load_schedule(SEASON)
 
 # ---------------------------------------------------------------------------
 # Build team name and conference lookup maps

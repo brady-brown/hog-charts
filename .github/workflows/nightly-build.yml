@@ -40,6 +40,9 @@ jobs:
       # ── Current-season data pipeline ─────────────────────────────────────
       # OVERRIDE_SEASON is not set — each script auto-detects the current season.
 
+      - name: Ingest ESPN feeds (step 0 — download pbp/box/schedule once)
+        run: python build_ingest.py
+
       - name: Build predictor artifacts + net ratings
         run: python build_artifacts.py
 

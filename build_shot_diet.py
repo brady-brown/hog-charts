@@ -65,9 +65,9 @@ def _game_scopes():
     Conference tournaments are ESPN-tagged season_type 2 but belong to the
     postseason, so they are pulled out of reg/conf/nonconf and folded into post.
     """
-    import sportsdataverse.mbb as mbb
     from hoglib.scopes import game_id_sets
-    s = game_id_sets(mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True))
+    from hoglib import feeds
+    s = game_id_sets(feeds.load_schedule(SEASON))
     return {"": s.reg, "_all": s.all, "_post": s.post,
             "_conf": s.conf, "_nonconf": s.nonconf}
 

@@ -51,5 +51,9 @@ pages/
 /net_ratings_*.csv
 /[0-9]_man_*_stats_*.csv
 
+# Raw ESPN feed cache written by build_ingest.py (nightly step 0). Large
+# (pbp ~1GB); regenerated each run, read by the builders via hoglib.feeds.
+/raw_[0-9][0-9][0-9][0-9]/
+
 # Local prototype / scratch (not part of the site)
 zone_chart_prototype/

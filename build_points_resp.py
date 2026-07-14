@@ -50,16 +50,16 @@ def _game_sets():
     Conference tournaments are ESPN-tagged season_type 2 but belong to postseason,
     so they're excluded from both — matching the player-stats scope masks.
     """
-    import sportsdataverse.mbb as mbb
     from hoglib.scopes import game_id_sets
-    s = game_id_sets(mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True))
+    from hoglib import feeds
+    s = game_id_sets(feeds.load_schedule(SEASON))
     return s.reg, s.conf, s.nonconf
 
 
 def _scoring_frame():
     """Full-season scoring plays: team_id, scorer, assister, points, type, game."""
-    import sportsdataverse.mbb as mbb
-    pbp = mbb.load_mbb_pbp(seasons=[SEASON], return_as_pandas=True)
+    from hoglib import feeds
+    pbp = feeds.load_pbp(SEASON)
     keep = ["game_id", "team_id", "athlete_id_1", "athlete_id_2",
             "scoring_play", "score_value", "season_type"]
     sc = pbp[pbp["scoring_play"] == True][keep].copy()

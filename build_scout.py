@@ -63,8 +63,8 @@ def load_jersey_map(season):
     players who left after the season — leaving jn=None for them in player-stats).
     """
     try:
-        import sportsdataverse.mbb as mbb
-        pbox = mbb.load_mbb_player_boxscore(seasons=[season]).to_pandas()
+        from hoglib import feeds
+        pbox = feeds.load_player_box(season)   # cached by build_ingest.py (step 0)
         j = pbox.dropna(subset=["athlete_id", "athlete_jersey"]).copy()
         j["athlete_id"] = j["athlete_id"].astype(float).astype("int64")
         j["athlete_jersey"] = j["athlete_jersey"].astype(str)

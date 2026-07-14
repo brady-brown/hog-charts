@@ -32,7 +32,8 @@ SEASON = detect_season()
 # Identify conference game IDs from the schedule
 # ---------------------------------------------------------------------------
 print("Loading schedule...")
-schedule_df = mbb.load_mbb_schedule(seasons=[SEASON], return_as_pandas=True)
+from hoglib import feeds  # cached by build_ingest.py (step 0)
+schedule_df = feeds.load_schedule(SEASON)
 
 conference_game_id_set = set(
     schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"]
@@ -43,7 +44,7 @@ print(f"  {len(conference_game_id_set)} conference games found")
 # Load player box scores and filter to conference games
 # ---------------------------------------------------------------------------
 print("Loading player boxscores...")
-full_player_boxscores_df = mbb.load_mbb_player_boxscore(seasons=[SEASON], return_as_pandas=True)
+full_player_boxscores_df = feeds.load_player_box(SEASON)
 
 conference_boxscores_df = full_player_boxscores_df[
     full_player_boxscores_df["game_id"].isin(conference_game_id_set)

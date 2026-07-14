@@ -816,8 +816,8 @@ def load_boxscore_jerseys(season):
     so it fills those gaps and corrects mid-fetch roster churn.
     """
     try:
-        import sportsdataverse.mbb as mbb
-        pbox = mbb.load_mbb_player_boxscore(seasons=[season]).to_pandas()
+        from hoglib import feeds
+        pbox = feeds.load_player_box(season)   # cached by build_ingest.py (step 0)
         j = pbox.dropna(subset=["athlete_id", "athlete_jersey"]).copy()
         j["athlete_id"] = j["athlete_id"].astype(float).astype("int64").astype(str)
         j["athlete_jersey"] = j["athlete_jersey"].astype(str)

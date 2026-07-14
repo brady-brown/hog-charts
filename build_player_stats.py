@@ -40,7 +40,8 @@ MIN_MINUTES_THRESHOLD = 1.0
 # Load schedule to identify conference games
 # ---------------------------------------------------------------------------
 print("Loading schedule…")
-season_schedule_df = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
+from hoglib import feeds  # cached by build_ingest.py (step 0)
+season_schedule_df = feeds.load_schedule(SEASON)
 
 from hoglib.scopes import game_id_sets
 _scopes = game_id_sets(season_schedule_df)
@@ -74,10 +75,8 @@ offline_boxscore_csv = f"offline_player_{SEASON}.csv"
 if os.path.exists(offline_boxscore_csv):
     raw_player_boxscores_df = pd.read_csv(offline_boxscore_csv, low_memory=False)
 else:
-    print(f"  {offline_boxscore_csv} not found — fetching from sportsdataverse…")
-    raw_player_boxscores_df = mbb.load_mbb_player_boxscore(
-        seasons=[SEASON], return_as_pandas=True
-    )
+    print(f"  {offline_boxscore_csv} not found — reading cached feed…")
+    raw_player_boxscores_df = feeds.load_player_box(SEASON)
 
 # Keep regular-season (season_type == 2) AND postseason (season_type == 3) games.
 # Preseason (1) and any other types are dropped.  Each scope below is a mask over
@@ -387,7 +386,7 @@ def build_scope_net_ratings(scope_team_box_df):
 
 
 print("Loading team box scores for opponent context…")
-raw_team_boxscores_df = mbb.load_mbb_team_boxscore(seasons=[SEASON], return_as_pandas=True)
+raw_team_boxscores_df = feeds.load_team_box(SEASON)
 team_boxscores_df = raw_team_boxscores_df[
     raw_team_boxscores_df["season_type"].isin([2, 3])
 ].copy()
