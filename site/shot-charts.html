@@ -152,52 +152,20 @@
 </div><!-- /container -->
 
 <script src="js/common.js"></script>
+<script src="js/court.js"></script>
 <script src="js/zone-chart.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
 // Court geometry  (scatter / density — college 3PT)
 // ═══════════════════════════════════════════════════════════════════════════
-const HOOP_Y   = 5.25;
-const THREE_R  = 22.146;
-const CORNER_X = 21.65;
-const X_RANGE  = [-26, 26];
-const Y_RANGE  = [-2.5, 31];
+// Court geometry (X_RANGE/Y_RANGE, courtTraces, shotsXY, densityTraces) comes
+// from js/court.js, loaded before this script.
 const MAKE_C   = "#22C55E";
 const MISS_C   = "#EF4444";
 
 const THREE_ZONE_SET = new Set([
   "3PT - Right","3PT - Right Center","3PT - Center","3PT - Left Center","3PT - Left"
 ]);
-
-function arcPts(cx, cy, r, t0, t1, n = 80) {
-  const xs = [], ys = [];
-  for (let i = 0; i < n; i++) {
-    const t = (t0 + (t1 - t0) * i / (n - 1)) * Math.PI / 180;
-    xs.push(cx + r * Math.cos(t));
-    ys.push(cy + r * Math.sin(t));
-  }
-  return {x: xs, y: ys};
-}
-
-function courtTraces(lineColor = "#3C4456") {
-  const S = [];
-  const ln  = (x0,y0,x1,y1) => S.push({x:[x0,x1],y:[y0,y1]});
-  const arc = (cx,cy,r,t0,t1) => S.push(arcPts(cx,cy,r,t0,t1));
-  ln(-25,0,25,0); ln(-25,0,-25,31); ln(25,0,25,31);
-  ln(-3,4,3,4); arc(0,HOOP_Y,0.75,0,360); ln(0,4,0,4.5);
-  arc(0,HOOP_Y,4,0,180);
-  ln(-6,0,-6,19); ln(6,0,6,19); ln(-6,19,6,19);
-  arc(0,19,6,0,180); arc(0,19,6,180,360);
-  const junc = HOOP_Y + Math.sqrt(THREE_R**2 - CORNER_X**2);
-  const ang  = Math.atan2(junc - HOOP_Y, CORNER_X) * 180 / Math.PI;
-  ln(-CORNER_X,0,-CORNER_X,junc); ln(CORNER_X,0,CORNER_X,junc);
-  arc(0,HOOP_Y,THREE_R,ang,180-ang);
-  return S.map(s => ({
-    type:"scatter", x:s.x, y:s.y, mode:"lines",
-    line:{color:lineColor, width:1.6},
-    hoverinfo:"skip", showlegend:false,
-  }));
-}
 
 const BASE_LAYOUT = {
   paper_bgcolor:"#0B0E14", plot_bgcolor:"#0B0E14",
@@ -238,17 +206,6 @@ function computeZoneStats(shots, filterFn) {
   return ZoneChart.computeZones(shots, filterFn);
 }
 
-function getXY(shots, filterFn) {
-  const mx=[], my=[], hx=[], hy=[];
-  for (let i = 0; i < shots.length; i += 5) {
-    if (!filterFn(shots[i], shots[i+4])) continue;
-    const px = shots[i+1] / 10, py = shots[i+2] / 10;
-    if (shots[i+3]) { mx.push(px); my.push(py); }
-    else            { hx.push(px); hy.push(py); }
-  }
-  return {mx, my, hx, hy};
-}
-
 function splitSubtitle(base, zoneData) {
   let tm=0, ta=0, t3m=0, t3a=0;
   for (const [zi, m, a] of zoneData) {
@@ -269,20 +226,8 @@ function renderZone(container, zoneData, title, subtitle) {
 }
 
 function renderDensity(divId, mx, my, hx, hy, title, subtitle) {
-  const allX = [...mx, ...hx], allY = [...my, ...hy];
-  const traces = [
-    {
-      type:"histogram2dcontour", x:allX, y:allY,
-      colorscale:"YlOrRd", showscale:false, ncontours:20,
-      opacity:1.0, hoverinfo:"skip",
-      contours:{coloring:"fill", showlines:false},
-      xbins:{start:-26,end:26,size:2.5},
-      ybins:{start:-2.5,end:31,size:2.5},
-      zmin:0,
-    },
-    ...courtTraces("rgba(255,255,255,0.85)"),
-  ];
-  const total = allX.length;
+  const traces = densityTraces(mx, my, hx, hy);
+  const total = mx.length + hx.length;
   const makes = mx.length;
   const pct   = total>0 ? (makes/total*100).toFixed(0)+"%" : "—";
   const densityLayout = {
@@ -359,7 +304,7 @@ async function tGenerate() {
     const zoneData = computeZoneStats(td.shots, () => true);
     const sub      = splitSubtitle(`${teamName} · ${SEASON} season`, zoneData);
     renderZone(ensureZoneEl("t-zone-wrap"), zoneData, teamName, sub);
-    const {mx,my,hx,hy} = getXY(td.shots, () => true);
+    const {mx,my,hx,hy} = shotsXY(td.shots, () => true);
     renderDensity(ensureDiv("t-density-wrap","t-density"), mx,my,hx,hy,
       teamName, `${SEASON} season · shot density`);
     document.getElementById("t-scatter-wrap").style.display = "none";
@@ -372,7 +317,7 @@ async function tGenerate() {
     const gameSub  = `${game.date} · vs ${game.opp}`;
     renderZone(ensureZoneEl("t-zone-wrap"), zoneData, teamName,
       splitSubtitle(`${teamName} · ${gameSub}`, zoneData));
-    const {mx,my,hx,hy} = getXY(td.shots, filterFn);
+    const {mx,my,hx,hy} = shotsXY(td.shots, filterFn);
     renderScatter(ensureDiv("t-scatter-wrap","t-scatter"), mx,my,hx,hy, teamName, gameSub);
     document.getElementById("t-density-wrap").style.display = "none";
   }
@@ -405,7 +350,7 @@ async function pGenerate() {
     const zoneData = computeZoneStats(td.shots, filterFn);
     renderZone(ensureZoneEl("p-zone-wrap"), zoneData, playerName,
       splitSubtitle(`${teamName} · ${SEASON} season`, zoneData));
-    const {mx,my,hx,hy} = getXY(td.shots, filterFn);
+    const {mx,my,hx,hy} = shotsXY(td.shots, filterFn);
     renderDensity(ensureDiv("p-density-wrap","p-density"), mx,my,hx,hy,
       playerName, `${SEASON} season · shot density`);
     document.getElementById("p-scatter-wrap").style.display = "none";
@@ -418,7 +363,7 @@ async function pGenerate() {
     const gameSub  = `${game.date} · vs ${game.opp}`;
     renderZone(ensureZoneEl("p-zone-wrap"), zoneData, playerName,
       splitSubtitle(`${playerName} · ${gameSub}`, zoneData));
-    const {mx,my,hx,hy} = getXY(td.shots, filterFn);
+    const {mx,my,hx,hy} = shotsXY(td.shots, filterFn);
     renderScatter(ensureDiv("p-scatter-wrap","p-scatter"), mx,my,hx,hy, playerName, gameSub);
     document.getElementById("p-density-wrap").style.display = "none";
   }

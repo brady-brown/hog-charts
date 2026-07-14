@@ -264,6 +264,7 @@
 
 <script src="js/common.js"></script>
 <script src="js/percentile.js"></script>
+<script src="js/court.js"></script>
 <script src="js/zone-chart.js"></script>
 <script>
 // ── Column definitions ──────────────────────────────────────────────────────
@@ -665,41 +666,17 @@ function buildFooter() {
     + `Defense / TOV% — lower is better.`;
 }
 
-// ── Shot chart helpers (ported from player-stats.html) ───────────────────────
-const HOOP_Y=5.25, THREE_R=22.146, CORNER_X=21.65, X_RANGE=[-26,26], Y_RANGE=[-2.5,31];
-function scArcPts(cx,cy,r,t0,t1,n=80){const xs=[],ys=[];for(let i=0;i<n;i++){const t=(t0+(t1-t0)*i/(n-1))*Math.PI/180;xs.push(cx+r*Math.cos(t));ys.push(cy+r*Math.sin(t));}return{x:xs,y:ys};}
-function scCourtTraces(lc="#3C4456"){
-  const S=[],ln=(x0,y0,x1,y1)=>S.push({x:[x0,x1],y:[y0,y1]}),arc=(cx,cy,r,t0,t1)=>S.push(scArcPts(cx,cy,r,t0,t1));
-  ln(-25,0,25,0);ln(-25,0,-25,31);ln(25,0,25,31);
-  ln(-3,4,3,4);arc(0,HOOP_Y,0.75,0,360);ln(0,4,0,4.5);arc(0,HOOP_Y,4,0,180);
-  ln(-6,0,-6,19);ln(6,0,6,19);ln(-6,19,6,19);arc(0,19,6,0,180);arc(0,19,6,180,360);
-  const junc=HOOP_Y+Math.sqrt(THREE_R**2-CORNER_X**2);
-  const ang=Math.atan2(junc-HOOP_Y,CORNER_X)*180/Math.PI;
-  ln(-CORNER_X,0,-CORNER_X,junc);ln(CORNER_X,0,CORNER_X,junc);arc(0,HOOP_Y,THREE_R,ang,180-ang);
-  return S.map(s=>({type:"scatter",x:s.x,y:s.y,mode:"lines",line:{color:lc,width:1.6},hoverinfo:"skip",showlegend:false}));
-}
+// ── Shot chart helpers ───────────────────────────────────────────────────────
+// Court geometry (X_RANGE/Y_RANGE, courtTraces, shotsXY, densityTraces) comes
+// from js/court.js, loaded before this script.
 const SC_LAYOUT={paper_bgcolor:"#0B0E14",plot_bgcolor:"#0B0E14",height:400,margin:{l:10,r:10,t:10,b:10},showlegend:false,dragmode:false,
   xaxis:{range:X_RANGE,visible:false,scaleanchor:"y",scaleratio:1,constrain:"domain"},yaxis:{range:Y_RANGE,visible:false,constrain:"domain"}};
 const SC_CFG={displaylogo:false,staticPlot:true};
 let PZB=null;
 async function ensureZoneBaselines(){ if(!PZB) PZB=await loadJSON("data/zone-baselines.json"); return PZB; }
 function scRenderZone(divEl,zoneData){ ZoneChart.render(divEl,zoneData,{zones:PZB?.zones,baselines:PZB?.baselines,minAtt:5}); }
-function scGetXY(shots){
-  const mx=[],my=[],hx=[],hy=[];
-  for(let i=0;i<shots.length;i+=5){
-    const px=shots[i+1]/10,py=shots[i+2]/10;
-    if(shots[i+3]){mx.push(px);my.push(py);}else{hx.push(px);hy.push(py);}
-  }
-  return{mx,my,hx,hy};
-}
 function scRenderDensity(divEl,mx,my,hx,hy){
-  const allX=[...mx,...hx],allY=[...my,...hy];
-  const traces=[
-    {type:"histogram2dcontour",x:allX,y:allY,colorscale:"YlOrRd",showscale:false,ncontours:20,
-     opacity:1.0,hoverinfo:"skip",contours:{coloring:"fill",showlines:false},
-     xbins:{start:-26,end:26,size:2.5},ybins:{start:-2.5,end:31,size:2.5},zmin:0},
-    ...scCourtTraces("rgba(255,255,255,0.85)"),
-  ];
+  const traces = densityTraces(mx,my,hx,hy);
   // Plotly loads on demand (see ensurePlotly in common.js); degrade quietly if blocked.
   ensurePlotly()
     .then(Plotly=>Plotly.react(divEl,traces,{...SC_LAYOUT,plot_bgcolor:"#F0E8D5"},SC_CFG))
@@ -777,7 +754,7 @@ function openModal(r) {
       if (!td || !td.shots) { chartStatus.textContent = "Shot data not available."; return; }
       const zoneData = ZoneChart.computeZones(td.shots, ()=>true);
       if (!zoneData.length) { chartStatus.textContent = "No shot attempts found."; return; }
-      const {mx,my,hx,hy} = scGetXY(td.shots);
+      const {mx,my,hx,hy} = shotsXY(td.shots);
       await ensureZoneBaselines();
       chartStatus.textContent = "";
       chartsWrap.style.display = "block";
