@@ -37,35 +37,15 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 
 # ── JSON helpers (copied from build_site.py conventions) ─────────────────────
-def _sanitize_for_json(obj):
-    """Recursively replace NaN/Inf and pandas nulls with None (browser-safe)."""
-    if isinstance(obj, float):
-        return None if (obj != obj or obj in (float("inf"), float("-inf"))) else obj
-    if obj is pd.NA or obj is pd.NaT:
-        return None
-    if isinstance(obj, (np.integer,)):
-        return int(obj)
-    if isinstance(obj, (np.floating,)):
-        v = float(obj)
-        return None if (v != v or v in (float("inf"), float("-inf"))) else v
-    if isinstance(obj, np.bool_):
-        return bool(obj)
-    if isinstance(obj, dict):
-        return {k: _sanitize_for_json(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [_sanitize_for_json(x) for x in obj]
-    return obj
+# NaN-safe JSON sanitizing + slugify now live in hoglib.io (shared, must not drift).
+from hoglib.io import sanitize_for_json, slugify
 
 
 def write_json(data_object, output_filename, output_directory=OUT_DIR):
     path = os.path.join(output_directory, output_filename)
     with open(path, "w") as fh:
-        json.dump(_sanitize_for_json(data_object), fh,
+        json.dump(sanitize_for_json(data_object), fh,
                   separators=(",", ":"), allow_nan=False)
-
-
-def slugify(name):
-    return re.sub(r"[^a-z0-9]+", "-", str(name).lower()).strip("-")
 
 
 def _records(df):

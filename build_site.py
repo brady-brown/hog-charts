@@ -75,40 +75,17 @@ THREE_POINT_ZONES  = {"3PT - Right", "3PT - Right Center", "3PT - Center",
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _sanitize_for_json(python_obj):
-    """Recursively replace NaN/Inf floats with None so JSON.parse never breaks.
-
-    Python's json.dumps writes bare `NaN` and `Infinity` which are not valid
-    JSON — the browser's JSON.parse will throw a SyntaxError and the page
-    will stall on 'Loading…'.
-    """
-    if isinstance(python_obj, float):
-        return None if (python_obj != python_obj
-                        or python_obj == float("inf")
-                        or python_obj == float("-inf")) else python_obj
-    # pandas nullable scalars (pd.NA from Int64 columns, NaT) aren't floats and
-    # aren't JSON-serializable — collapse them to null.
-    if python_obj is pd.NA or python_obj is pd.NaT:
-        return None
-    if isinstance(python_obj, dict):
-        return {key: _sanitize_for_json(val) for key, val in python_obj.items()}
-    if isinstance(python_obj, list):
-        return [_sanitize_for_json(item) for item in python_obj]
-    return python_obj
+# NaN-safe JSON sanitizing + slugify now live in hoglib.io (shared, must not drift).
+from hoglib.io import sanitize_for_json, slugify
 
 
 def write_json(data_object, output_filename, output_directory=None):
     """Write a Python object as compact JSON; log filename and size."""
     output_path = os.path.join(output_directory or SEASON_DATA_DIR, output_filename)
     with open(output_path, "w") as json_file:
-        json_file.write(json.dumps(_sanitize_for_json(data_object), separators=(",", ":")))
+        json_file.write(json.dumps(sanitize_for_json(data_object), separators=(",", ":")))
     file_size_kb = os.path.getsize(output_path) / 1024
     print(f"  {output_filename:<35s} {file_size_kb:7.0f} KB")
-
-
-def slugify(display_name):
-    """Convert a team/player name to a URL-safe slug (e.g. 'Arkansas Razorbacks' → 'arkansas-razorbacks')."""
-    return re.sub(r"[^a-z0-9]+", "-", display_name.lower()).strip("-")
 
 
 def get_data_freshness_date(season):
@@ -1086,7 +1063,7 @@ for team_name in sorted(all_team_names_across_sizes):
     }
     team_lineup_path = os.path.join(LINEUPS_PER_TEAM_DIR, f"{team_slug}.json")
     with open(team_lineup_path, "w") as lineup_file:
-        lineup_file.write(json.dumps(_sanitize_for_json(per_team_data), separators=(",", ":")))
+        lineup_file.write(json.dumps(sanitize_for_json(per_team_data), separators=(",", ":")))
 
 print(f"  lineup files:          {len(team_slug_map):5d} teams → lineups/{{slug}}.json")
 
@@ -1279,7 +1256,7 @@ if os.path.exists(shots_parquet_path) and os.path.exists(box_score_parquet_path)
             team_shot_file_path = os.path.join(SHOTS_DATA_DIR, f"{team_slug}.json")
             with open(team_shot_file_path, "w") as shot_file:
                 shot_file.write(json.dumps(
-                    _sanitize_for_json({
+                    sanitize_for_json({
                         "games":   game_records,
                         "players": roster_player_names,
                         "shots":   raw_shot_array.ravel().tolist(),

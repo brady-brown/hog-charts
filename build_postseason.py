@@ -77,24 +77,8 @@ COUNTING_STAT_COLUMNS = [
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _sanitize_for_json(python_obj):
-    """Replace NaN/Inf with None so the browser's JSON.parse never breaks.
-
-    json.dumps emits bare NaN/Infinity, which are invalid JSON and stall the
-    page on 'Loading…'.  Same guard the other builders use.
-    """
-    if isinstance(python_obj, float):
-        return None if (python_obj != python_obj
-                        or python_obj in (float("inf"), float("-inf"))) else python_obj
-    if isinstance(python_obj, dict):
-        return {key: _sanitize_for_json(val) for key, val in python_obj.items()}
-    if isinstance(python_obj, (list, tuple)):
-        return [_sanitize_for_json(item) for item in python_obj]
-    if isinstance(python_obj, (np.integer,)):
-        return int(python_obj)
-    if isinstance(python_obj, (np.floating,)):
-        return _sanitize_for_json(float(python_obj))
-    return python_obj
+# NaN-safe JSON sanitizing now lives in hoglib.io (shared, must not drift).
+from hoglib.io import sanitize_for_json
 
 
 def parse_region_and_round(notes_headline):
@@ -480,7 +464,7 @@ output = {
 
 output_path = os.path.join(SEASON_DATA_DIR, "postseason.json")
 with open(output_path, "w") as json_file:
-    json_file.write(json.dumps(_sanitize_for_json(output), separators=(",", ":")))
+    json_file.write(json.dumps(sanitize_for_json(output), separators=(",", ":")))
 print(f"\nWrote {output_path}  ({os.path.getsize(output_path) / 1024:.0f} KB)")
 print("Done.")
 
