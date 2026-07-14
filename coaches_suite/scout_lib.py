@@ -135,13 +135,20 @@ def load_data(season, root="."):
     onoff = pd.read_csv(os.path.join(root, f"mbb_onoff_{season}_v2.csv"),
                         usecols=["athlete_id", "team_id", "drtg_on", "drtg_off",
                                  "poss_off_on", "poss_def_on"])
-    # personal fouls per player from full play-by-play (for the foul-trouble sheet).
-    # offline_pbp.csv is current-season only; empty series if it's a different year.
+    # personal fouls per player for the foul-trouble sheet. build_shots_data.py
+    # emits fouls_{season}.csv from the standard PBP feed (so a CI scout build has
+    # real foul data); fall back to a local offline_pbp.csv for ad-hoc runs, then
+    # to an empty series. (See ARCHITECTURE_REVIEW.md G1.)
+    fouls = pd.Series(dtype="int64", name="fouls")
+    _fouls_csv = os.path.join(root, f"fouls_{season}.csv")
     try:
-        pbp = pd.read_csv(os.path.join(root, "offline_pbp.csv"),
-                          usecols=["type_text", "athlete_id_1", "season"])
-        pf = pbp[(pbp["type_text"] == "PersonalFoul") & (pbp["season"] == season)]
-        fouls = pf.groupby("athlete_id_1").size().rename("fouls")
+        if os.path.exists(_fouls_csv):
+            fouls = pd.read_csv(_fouls_csv).set_index("athlete_id_1")["fouls"]
+        else:
+            pbp = pd.read_csv(os.path.join(root, "offline_pbp.csv"),
+                              usecols=["type_text", "athlete_id_1", "season"])
+            pf = pbp[(pbp["type_text"] == "PersonalFoul") & (pbp["season"] == season)]
+            fouls = pf.groupby("athlete_id_1").size().rename("fouls")
     except Exception:
         fouls = pd.Series(dtype="int64", name="fouls")
 

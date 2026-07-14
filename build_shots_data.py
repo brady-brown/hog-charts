@@ -12,6 +12,7 @@ the parquet instantly without any network calls.
 Outputs:
     shots_{SEASON}.parquet   Shooting rows only, with game metadata joined in.
     box_{SEASON}.parquet     Player box scores (used to look up athlete names and teams).
+    fouls_{SEASON}.csv       Personal fouls per athlete (Scout foul-trouble board).
 
 Run locally:
     python build_shots_data.py
@@ -72,6 +73,24 @@ game_metadata_df = (
 )
 game_metadata_df["_is_game_row"] = True
 
+# ---------------------------------------------------------------------------
+# Personal fouls per player (for the Scout foul-trouble board)
+# ---------------------------------------------------------------------------
+# Extracted from the SAME PBP feed already in memory, so Scout no longer depends
+# on offline_pbp.csv — a local-only, gitignored file that no build step writes.
+# Without this, a CI-built scout (in-season) would silently produce empty Foul
+# Trouble boards. Fouls are not shooting plays, so this must run before the
+# `del` below. (See ARCHITECTURE_REVIEW.md G1.)
+print("Extracting personal fouls...")
+foul_plays_df = raw_play_by_play[raw_play_by_play["type_text"] == "PersonalFoul"]
+player_fouls_df = (
+    foul_plays_df.dropna(subset=["athlete_id_1"])
+    .groupby("athlete_id_1").size()
+    .rename("fouls").reset_index()
+)
+player_fouls_df["athlete_id_1"] = player_fouls_df["athlete_id_1"].astype("int64")
+player_fouls_df.to_csv(f"fouls_{SEASON}.csv", index=False)
+
 # Free memory — the full PBP is large.
 del raw_play_by_play
 
@@ -101,6 +120,7 @@ shots_with_game_info_df.to_parquet(SHOTS_OUTPUT_FILE, index=False)
 print(f"\nDone.")
 print(f"  shots_{SEASON}.parquet  — {len(shots_with_game_info_df):,} shot rows")
 print(f"  box_{SEASON}.parquet    — {len(player_identity_df):,} player rows")
+print(f"  fouls_{SEASON}.csv      — {len(player_fouls_df):,} players with fouls")
 
 
 # ===========================================================================
@@ -116,6 +136,8 @@ print(f"  box_{SEASON}.parquet    — {len(player_identity_df):,} player rows")
 # raw_play_by_play             DataFrame  Full PBP — every play from every game. ~5M rows.
 # shooting_plays_df            DataFrame  Subset: only rows where shooting_play == True.
 # game_metadata_df             DataFrame  One row per game_id with home/away team IDs and date.
+# foul_plays_df                DataFrame  PBP rows where type_text == "PersonalFoul".
+# player_fouls_df              DataFrame  athlete_id_1 + fouls count; written to fouls_{SEASON}.csv.
 # shots_with_game_info_df      DataFrame  shooting_plays_df joined with game_metadata_df.
 # raw_player_boxscores         DataFrame  Full player box score (every player, every game).
 # player_identity_df           DataFrame  athlete_id/name + team_id/name; used for name lookup.
