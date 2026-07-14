@@ -10,15 +10,24 @@ views for a single opponent:
     4. Who To Attack             — the defensive weak links (drapm + on/off)
 
 Everything is parametric on (team_name, season).  Nothing here prints or plots;
-the notebook owns presentation.  Zone math is copied verbatim from
-build_site.classify_shot_zones so the zones match the rest of the site.
+the notebook owns presentation.  Zone math comes from hoglib.zones so the zones
+match the rest of the site.
 """
 
 import json
 import os
+import sys
 
 import numpy as np
 import pandas as pd
+
+# scout.ipynb imports this module with cwd=coaches_suite/, so the repo root
+# (where the hoglib package lives) isn't on sys.path by default — add it before
+# the hoglib import. The pipeline (build_scout.py, run from the repo root) keeps
+# the root on sys.path already, so this is a no-op there.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 # ── zone system (shared with build_site / build_shot_diet via hoglib.zones) ──
 from hoglib.zones import ZONE_NAMES, classify_shot_zones
