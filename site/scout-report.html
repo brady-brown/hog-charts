@@ -53,10 +53,14 @@
        cells wrapped on phones. Wide tables scroll inside .tbl-wrap instead. */
     .sc-section .breakdown-table th, .sc-section .breakdown-table td { white-space:nowrap; padding-right:14px; }
     .sc-section .breakdown-table th:last-child, .sc-section .breakdown-table td:last-child { padding-right:0; }
-    /* low-sample toggle under the gated boards */
-    .sc-gate { padding:8px 0 4px; }
-    .sc-gate a { color:var(--muted); font-size:.78rem; text-decoration:none; }
-    .sc-gate a:hover { color:var(--ink); text-decoration:underline; }
+    /* minutes filter bar (applies to every rotation board) */
+    .sc-filter { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+                 margin:4px 0 22px; padding:12px 14px; background:var(--card2);
+                 border-radius:8px; font-size:.85rem; }
+    .sc-filter label { color:var(--muted); font-weight:600; }
+    .sc-filter input[type=range] { flex:1; min-width:130px; max-width:260px; }
+    .sc-filter .sc-filter-val { font-variant-numeric:tabular-nums; min-width:3.6em; font-weight:600; }
+    .sc-filter .sc-filter-hint { color:var(--muted); font-size:.78rem; }
   </style>
 </head>
 <body>
@@ -312,41 +316,50 @@ function directionalMini(rows){
   ], rows);
 }
 
-// ── low-sample gating (Who to Attack / Foul Trouble) ─────────────────────────
-// Rows under a defensive-possession floor are hidden by default (tiny samples
-// make On−Off and Fouls/100 explode); a per-section toggle shows everyone.
-// Floor adapts early season: 20% of the team leader's def poss, capped at 100.
-const GATES = {};    // key -> {elId, rows, build}
-let SHOW_ALL = {};   // key -> bool, reset on each report render
+// ── minutes filter (applies to every rotation board) ─────────────────────────
+// Boards ship UNFILTERED; the reader sets a minutes-per-game floor here to hide
+// deep-bench players whose per-possession rates (On−Off, Fouls/100) are noise.
+// The floor is persisted, so it sticks across teams and visits. Rows missing an
+// mpg value are always shown (treated as +∞) rather than silently dropped.
+const BOARDS = {};   // key -> {elId, rows, build}, rebuilt per report
+let MIN_MPG = (() => {
+  const v = parseFloat(localStorage.getItem("scoutMinMpg"));
+  return Number.isFinite(v) ? v : 5;
+})();
 
-function defPossFloor(rows){
-  const mx = Math.max(0, ...rows.map(r => r.def_poss || 0));
-  return Math.min(100, Math.ceil(mx * 0.2));
+function filterMpg(rows){
+  return (rows || []).filter(r => (r.mpg == null ? Infinity : r.mpg) >= MIN_MPG);
 }
-function gatedSection(key, rows, build){
-  const elId = `sc-gate-${key}`;
-  GATES[key] = {elId, rows: rows || [], build};
+function filterBoard(key, rows, build){
+  const elId = `sc-board-${key}`;
+  BOARDS[key] = {elId, rows: rows || [], build};
   return `<div id="${elId}"></div>`;
 }
-function renderGate(key){
-  const g = GATES[key];
-  const el = document.getElementById(g.elId);
-  if(!el) return;
-  const floor = defPossFloor(g.rows);
-  const all = !!SHOW_ALL[key];
-  const kept = all ? g.rows : g.rows.filter(r => (r.def_poss || 0) >= floor);
-  const hidden = g.rows.length - kept.length;
-  let html = g.build(kept);
-  if(all || hidden > 0){
-    const label = all
-      ? "Hide small samples"
-      : `Show ${hidden} more (under ${floor} def. poss.)`;
-    html += `<div class="sc-gate"><a href="#" onclick="toggleGate('${key}');return false">${label}</a></div>`;
-  }
-  el.innerHTML = html;
-  markClickable();   // re-mark the freshly rendered rows (no-op until players load)
+function renderBoard(key){
+  const b = BOARDS[key];
+  const el = document.getElementById(b.elId);
+  if(el) el.innerHTML = b.build(filterMpg(b.rows));
 }
-function toggleGate(key){ SHOW_ALL[key] = !SHOW_ALL[key]; renderGate(key); }
+function renderBoards(){
+  Object.keys(BOARDS).forEach(renderBoard);
+  markClickable();   // re-mark freshly rendered rows (no-op until players load)
+}
+function updateFilterHint(){
+  const el = document.getElementById("sc-mpg-hint");
+  if(!el) return;
+  let hid = 0;
+  Object.values(BOARDS).forEach(b => { hid += b.rows.length - filterMpg(b.rows).length; });
+  el.textContent = MIN_MPG <= 0 ? "showing everyone"
+                 : `${hid} board row${hid === 1 ? "" : "s"} hidden`;
+}
+function setMinMpg(v){
+  MIN_MPG = v;
+  localStorage.setItem("scoutMinMpg", String(v));
+  const lbl = document.getElementById("sc-mpg-val");
+  if(lbl) lbl.textContent = v.toFixed(1);
+  renderBoards();
+  updateFilterHint();
+}
 
 // ── render one team's whole report ───────────────────────────────────────────
 async function renderReport(entry){
@@ -363,7 +376,7 @@ async function renderReport(entry){
   PLAYERS_PROMISE = ensurePlayers().then(() => {
     if(CUR_TID === rep.tid) indexTeamPlayers(rep.tid);
   });
-  SHOW_ALL = {};   // gated boards start filtered on every report
+  Object.keys(BOARDS).forEach(k => delete BOARDS[k]);   // fresh registry per report
 
   const section = (h,blurb,body)=>`
     <section class="sc-section">
@@ -379,16 +392,23 @@ async function renderReport(entry){
         <h1>${rep.team}</h1>
         <div class="sc-sub">Through ${rep.generated ?? ""}</div>
       </div>
+    </div>
+    <div class="sc-filter">
+      <label for="sc-mpg">Min minutes/game</label>
+      <input id="sc-mpg" type="range" min="0" max="30" step="0.5" value="${MIN_MPG}"
+             oninput="setMinMpg(parseFloat(this.value))">
+      <span class="sc-filter-val" id="sc-mpg-val">${MIN_MPG.toFixed(1)}</span>
+      <span class="sc-filter-hint" id="sc-mpg-hint"></span>
     </div>`;
 
   // 1 — three-point threat
-  html += section("Three-Point Threats", "Who to guard beyond the arc, ranked by shooting gravity.", boardThreat(rep.three_point_threat));
+  html += section("Three-Point Threats", "Who to guard beyond the arc, ranked by shooting gravity.", filterBoard("threat", rep.three_point_threat, boardThreat));
 
   // 2 — usage / who runs the offense
-  html += section("Who Runs the Offense", "Usage, playmaking, and how often each player's makes are assisted.", boardUsage(rep.usage_board));
+  html += section("Who Runs the Offense", "Usage, playmaking, and how often each player's makes are assisted.", filterBoard("usage", rep.usage_board, boardUsage));
 
   // 2b — points responsible (scored + assisted share of team points)
-  html += section("Points Responsible", "Of the points the team scores while a player is on the floor, the share he scored or assisted. Overlaps across players (a scorer and his passer both get credit), so it sums past 100%.", boardPointsResp(rep.points_responsible));
+  html += section("Points Responsible", "Of the points the team scores while a player is on the floor, the share he scored or assisted. Overlaps across players (a scorer and his passer both get credit), so it sums past 100%.", filterBoard("pointsResp", rep.points_responsible, boardPointsResp));
 
   // 3 — offense: shot diet + shot quality (+ team zone chart)
   html += section("Offense — Where They Shoot", "Shot diet and shot quality by area, against the Division I average.", `
@@ -410,19 +430,19 @@ async function renderReport(entry){
     </div>`);
 
   // 6 — who to attack
-  html += section("Who to Attack", "Defenders the team gives up the most points with on the floor.", gatedSection("attack", rep.attack_board, boardAttack));
+  html += section("Who to Attack", "Defenders the team gives up the most points with on the floor.", filterBoard("attack", rep.attack_board, boardAttack));
 
   // 7 — foul trouble
-  html += section("Foul Trouble", "Who fouls the most per 100 defensive possessions.", gatedSection("fouls", rep.foul_board, boardFouls));
+  html += section("Foul Trouble", "Who fouls the most per 100 defensive possessions.", filterBoard("fouls", rep.foul_board, boardFouls));
 
   // 8 — box-out / rebounding
-  html += section("The Glass", "Who to box out — rebounding rates and volume.", boardRebound(rep.rebound_board));
+  html += section("The Glass", "Who to box out — rebounding rates and volume.", filterBoard("rebound", rep.rebound_board, boardRebound));
 
   // 9 — recent form
   html += section("Recent Form", `Season shot mix and quality vs. the last ${rep.form.n_recent_games} games.`, formTable(rep.form.table));
 
   wrap.innerHTML = html;
-  renderGate("attack"); renderGate("fouls");
+  renderBoards(); updateFilterHint();
   status.style.display="none"; wrap.style.display="block";
   // Light up clickable rows/names once players finish loading and the whole
   // report DOM (incl. gated boards + scorer cards) exists.

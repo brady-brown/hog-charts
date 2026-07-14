@@ -214,6 +214,7 @@ def three_point_threat(data, tid, min_tpa=15):
     out = pd.DataFrame(rows)
     out["name"] = out["athlete_id"].map(data["names"]["athlete_display_name"])
     out["jn"] = out["athlete_id"].map(_jersey_map(data))
+    out["mpg"] = out["athlete_id"].map(_mpg_map(data))
     return out.sort_values("gravity", ascending=False).reset_index(drop=True)
 
 
@@ -223,6 +224,18 @@ def _jersey_map(data):
     if "id" not in ps.columns or "jn" not in ps.columns:
         return pd.Series(dtype="object")
     return ps.dropna(subset=["id"]).drop_duplicates("id").set_index("id")["jn"]
+
+
+def _mpg_map(data):
+    """athlete_id -> minutes/game (float) from player-stats; missing -> NaN.
+
+    Lets shot-derived boards (which key off athlete_id, not the player-stats
+    table) carry mpg so the site's minutes filter can hide bench players."""
+    ps = data["pstats"]
+    if "id" not in ps.columns or "mpg" not in ps.columns:
+        return pd.Series(dtype="float64")
+    m = ps.dropna(subset=["id"]).drop_duplicates("id").set_index("id")["mpg"]
+    return m.round(1)
 
 
 def _threat_tier(tpa, tpa_pg, pct, min_tpa):
@@ -458,7 +471,7 @@ def points_responsible_board(data, tid, name):
     # build_scout from the boxscore, so bench players resolve too)
     ps = data["pstats"]
     meta = (ps.dropna(subset=["id"]).drop_duplicates("id")
-              .set_index("id")[[c for c in ("n", "jn", "pos") if c in ps.columns]])
+              .set_index("id")[[c for c in ("n", "jn", "pos", "mpg") if c in ps.columns]])
     fallback = data["names"]["athlete_display_name"]
 
     rows = []
@@ -470,6 +483,7 @@ def points_responsible_board(data, tid, name):
             name=nm,
             jn=(m["jn"] if m is not None else None),
             pos=(m["pos"] if m is not None else None),
+            mpg=(round(float(m["mpg"]), 1) if m is not None and pd.notna(m.get("mpg")) else None),
             pts_scored=int(r["pts_scored"]), pts_ast=int(r["pts_ast"]),
             pts_resp=int(r["pts_scored"] + r["pts_ast"]),
             on_court_pts=int(r["on_court_pts"]),
