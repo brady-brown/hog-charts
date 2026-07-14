@@ -20,15 +20,8 @@ import os
 import numpy as np
 import pandas as pd
 
-# ── zone system (must match build_site.ZONE_NAMES / zone-chart.js) ──────────
-ZONE_NAMES = [
-    "Restricted Area",
-    "Close Mid - Right", "Close Mid - Center", "Close Mid - Left",
-    "Mid - Right", "Mid - Right Center", "Mid - Center",
-    "Mid - Left Center", "Mid - Left",
-    "3PT - Right", "3PT - Right Center", "3PT - Center",
-    "3PT - Left Center", "3PT - Left",
-]
+# ── zone system (shared with build_site / build_shot_diet via hoglib.zones) ──
+from hoglib.zones import ZONE_NAMES, classify_shot_zones
 # Shot-diet families (coarser than the 14 wedges) and their member zones.
 FAMILY_OF = {z: ("Rim" if z == "Restricted Area"
                  else "Close" if z.startswith("Close Mid")
@@ -45,48 +38,6 @@ MACRO_ORDER = ["Paint / Restricted", "Mid-Range", "Three"]
 FG_TYPES = {"JumpShot", "LayUpShot", "DunkShot", "TipShot", "Shot"}
 
 LEAGUE_3P_PCT = 0.345    # D-I average, matches avg of the three-zone baselines
-
-
-def classify_shot_zones(shot_df):
-    """Assign each shot a zone name — verbatim from build_site.classify_shot_zones."""
-    RA, CLOSE, THREE, CORNER_X = 4.0, 11.0, 22.146, 21.65
-    Y_MEET = np.sqrt(THREE**2 - CORNER_X**2)
-
-    valid = shot_df["coordinate_x"].notna() & shot_df["coordinate_y"].notna()
-    zone = pd.Series("Unknown", index=shot_df.index, dtype="object")
-
-    x_abs = shot_df.loc[valid, "coordinate_x"].abs()
-    y_coord = shot_df.loc[valid, "coordinate_y"]
-    lateral = -y_coord
-    toward = 41.75 - x_abs
-    distance = np.sqrt(lateral**2 + toward**2)
-    angle = np.degrees(np.arctan2(toward, lateral))
-    angle = angle.where(angle >= -90, angle + 360)
-
-    is_heave = distance >= 40
-    is_rim = ~is_heave & (distance < RA)
-    is_three = ~is_heave & ~is_rim & (
-        (distance >= THREE) | ((lateral.abs() >= CORNER_X) & (toward <= Y_MEET)))
-    is_close = ~is_heave & ~is_rim & ~is_three & (distance < CLOSE)
-    is_mid = ~is_heave & ~is_rim & ~is_three & ~is_close
-
-    m = valid
-    zone[m & is_heave] = "Heave"
-    zone[m & is_rim] = "Restricted Area"
-    zone[m & is_close & (angle < 60)] = "Close Mid - Right"
-    zone[m & is_close & (angle >= 60) & (angle < 120)] = "Close Mid - Center"
-    zone[m & is_close & (angle >= 120)] = "Close Mid - Left"
-    zone[m & is_mid & (angle < 36)] = "Mid - Right"
-    zone[m & is_mid & (angle >= 36) & (angle < 72)] = "Mid - Right Center"
-    zone[m & is_mid & (angle >= 72) & (angle < 108)] = "Mid - Center"
-    zone[m & is_mid & (angle >= 108) & (angle < 144)] = "Mid - Left Center"
-    zone[m & is_mid & (angle >= 144)] = "Mid - Left"
-    zone[m & is_three & (angle < 36)] = "3PT - Right"
-    zone[m & is_three & (angle >= 36) & (angle < 72)] = "3PT - Right Center"
-    zone[m & is_three & (angle >= 72) & (angle < 108)] = "3PT - Center"
-    zone[m & is_three & (angle >= 108) & (angle < 144)] = "3PT - Left Center"
-    zone[m & is_three & (angle >= 144)] = "3PT - Left"
-    return zone
 
 
 # ── data loading ────────────────────────────────────────────────────────────

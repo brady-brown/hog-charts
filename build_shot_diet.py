@@ -113,7 +113,9 @@ def _classified_shots():
     shots = shots.dropna(subset=["game_id", "team_id", "athlete_id",
                                  "coordinate_x", "coordinate_y"]).copy()
 
-    RA, THREE, CORNER_X = 4.0, 22.146, 21.65
+    # Boundary constants shared with the 14-zone classifier (hoglib.zones), so
+    # the coarse rim/mid/three split lines up with the shot chart.
+    from hoglib.zones import RESTRICTED_RADIUS as RA, THREE_POINT_RADIUS as THREE, CORNER_X
     Y_MEET = np.sqrt(THREE**2 - CORNER_X**2)
 
     lateral  = -shots["coordinate_y"]
