@@ -42,14 +42,8 @@ from datetime import date as _date
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-_season_override = _os.environ.get("OVERRIDE_SEASON")
-if _season_override:
-    SEASON = int(_season_override)
-else:
-    _today = _date.today()
-    # NCAA seasons are labeled by the calendar year they END (spring).
-    # A date in Nov or later belongs to the NEXT year's season.
-    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
+from hoglib.season import detect_season
+SEASON = detect_season()
 
 REGULAR_SEASON_TYPE = 2   # sportsdataverse code for regular season (1=pre, 3=post)
 

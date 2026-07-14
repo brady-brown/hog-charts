@@ -25,12 +25,8 @@ import sportsdataverse.mbb as mbb
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-_season_override = os.environ.get("OVERRIDE_SEASON")
-if _season_override:
-    SEASON = int(_season_override)
-else:
-    _today = _date.today()
-    SEASON = _today.year + 1 if _today.month >= 11 else _today.year
+from hoglib.season import detect_season
+SEASON = detect_season()
 
 # ---------------------------------------------------------------------------
 # Identify conference game IDs from the schedule

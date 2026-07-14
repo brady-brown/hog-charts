@@ -38,12 +38,8 @@ import os as _os
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-_season_override = _os.environ.get("OVERRIDE_SEASON")
-if _season_override:
-    _season = int(_season_override)
-else:
-    _today = _date.today()
-    _season = _today.year + 1 if _today.month >= 11 else _today.year
+from hoglib.season import detect_season
+_season = detect_season()
 
 # Set RATINGS_ONLY=1 to skip model training (faster for historical seasons
 # where we don't need a fresh predictor, just the ratings table).
