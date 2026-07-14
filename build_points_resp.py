@@ -51,25 +51,9 @@ def _game_sets():
     so they're excluded from both — matching the player-stats scope masks.
     """
     import sportsdataverse.mbb as mbb
-    sched = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
-    conf_comp = sched[sched["conference_competition"] == True]
-    conf_comp_ids = set(conf_comp["game_id"].astype(int).unique())
-
-    notes = sched.get("notes_headline")
-    if notes is not None:
-        is_conf_tourney = (
-            (sched["conference_competition"] == True)
-            & notes.astype(str).str.contains("Tournament|Championship|Playoffs",
-                                             case=False, na=False))
-        conf_tourney_ids = set(sched.loc[is_conf_tourney, "game_id"].astype(int).unique())
-    else:
-        conf_tourney_ids = set()
-
-    reg_type2 = set(sched.loc[sched["season_type"] == 2, "game_id"].astype(int).unique())
-    reg_games = reg_type2 - conf_tourney_ids
-    conf_games = (conf_comp_ids - conf_tourney_ids) & reg_games
-    nonconf_games = reg_games - conf_games
-    return reg_games, conf_games, nonconf_games
+    from hoglib.scopes import game_id_sets
+    s = game_id_sets(mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True))
+    return s.reg, s.conf, s.nonconf
 
 
 def _scoring_frame():

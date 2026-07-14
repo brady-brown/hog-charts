@@ -42,11 +42,9 @@ MIN_MINUTES_THRESHOLD = 1.0
 print("Loading schedule…")
 season_schedule_df = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
 
-conference_game_ids = (
-    season_schedule_df[season_schedule_df["conference_competition"] == True]["game_id"]
-    .astype(int)
-    .unique()
-)
+from hoglib.scopes import game_id_sets
+_scopes = game_id_sets(season_schedule_df)
+conference_game_ids = _scopes.conf_competition
 print(f"  {len(conference_game_ids):,} conference game IDs")
 
 # Conference TOURNAMENT games are a quirk: ESPN tags them season_type == 2
@@ -57,17 +55,7 @@ print(f"  {len(conference_game_ids):,} conference game IDs")
 # instead of the regular season. (Early-season multi-team events like the Maui
 # Invitational are non-conference, so conference_competition is False and they
 # are correctly excluded.)
-_notes = season_schedule_df.get("notes_headline")
-if _notes is not None:
-    is_conf_tournament_game = (
-        (season_schedule_df["conference_competition"] == True)
-        & _notes.astype(str).str.contains("Tournament|Championship|Playoffs", case=False, na=False)
-    )
-    conference_tournament_game_ids = set(
-        season_schedule_df.loc[is_conf_tournament_game, "game_id"].astype(int).unique()
-    )
-else:
-    conference_tournament_game_ids = set()
+conference_tournament_game_ids = _scopes.conf_tournament
 print(f"  {len(conference_tournament_game_ids):,} conference-tournament game IDs (grouped into postseason)")
 
 # ---------------------------------------------------------------------------
@@ -473,7 +461,8 @@ print("\nDone.")
 # MIN_MINUTES_THRESHOLD            float   Rows with < 1 minute are treated as DNP and dropped.
 #
 # season_schedule_df               DataFrame  Full ESPN schedule for the current season.
-# conference_game_ids              ndarray  game_id values where conference_competition == True.
+# conference_game_ids              set      game_id values where conference_competition == True (hoglib.scopes).
+# _scopes                          ScopeSets  per-scope game-id sets from hoglib.scopes.game_id_sets().
 # home_teams_in_schedule           DataFrame  Home team id/conf/name columns from schedule.
 # away_teams_in_schedule           DataFrame  Away team id/conf/name columns from schedule.
 # all_unique_teams_df              DataFrame  Union of home/away teams; one row per team.

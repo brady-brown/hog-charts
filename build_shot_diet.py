@@ -66,30 +66,10 @@ def _game_scopes():
     postseason, so they are pulled out of reg/conf/nonconf and folded into post.
     """
     import sportsdataverse.mbb as mbb
-    sched = mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True)
-    conf_comp_ids = set(
-        sched.loc[sched["conference_competition"] == True, "game_id"].astype(int).unique())
-
-    notes = sched.get("notes_headline")
-    if notes is not None:
-        is_conf_tourney = (
-            (sched["conference_competition"] == True)
-            & notes.astype(str).str.contains("Tournament|Championship|Playoffs",
-                                             case=False, na=False))
-        conf_tourney_ids = set(sched.loc[is_conf_tourney, "game_id"].astype(int).unique())
-    else:
-        conf_tourney_ids = set()
-
-    type2_ids = set(sched.loc[sched["season_type"] == 2, "game_id"].astype(int).unique())
-    type3_ids = set(sched.loc[sched["season_type"] == 3, "game_id"].astype(int).unique())
-
-    reg_games     = type2_ids - conf_tourney_ids
-    conf_games    = (conf_comp_ids - conf_tourney_ids) & reg_games
-    nonconf_games = reg_games - conf_games
-    post_games    = type3_ids | conf_tourney_ids
-    all_games     = reg_games | post_games
-    return {"": reg_games, "_all": all_games, "_post": post_games,
-            "_conf": conf_games, "_nonconf": nonconf_games}
+    from hoglib.scopes import game_id_sets
+    s = game_id_sets(mbb.load_mbb_schedule(seasons=SEASON, return_as_pandas=True))
+    return {"": s.reg, "_all": s.all, "_post": s.post,
+            "_conf": s.conf, "_nonconf": s.nonconf}
 
 
 def _classified_shots():
