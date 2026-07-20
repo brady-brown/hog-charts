@@ -297,6 +297,9 @@ details[open] summary { border-bottom: 1px solid var(--line); }
   border-bottom: none; font-weight: 800; padding-top: 12px;
 }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
+/* numeric headers must right-align with their cells; the base `.breakdown-table th`
+   left-align rule out-specifies `.num`, so target th.num explicitly. */
+.breakdown-table th.num { text-align: right; }
 
 /* ── Home page cards ──────────────────────────────────────────────────────── */
 .home-hero {
