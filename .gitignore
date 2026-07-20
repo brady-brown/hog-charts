@@ -57,3 +57,9 @@ pages/
 
 # Local prototype / scratch (not part of the site)
 zone_chart_prototype/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
