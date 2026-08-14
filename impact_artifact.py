@@ -9,9 +9,7 @@ combines two independently computed metrics into one table:
   RAPM (Regularized Adjusted Plus-Minus)
       Ridge regression over the stint design matrix; measures how many net
       points per 100 possessions a player contributes independent of his
-      teammates.  The "bp" (box-score prior) variant shrinks toward an
-      expectation calibrated from Hollinger Game Score instead of toward
-      zero, which improves stability for players with few stints.
+      teammates.  Every player is shrunk toward zero.
 
   On/Off net rating differential
       Raw net rating when the player is on the court vs. off it.  This is
@@ -133,7 +131,7 @@ def build_impact_records(project_root, season, conf_map=None,
     rapm_df = rapm_df[rapm_df["total_poss"].fillna(0) >= min_possessions].copy()
 
     # ── Round to display precision ────────────────────────────────────────────
-    rapm_two_decimal_columns = ["o_rapm", "d_rapm", "rapm", "o_rapm_bp", "d_rapm_bp", "rapm_bp"]
+    rapm_two_decimal_columns = ["o_rapm", "d_rapm", "rapm"]
     rapm_one_decimal_columns = [
         "nrtg_on", "nrtg_off", "on_off",
         "ortg_on", "drtg_on", "ortg_off", "drtg_off"
@@ -159,9 +157,6 @@ def build_impact_records(project_root, season, conf_map=None,
         "orapm":    rapm_df["o_rapm"],
         "drapm":    rapm_df["d_rapm"],
         "rapm":     rapm_df["rapm"],
-        "orapm_bp": rapm_df["o_rapm_bp"],
-        "drapm_bp": rapm_df["d_rapm_bp"],
-        "rapm_bp":  rapm_df["rapm_bp"],
         "non":      rapm_df["nrtg_on"],
         "noff":     rapm_df["nrtg_off"],
         "onoff":    rapm_df["on_off"],

@@ -8,11 +8,11 @@ players on the same team performed together — net rating, offensive rating,
 defensive rating, and per-100 counting stats.
 
 Lineups are reconstructed by the SAME stint engine build_onoff_rapm uses
-(hoglib.stints), and possessions use on/off's convention — FGA + 0.44·FT + TOV
-scaled per game to the box-score possession total. So the Lineups page and the
-on/off table now agree: a 1-man "lineup" matches that player's ortg_on/drtg_on
-in mbb_onoff_*.csv. (Before, this file ran a separate per-team clock walk with
-0.475·FTA possessions, so the two disagreed by construction.)
+(hoglib.stints). Per-play weights (FGA 1, FT 0.44, TOV 1) only DISTRIBUTE
+possessions across stints; each game/team's stint possessions are then rescaled
+to the box-score total, which is the project-wide possession estimate
+FGA + 0.44·FTA − ORB + TOV. So the Lineups page and the on/off table agree: a
+1-man "lineup" matches that player's ortg_on/drtg_on in mbb_onoff_*.csv.
 
 Steps:
   1. hoglib.stints.build_stints reconstructs on-court lineups from substitution
@@ -103,10 +103,10 @@ qualifying_team_ids = games_per_team[games_per_team >= MIN_GAMES_TO_QUALIFY].ind
 # Unified stint engine
 # ---------------------------------------------------------------------------
 # Lineups are reconstructed by the SAME engine build_onoff_rapm uses
-# (hoglib.stints), so the Lineups page and the on/off table now agree for the
-# same players. Possessions use on/off's convention — FGA + 0.44·FT + TOV,
-# scaled per game to the team's box-score possession total — instead of the old
-# combo-level FGA−ORB+TOV+0.475·FTA. A 1-man "lineup" therefore matches that
+# (hoglib.stints), so the Lineups page and the on/off table agree for the same
+# players. Per-play weights (FGA 1, FT 0.44, TOV 1) only distribute possessions
+# across stints; the per-game total is rescaled to the box-score possession
+# estimate FGA + 0.44·FTA − ORB + TOV. A 1-man "lineup" therefore matches that
 # player's ortg_on / drtg_on in mbb_onoff_*.csv.
 from hoglib import stints
 

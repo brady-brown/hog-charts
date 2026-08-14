@@ -92,8 +92,7 @@
       <div id="pc-rapm-section" style="border-top:1px solid var(--line); padding:18px 28px 4px; display:none">
         <div class="pc-col-hdr" style="margin-bottom:8px">RAPM / 100 possessions</div>
         <div class="pc-stats" style="padding:0 0 18px">
-          <div class="pc-stat-col" id="pc-rapm-left"></div>
-          <div class="pc-stat-col" id="pc-rapm-right"></div>
+          <div class="pc-stat-col" id="pc-rapm-vals"></div>
         </div>
       </div>
       <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
@@ -264,18 +263,14 @@
     // RAPM block — read from the row, or resolve it lazily if a provider is given.
     const rapmSection = document.getElementById("pc-rapm-section");
     const r = resolveRapm ? (await resolveRapm(p)) || p : p;
-    if (r.rapm != null || r.rapm_bp != null) {
+    if (r.rapm != null) {
       const sg = (val) => val == null ? "—" : (val >= 0 ? "+" : "−") + Math.abs(val).toFixed(2);
       const sc = (val) => val == null ? "" : val > 0 ? "good" : val < 0 ? "bad" : "";
       const rRow = (lbl, val, bold) =>
         `<div class="pc-stat-row"><span class="pc-stat-lbl">${lbl}</span>
          <span class="pc-stat-val ${sc(val)}" ${bold ? 'style="font-weight:900"' : ""}>${sg(val)}</span></div>`;
-      document.getElementById("pc-rapm-left").innerHTML =
-        `<div class="pc-col-hdr">RAPM</div>` +
+      document.getElementById("pc-rapm-vals").innerHTML =
         rRow("Offense", r.orapm) + rRow("Defense", r.drapm) + rRow("Total", r.rapm, true);
-      document.getElementById("pc-rapm-right").innerHTML =
-        `<div class="pc-col-hdr">Box-Prior</div>` +
-        rRow("Offense", r.orapm_bp) + rRow("Defense", r.drapm_bp) + rRow("Total", r.rapm_bp, true);
       rapmSection.style.display = "block";
     } else {
       rapmSection.style.display = "none";

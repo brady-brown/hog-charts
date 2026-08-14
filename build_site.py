@@ -555,7 +555,17 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
         ).reset_index()
     )
     player_stats_df = player_stats_df.merge(team_totals_df, on="team_display_name", how="left")
-    team_possessions  = player_stats_df["team_total_fga"] + 0.44 * player_stats_df["team_total_fta"] + player_stats_df["team_total_tov"]
+    # NOTE: these are PLAYS USED, not the project-wide possession estimate, and
+    # deliberately omit the −ORB term on BOTH sides. Usage measures a player's
+    # share of his team's possession-ending plays; an offensive rebound extends a
+    # possession rather than un-using one. Keeping numerator and denominator on
+    # the same footing is what makes a lineup's usage sum to ~100%, and matches
+    # the standard USG% definition. Everywhere an actual POSSESSION COUNT is
+    # needed, use FGA + 0.44·FTA − ORB + TOV instead.
+    team_possessions = (
+        player_stats_df["team_total_fga"] + 0.44 * player_stats_df["team_total_fta"]
+        + player_stats_df["team_total_tov"]
+    )
     player_possessions = field_goals_attempted + 0.44 * free_throws_attempted + turnovers
     player_stats_df["usg"] = np.where(
         (total_minutes > 0) & (team_possessions > 0),
@@ -626,10 +636,11 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     # The on/off CSV carries each player's ON-COURT team and opponent box totals,
     # accumulated over the exact stints they played. That lets AST%/STL%/BLK% and
     # the rebound rates be computed against what actually happened on the floor
-    # instead of season team totals. Used only where (a) the stint file matches
-    # this scope's games (regular & conference — NOT all/post, whose box totals
-    # include games the regular-season stint data doesn't) and (b) the player has
-    # enough on-court possessions. Everyone else keeps the season approximation.
+    # instead of season team totals. Used only where (a) the stint file covers
+    # exactly this scope's games and (b) the player has enough on-court
+    # possessions. Regular, conference and all-games each have a matching stint
+    # file from build_onoff_rapm.py; post and nonconf have none, so they keep the
+    # season approximation. adv_src records which one each row ended up using.
     STINT_COLS = ["poss_off_on", "poss_def_on", "fgm_for_on", "orb_for_on", "drb_for_on",
                   "fga_against_on", "tpa_against_on", "orb_against_on", "drb_against_on"]
     player_stats_df["adv_src"] = "season"
@@ -837,16 +848,21 @@ for _aid, _jersey in _boxscore_jerseys.items():
     all_player_bios.setdefault(_aid, {})["jn"] = _jersey
 print(f"  → jerseys overlaid from boxscore for {len(_boxscore_jerseys)} players")
 
-# One JSON per scope. on/off and RAPM come from the regular-season pipeline, so
-# the overall on/off CSV is attached to reg + all (it's a season metric); the
-# postseason scope has no on/off (no postseason RAPM pipeline).
+# One JSON per scope. Each scope uses the on/off table built over the same games:
+# regular, conference and all-games (regular + postseason). The postseason and
+# non-conference scopes have no on/off pipeline of their own, so that column is
+# blank there.
 onoff_overall_csv = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_v2.csv")
 onoff_conf_csv    = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_conf_v2.csv")
+# Regular + postseason stints, so the all-games scope gets real on-court
+# denominators for its advanced rates instead of the minutes-share estimate.
+onoff_all_csv     = os.path.join(PROJECT_ROOT, f"mbb_onoff_{SEASON}_all_v2.csv")
 _exists = lambda path: path if os.path.exists(path) else None
 
 # stint_csv supplies on-court box totals for the stint-based advanced rates; it
-# may only be used where its games match the scope (regular & conference), so
-# all/post pass None and fall back to the season approximation.
+# may only be used where its games match the scope (regular, conference and
+# all-games each have one), so post/nonconf pass None and fall back to the
+# season approximation.
 # Points-responsible on-court rate (build_points_resp.py): regular-season table
 # for the regular + all-games scopes; a conference-games table for the conf scope.
 points_resp_csv         = os.path.join(PROJECT_ROOT, f"points_resp_{SEASON}.csv")
@@ -867,7 +883,7 @@ PLAYER_STATS_SCOPE_SPECS = [
     # low for a 20-game team gate, so it stays 0 there).
     (f"player_stats_{SEASON}.csv",         onoff_overall_csv, onoff_overall_csv, f"team_context_{SEASON}.csv",         f"assist_share_{SEASON}.csv",
      0, 0, 200, 20, points_resp_csv,         _shot_diet(""),        "player-stats.json",         "(regular)"),
-    (f"player_stats_all_{SEASON}.csv",     onoff_overall_csv, None,              f"team_context_all_{SEASON}.csv",     f"assist_share_{SEASON}_all.csv",
+    (f"player_stats_all_{SEASON}.csv",     onoff_all_csv,     onoff_all_csv,     f"team_context_all_{SEASON}.csv",     f"assist_share_{SEASON}_all.csv",
      0, 0, 200, 20, points_resp_csv,         _shot_diet("_all"),    "player-stats-all.json",     "(all games)"),
     (f"player_stats_post_{SEASON}.csv",    None,              None,              f"team_context_post_{SEASON}.csv",    f"assist_share_{SEASON}_post.csv",
      1, 1, 200, 0, None,                     _shot_diet("_post"),   "player-stats-post.json",    "(postseason)"),
@@ -1309,8 +1325,9 @@ print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 # games_played                 Series   GP column.
 # total_minutes                Series   Total season minutes.
 # team_totals_df               DataFrame  Sum of FGA/FTA/TOV/MIN per team.
-# team_possessions             Series   FGA + 0.44*FTA + TOV per team (for usage rate).
-# player_possessions           Series   Individual player's possession-ending events.
+# team_possessions             Series   Team plays used: FGA + 0.44*FTA + TOV (usage denominator).
+# player_possessions           Series   Player plays used: FGA + 0.44*FTA + TOV.
+#                                       Both intentionally omit -ORB; see the note at the call site.
 # hollinger_gamescore          Series   Hollinger's weighted counting-stat composite.
 # player_on_court_team_poss    ndarray  Estimated team possessions while player was on court.
 # gamescore_per_100_team_poss  ndarray  Game score normalized to per-100-team-possessions.

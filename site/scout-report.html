@@ -110,7 +110,7 @@ async function ensurePlayers(){
     loadJSON(`data/${SEASON}/player-impact.json`).catch(()=>null),
   ]);
   const rows = stats?.players || [];
-  const IMPACT_FIELDS = ["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp","poss"];
+  const IMPACT_FIELDS = ["rapm","orapm","drapm","poss"];
   const imp = new Map((impact?.players || []).map(ip => [ip.id, ip]));
   rows.forEach(p => {
     const ip = imp.get(p.id);

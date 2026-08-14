@@ -5,10 +5,11 @@ Run locally:
     python3 build_onoff_rapm.py
 
 Outputs (season auto-detected from current date):
-    mbb_onoff_{SEASON}_v2.csv
-    mbb_onoff_{SEASON}_conf_v2.csv
+    mbb_onoff_{SEASON}_v2.csv          regular season
+    mbb_onoff_{SEASON}_conf_v2.csv     conference games
+    mbb_onoff_{SEASON}_all_v2.csv      regular + postseason (no RAPM)
     mbb_rapm_{SEASON-1}{SEASON%100:02d}.csv
-    presence_full.parquet
+    presence_full.parquet              regular season only
     player_lookup.csv
 
 HIGH-LEVEL APPROACH
@@ -23,8 +24,17 @@ HIGH-LEVEL APPROACH
     player was on or off the court.  Aggregating on/off gives each player's
     on-court and off-court net rating.
 5.  Fit RAPM (Regularized Adjusted Plus-Minus) via Ridge regression over the
-    design matrix.  Two flavors are fit: vanilla (shrinks toward 0) and
-    box-score prior (shrinks toward a Hollinger Game Score expectation).
+    design matrix, shrinking every player toward 0.
+
+SCOPES
+------
+The pipeline runs three times.  "reg" (regular season) is the canonical pass —
+it writes presence_full.parquet and the RAPM tables, and its on/off file is what
+the site treats as the season on/off metric.  "conf" restricts to conference
+games.  "all" covers regular + postseason and exists so the site's all-games
+scope can compute stint-based advanced rates against what actually happened on
+the floor instead of a minutes-share approximation; it skips the RAPM solve,
+since RAPM stays a regular-season metric.
 """
 
 import pandas as pd
@@ -46,24 +56,35 @@ from hoglib.season import detect_season
 SEASON = detect_season()
 
 REGULAR_SEASON_TYPE = 2   # sportsdataverse code for regular season (1=pre, 3=post)
+POSTSEASON_TYPE     = 3   # NCAA / NIT / etc.
+# Season types the stint pipeline can ever see. Preseason is always dropped; the
+# per-scope masks inside run_pipeline narrow this further.
+PLAYED_SEASON_TYPES = [REGULAR_SEASON_TYPE, POSTSEASON_TYPE]
 
 # ---------------------------------------------------------------------------
 # Load raw data from ESPN (once, then filter inside run_pipeline)
 # ---------------------------------------------------------------------------
 print("Loading play-by-play...")
-# Keep the full feed (all season types) for the assisted-FG share tables below;
-# the on/off + RAPM pipeline itself only ever uses the regular-season subset.
+# Keep the full feed (all season types) for the assisted-FG share tables below,
+# then narrow to regular + postseason: the "reg"/"conf" passes mask down to
+# season_type 2, and the "all" pass needs the postseason rows too.
 from hoglib import feeds  # feeds cached by build_ingest.py (step 0)
 raw_play_by_play_full = feeds.load_pbp(SEASON)
-raw_play_by_play = raw_play_by_play_full[raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
+raw_play_by_play = raw_play_by_play_full[
+    raw_play_by_play_full["season_type"].isin(PLAYED_SEASON_TYPES)
+].reset_index(drop=True)
 
 print("Loading player box scores...")
 raw_player_boxscores = feeds.load_player_box(SEASON)
-raw_player_boxscores = raw_player_boxscores[raw_player_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
+raw_player_boxscores = raw_player_boxscores[
+    raw_player_boxscores["season_type"].isin(PLAYED_SEASON_TYPES)
+].reset_index(drop=True)
 
 print("Loading team box scores...")
 raw_team_boxscores = feeds.load_team_box(SEASON)
-raw_team_boxscores = raw_team_boxscores[raw_team_boxscores["season_type"] == REGULAR_SEASON_TYPE].reset_index(drop=True)
+raw_team_boxscores = raw_team_boxscores[
+    raw_team_boxscores["season_type"].isin(PLAYED_SEASON_TYPES)
+].reset_index(drop=True)
 
 print("Loading schedule...")
 schedule_df = feeds.load_schedule(SEASON)
@@ -103,7 +124,7 @@ def _assisted_fg_share_table(pbp_frame):
 
 print("Building assisted-FG share tables...")
 _is_regular    = raw_play_by_play_full["season_type"] == REGULAR_SEASON_TYPE
-_is_postseason = raw_play_by_play_full["season_type"] == 3   # conf tourneys + NCAA + NIT
+_is_postseason = raw_play_by_play_full["season_type"] == POSTSEASON_TYPE   # NCAA + NIT + …
 _is_conference = raw_play_by_play_full["game_id"].isin(conference_game_id_set)
 assist_share_scopes = {
     "":         raw_play_by_play_full[_is_regular],
@@ -127,166 +148,45 @@ _gc.collect()
 
 
 # ---------------------------------------------------------------------------
-# Box-score prior RAPM helper
-# ---------------------------------------------------------------------------
-def _compute_boxscore_prior_rapm(player_boxscores_filtered, player_on_off_stats,
-                                  all_players, num_players,
-                                  stint_design_matrix, weighted_design_matrix,
-                                  centered_net_ratings, sqrt_possession_weights,
-                                  ridge_alpha, vanilla_off_rapm, vanilla_def_rapm,
-                                  min_possessions_for_calibration=200):
-    """Fit RAPM that shrinks toward a Hollinger Game Score prior instead of zero.
-
-    Empirical Bayes approach:
-      1. Compute a box-score-based expected RAPM (the "prior") for each player
-         using Hollinger's Game Score formula, split into offense and defense.
-      2. Calibrate the prior to RAPM units via possession-weighted regression
-         on the vanilla (zero-shrinkage) RAPM estimates.
-      3. Fit a standard Ridge on the residual target  t = y_centered - X @ prior,
-         then add the prior back: final_coef = gamma + prior.
-
-    Returns (prior_off_rapm_array, prior_def_rapm_array) aligned to all_players.
-    """
-    # --- Step 1: Aggregate season box-score totals per player ---
-    player_season_box = (player_boxscores_filtered.groupby("athlete_id").agg(
-        pts=("points", "sum"),
-        fgm=("field_goals_made", "sum"),
-        fga=("field_goals_attempted", "sum"),
-        ftm=("free_throws_made", "sum"),
-        fta=("free_throws_attempted", "sum"),
-        orb=("offensive_rebounds", "sum"),
-        drb=("defensive_rebounds", "sum"),
-        ast=("assists", "sum"),
-        stl=("steals", "sum"),
-        blk=("blocks", "sum"),
-        pf=("fouls", "sum"),
-        tov=("turnovers", "sum")
-    ).reset_index())
-
-    # Hollinger Game Score split into offensive and defensive halves.
-    # Offensive half: points, shooting, assists, turnovers, offensive boards.
-    # Defensive half: defensive boards, steals, blocks, fouls.
-    player_season_box["offensive_gamescore"] = (
-        player_season_box.pts
-        + 0.4 * player_season_box.fgm
-        - 0.7 * player_season_box.fga
-        - 0.4 * (player_season_box.fta - player_season_box.ftm)
-        + 0.7 * player_season_box.orb
-        + 0.7 * player_season_box.ast
-        - player_season_box.tov
-    )
-    player_season_box["defensive_gamescore"] = (
-        0.3 * player_season_box.drb
-        + player_season_box.stl
-        + 0.7 * player_season_box.blk
-        - 0.4 * player_season_box.pf
-    )
-
-    # Normalize game score to a per-100-possessions rate using each player's
-    # actual on-court possessions from the stint data.
-    player_possession_totals = (
-        player_on_off_stats.groupby("athlete_id")[["poss_off_on", "poss_def_on"]]
-        .sum().reset_index()
-    )
-    player_season_box = player_season_box.merge(player_possession_totals, on="athlete_id", how="left")
-    player_season_box["off_gamescore_per100"] = np.where(
-        player_season_box.poss_off_on > 0,
-        player_season_box.offensive_gamescore / player_season_box.poss_off_on * 100,
-        np.nan
-    )
-    player_season_box["def_gamescore_per100"] = np.where(
-        player_season_box.poss_def_on > 0,
-        player_season_box.defensive_gamescore / player_season_box.poss_def_on * 100,
-        np.nan
-    )
-    gamescore_by_player = player_season_box.set_index("athlete_id")
-
-    def _get_player_column(col_name):
-        series = gamescore_by_player[col_name]
-        return np.array([series.get(pid, np.nan) for pid in all_players], dtype=float)
-
-    off_gamescore_per100 = _get_player_column("off_gamescore_per100")
-    def_gamescore_per100 = _get_player_column("def_gamescore_per100")
-    off_possession_weights = np.nan_to_num(_get_player_column("poss_off_on"))
-    def_possession_weights = np.nan_to_num(_get_player_column("poss_def_on"))
-
-    def _center_and_clip(values, possession_weights_for_centering):
-        """Subtract possession-weighted mean and clip outliers to ±4 std devs."""
-        valid_mask = np.isfinite(values) & (possession_weights_for_centering > 0)
-        weighted_mean = np.average(values[valid_mask], weights=possession_weights_for_centering[valid_mask])
-        centered = np.where(np.isfinite(values), values - weighted_mean, 0.0)
-        weighted_std = np.sqrt(np.average(centered[valid_mask] ** 2,
-                                          weights=possession_weights_for_centering[valid_mask]))
-        return np.clip(centered, -4 * weighted_std, 4 * weighted_std)
-
-    centered_off_gamescore = _center_and_clip(off_gamescore_per100, off_possession_weights)
-    centered_def_gamescore = _center_and_clip(def_gamescore_per100, def_possession_weights)
-
-    def _weighted_least_squares_calibrate(centered_gamescore, vanilla_rapm, possession_weights_for_fit):
-        """Fit a linear calibration: vanilla_rapm ≈ a + b * centered_gamescore.
-
-        Uses only players with enough possessions to have a stable estimate.
-        Returns coefficients [intercept, slope].
-        """
-        high_poss_mask = possession_weights_for_fit >= min_possessions_for_calibration
-        feature_matrix = np.column_stack([
-            np.ones(int(high_poss_mask.sum())),
-            centered_gamescore[high_poss_mask]
-        ])
-        weight_vector = possession_weights_for_fit[high_poss_mask]
-        return np.linalg.solve(
-            feature_matrix.T @ (feature_matrix * weight_vector[:, None]),
-            feature_matrix.T @ (vanilla_rapm[high_poss_mask] * weight_vector)
-        )
-
-    offense_calibration_coefs = _weighted_least_squares_calibrate(
-        centered_off_gamescore, vanilla_off_rapm, off_possession_weights)
-    defense_calibration_coefs = _weighted_least_squares_calibrate(
-        centered_def_gamescore, vanilla_def_rapm, def_possession_weights)
-
-    # Apply calibration to get the per-player prior in RAPM units.
-    prior_off_means = (offense_calibration_coefs[0]
-                       + offense_calibration_coefs[1] * centered_off_gamescore)
-    prior_def_means = (defense_calibration_coefs[0]
-                       + defense_calibration_coefs[1] * centered_def_gamescore)
-    prior_means_combined = np.concatenate([prior_off_means, prior_def_means])
-
-    # --- Step 3: Fit Ridge on residual, then add prior back ---
-    # t = y_centered - X @ prior  (what the ridge hasn't yet explained)
-    adjusted_target_residuals = centered_net_ratings - stint_design_matrix.dot(prior_means_combined)
-    informed_prior_ridge = Ridge(alpha=ridge_alpha, fit_intercept=False)
-    informed_prior_ridge.fit(weighted_design_matrix, adjusted_target_residuals * sqrt_possession_weights)
-    rapm_deviation_from_prior = informed_prior_ridge.coef_
-
-    # Final estimate: prior + deviation learned by Ridge
-    boxscore_prior_off_rapm = rapm_deviation_from_prior[:num_players] + prior_off_means
-    boxscore_prior_def_rapm = rapm_deviation_from_prior[num_players:] + prior_def_means
-    return boxscore_prior_off_rapm, boxscore_prior_def_rapm
-
-
-# ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
-def run_pipeline(game_filter="all"):
-    """Run the full on/off + RAPM pipeline for a given game filter.
+def _scope_mask(frame, game_filter):
+    """Row mask selecting one scope's games out of a regular+postseason frame.
 
-    game_filter: "all" uses every regular-season game;
-                 "conf" restricts to conference games only.
+    reg  — regular season only (the canonical pass)
+    conf — regular-season conference games
+    all  — regular season + postseason
     """
-    filter_label = {"all": "all games", "conf": "conference only"}[game_filter]
+    is_regular = frame["season_type"] == REGULAR_SEASON_TYPE
+    if game_filter == "reg":
+        return is_regular
+    if game_filter == "conf":
+        return is_regular & frame["game_id"].isin(conference_game_id_set)
+    if game_filter == "all":
+        return frame["season_type"].isin(PLAYED_SEASON_TYPES)
+    raise ValueError(f"unknown game_filter: {game_filter!r}")
+
+
+def run_pipeline(game_filter="reg", fit_rapm=True):
+    """Run the on/off (and optionally RAPM) pipeline for one game scope.
+
+    game_filter: "reg" | "conf" | "all"  (see _scope_mask).
+    fit_rapm:    False skips the ridge solve and writes no RAPM table. RAPM is a
+                 regular-season metric, so only the "reg" and "conf" passes fit it.
+
+    Returns (presence_full, player_on_off_stats) for the scope.
+    """
+    filter_label = {"reg":  "regular season",
+                    "conf": "conference only",
+                    "all":  "regular + postseason"}[game_filter]
     print(f"\n{'='*60}")
     print(f"Running pipeline: {filter_label}")
     print(f"{'='*60}")
 
     # --- Filter raw data to the appropriate game set ---
-    if game_filter == "conf":
-        play_by_play       = raw_play_by_play[raw_play_by_play["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
-        player_boxscores   = raw_player_boxscores[raw_player_boxscores["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
-        team_boxscores     = raw_team_boxscores[raw_team_boxscores["game_id"].isin(conference_game_id_set)].reset_index(drop=True)
-    else:
-        play_by_play       = raw_play_by_play.copy()
-        player_boxscores   = raw_player_boxscores.copy()
-        team_boxscores     = raw_team_boxscores.copy()
+    play_by_play     = raw_play_by_play[_scope_mask(raw_play_by_play, game_filter)].reset_index(drop=True)
+    player_boxscores = raw_player_boxscores[_scope_mask(raw_player_boxscores, game_filter)].reset_index(drop=True)
+    team_boxscores   = raw_team_boxscores[_scope_mask(raw_team_boxscores, game_filter)].reset_index(drop=True)
 
     print(f"  {play_by_play['game_id'].nunique()} games, {len(play_by_play):,} plays")
 
@@ -687,12 +587,18 @@ def run_pipeline(game_filter="all"):
         if percentile_col not in on_off_results.columns:
             on_off_results[percentile_col] = np.nan
 
-    filename_suffix = "" if game_filter == "all" else f"_{game_filter}"
+    # The regular-season pass keeps the unsuffixed filename: downstream scripts
+    # treat mbb_onoff_{SEASON}_v2.csv as THE season on/off table.
+    filename_suffix = "" if game_filter == "reg" else f"_{game_filter}"
     onoff_output_filename = f"mbb_onoff_{SEASON}{filename_suffix}_v2.csv"
     on_off_results[[c for c in output_column_names if c in on_off_results.columns]].round(4).to_csv(
         onoff_output_filename, index=False
     )
     print(f"  Saved {onoff_output_filename} — {len(on_off_results)} players")
+
+    if not fit_rapm:
+        print("  Skipping RAPM (regular-season metric)")
+        return presence_full, player_on_off_stats
 
     # -----------------------------------------------------------------------
     # RAPM — Regularized Adjusted Plus-Minus
@@ -765,29 +671,18 @@ def run_pipeline(game_filter="all"):
     # the possession-weighted residual sum of squares.
     weighted_design_matrix   = stint_design_matrix.multiply(sqrt_possession_weights[:, None]).tocsr()
 
-    # --- (1) Vanilla RAPM: every player shrinks toward 0 ---
-    vanilla_ridge_model = Ridge(alpha=RIDGE_REGULARIZATION_ALPHA, fit_intercept=False)
-    vanilla_ridge_model.fit(weighted_design_matrix, centered_net_ratings * sqrt_possession_weights)
-    vanilla_off_rapm = vanilla_ridge_model.coef_[:num_players]
-    vanilla_def_rapm = vanilla_ridge_model.coef_[num_players:]
-
-    # --- (2) Box-score prior RAPM ---
-    boxscore_prior_off_rapm, boxscore_prior_def_rapm = _compute_boxscore_prior_rapm(
-        player_boxscores, player_on_off_stats, all_players, num_players,
-        stint_design_matrix, weighted_design_matrix,
-        centered_net_ratings, sqrt_possession_weights,
-        RIDGE_REGULARIZATION_ALPHA, vanilla_off_rapm, vanilla_def_rapm
-    )
+    # RAPM: every player shrinks toward 0.
+    ridge_model = Ridge(alpha=RIDGE_REGULARIZATION_ALPHA, fit_intercept=False)
+    ridge_model.fit(weighted_design_matrix, centered_net_ratings * sqrt_possession_weights)
+    off_rapm = ridge_model.coef_[:num_players]
+    def_rapm = ridge_model.coef_[num_players:]
 
     # Assemble output DataFrame.
     raw_rapm_estimates = pd.DataFrame({
         "athlete_id":  all_players,
-        "o_rapm":      vanilla_off_rapm,
-        "d_rapm":      vanilla_def_rapm,
-        "rapm":        vanilla_off_rapm + vanilla_def_rapm,
-        "o_rapm_bp":   boxscore_prior_off_rapm,
-        "d_rapm_bp":   boxscore_prior_def_rapm,
-        "rapm_bp":     boxscore_prior_off_rapm + boxscore_prior_def_rapm,
+        "o_rapm":      off_rapm,
+        "d_rapm":      def_rapm,
+        "rapm":        off_rapm + def_rapm,
     })
 
     # Possession totals for the minimum-sample filter.
@@ -811,12 +706,10 @@ def run_pipeline(game_filter="all"):
         .sort_values("rapm", ascending=False)
         .reset_index(drop=True)
     )
-    for rapm_col in ["o_rapm", "d_rapm", "o_rapm_bp", "d_rapm_bp"]:
+    for rapm_col in ["o_rapm", "d_rapm"]:
         qualified_rapm_players[rapm_col] = qualified_rapm_players[rapm_col].round(2)
-    qualified_rapm_players["rapm"]    = (qualified_rapm_players["o_rapm"]
-                                          + qualified_rapm_players["d_rapm"])
-    qualified_rapm_players["rapm_bp"] = (qualified_rapm_players["o_rapm_bp"]
-                                          + qualified_rapm_players["d_rapm_bp"])
+    qualified_rapm_players["rapm"] = (qualified_rapm_players["o_rapm"]
+                                      + qualified_rapm_players["d_rapm"])
 
     season_file_suffix  = f"{SEASON - 1}{str(SEASON)[2:]}"
     rapm_output_filename = f"mbb_rapm_{season_file_suffix}{filename_suffix}.csv"
@@ -827,12 +720,21 @@ def run_pipeline(game_filter="all"):
 
 
 # ---------------------------------------------------------------------------
-# Run both passes (all games, then conference only) and save shared outputs
+# Run every scope and save the shared outputs
 # ---------------------------------------------------------------------------
-presence_all_games, player_on_off_all_games = run_pipeline("all")
+# "reg" is the canonical pass — its presence table and player lookup are what the
+# rest of the pipeline consumes, and it owns the unsuffixed filenames.
+presence_regular, player_on_off_regular = run_pipeline("reg")
 run_pipeline("conf")
+# Regular + postseason. Exists so build_site can compute stint-based advanced
+# rates for the all-games scope instead of the minutes-share approximation. No
+# RAPM: that stays a regular-season metric, and skipping the solve keeps the
+# added nightly cost to the stint/presence build alone.
+run_pipeline("all", fit_rapm=False)
 
-# Presence parquet: used downstream by build_lineups.py for WOWY synergy.
+# Presence parquet: used downstream by build_lineups.py for WOWY synergy, and by
+# build_points_resp.py for the on-court points denominator. REGULAR SEASON ONLY —
+# Resp% is documented as a regular-season metric and depends on this staying so.
 SHOT_STAT_NAMES = ["fga", "fgm", "tpa", "tpm", "fta", "ftm", "orb", "drb"]
 columns_to_save = (
     ["game_id", "stint_id", "athlete_id", "team_id", "is_on_court",
@@ -840,12 +742,12 @@ columns_to_save = (
     + [f"{c}_for"     for c in SHOT_STAT_NAMES]
     + [f"{c}_against" for c in SHOT_STAT_NAMES]
 )
-presence_all_games[[c for c in columns_to_save if c in presence_all_games.columns]].to_parquet(
+presence_regular[[c for c in columns_to_save if c in presence_regular.columns]].to_parquet(
     "presence_full.parquet", index=False
 )
 
 # Player lookup: a lightweight name/team map used by the web app.
-player_on_off_all_games[
+player_on_off_regular[
     ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
 ].drop_duplicates("athlete_id").reset_index(drop=True).to_csv("player_lookup.csv", index=False)
 
@@ -853,6 +755,7 @@ _season_suffix = f"{SEASON-1}{str(SEASON)[2:]}"
 print("\nDone. Files saved:")
 print(f"  mbb_onoff_{SEASON}_v2.csv")
 print(f"  mbb_onoff_{SEASON}_conf_v2.csv")
+print(f"  mbb_onoff_{SEASON}_all_v2.csv")
 print(f"  mbb_rapm_{_season_suffix}.csv")
 print(f"  mbb_rapm_{_season_suffix}_conf.csv")
 print("  presence_full.parquet")
@@ -865,11 +768,13 @@ print("  player_lookup.csv")
 #
 # SEASON                      int   Calendar year the season ENDS (e.g. 2026 for the 2025-26 season).
 # REGULAR_SEASON_TYPE         int   sportsdataverse code for regular-season games (2).
+# POSTSEASON_TYPE             int   sportsdataverse code for postseason games (3).
+# PLAYED_SEASON_TYPES         list  Season types the stint pipeline can see ([2, 3]).
 # _season_override            str   Value of OVERRIDE_SEASON env var; used to build historical seasons.
 #
-# raw_play_by_play            DataFrame   Every play from every regular-season game (PBP feed).
-# raw_player_boxscores        DataFrame   Per-player per-game box score stats.
-# raw_team_boxscores          DataFrame   Per-team per-game box score stats.
+# raw_play_by_play            DataFrame   Every play from every regular-season + postseason game.
+# raw_player_boxscores        DataFrame   Per-player per-game box score stats (regular + postseason).
+# raw_team_boxscores          DataFrame   Per-team per-game box score stats (regular + postseason).
 # schedule_df                 DataFrame   Game schedule; used to identify conference games.
 # conference_game_id_set      set[int]    game_ids flagged as conference competition.
 #
@@ -909,7 +814,7 @@ print("  player_lookup.csv")
 # on_off_results              DataFrame   player_on_off_stats sorted by on_off descending.
 # output_column_names         list[str]   Columns to retain in the final on/off CSV.
 # onoff_output_filename       str         e.g. "mbb_onoff_2026_v2.csv".
-# filename_suffix             str         "" for all-games, "_conf" for conference.
+# filename_suffix             str         "" for regular season, "_conf" / "_all" otherwise.
 #
 # --- RAPM section ---
 # rapm_stint_data             DataFrame   Stint stats merged with home/away lineups for RAPM input.
@@ -922,7 +827,7 @@ print("  player_lookup.csv")
 # net_ratings_per_stint       list[float] Observed net rating (pts/poss*100) for each stint observation.
 # possession_weights_per_stint list[float] Possession count for each stint observation (regression weight).
 # stint_observation_count     int         Total number of (stint, side) rows in the design matrix.
-# RIDGE_REGULARIZATION_ALPHA  int         Ridge penalty λ; higher = more shrinkage toward the prior.
+# RIDGE_REGULARIZATION_ALPHA  int         Ridge penalty λ; higher = more shrinkage toward 0.
 # stint_design_matrix         csr_matrix  Sparse X, shape (observations, 2*num_players).
 # observed_net_ratings        ndarray     Target y: net rating per observation.
 # stint_possession_weights    ndarray     Regression weights w (possession counts).
@@ -930,40 +835,18 @@ print("  player_lookup.csv")
 # sqrt_possession_weights     ndarray     √w; used to convert Ridge to a WLS problem.
 # centered_net_ratings        ndarray     y - ȳ (mean-centered target for Ridge).
 # weighted_design_matrix      csr_matrix  X * √w elementwise (for WLS via Ridge).
-# vanilla_ridge_model         Ridge       sklearn Ridge fit with zero-shrinkage prior.
-# vanilla_off_rapm            ndarray     Offensive RAPM coefficients from vanilla Ridge.
-# vanilla_def_rapm            ndarray     Defensive RAPM coefficients from vanilla Ridge.
-# boxscore_prior_off_rapm     ndarray     Offensive RAPM with box-score prior (empirical Bayes).
-# boxscore_prior_def_rapm     ndarray     Defensive RAPM with box-score prior.
-# raw_rapm_estimates          DataFrame   Both RAPM flavors for every player.
+# ridge_model                 Ridge       sklearn Ridge, every player shrunk toward 0.
+# off_rapm                    ndarray     Offensive RAPM coefficients.
+# def_rapm                    ndarray     Defensive RAPM coefficients.
+# raw_rapm_estimates          DataFrame   RAPM estimates for every player.
 # player_on_court_possessions DataFrame   Total on-court possessions per player (for minimum filter).
 # player_name_most_recent     DataFrame   Most recent name/team per athlete_id.
 # qualified_rapm_players      DataFrame   Players with ≥500 on-court possessions; sorted by RAPM.
 # season_file_suffix          str         e.g. "202526" — used in filenames.
 # rapm_output_filename        str         e.g. "mbb_rapm_202526.csv".
 #
-# --- Inside _compute_boxscore_prior_rapm() ---
-# player_season_box           DataFrame   Season box-score totals per player.
-# offensive_gamescore         Series      Hollinger's Game Score offensive component (counting).
-# defensive_gamescore         Series      Hollinger's Game Score defensive component (counting).
-# player_possession_totals    DataFrame   On-court offensive/defensive possessions per player.
-# off_gamescore_per100        ndarray     Offensive game score normalized to per-100-possessions rate.
-# def_gamescore_per100        ndarray     Defensive game score normalized to per-100-possessions rate.
-# off_possession_weights      ndarray     Offensive possession counts (for weighted mean/clip).
-# def_possession_weights      ndarray     Defensive possession counts.
-# centered_off_gamescore      ndarray     off_gamescore_per100 minus possession-weighted mean, clipped.
-# centered_def_gamescore      ndarray     def_gamescore_per100 minus possession-weighted mean, clipped.
-# offense_calibration_coefs   ndarray     [intercept, slope] from WLS of vanilla_off_rapm ~ gamescore.
-# defense_calibration_coefs   ndarray     [intercept, slope] from WLS of vanilla_def_rapm ~ gamescore.
-# prior_off_means             ndarray     Calibrated box-score prior in offensive RAPM units.
-# prior_def_means             ndarray     Calibrated box-score prior in defensive RAPM units.
-# prior_means_combined        ndarray     Concatenation of off and def priors for matrix multiplication.
-# adjusted_target_residuals   ndarray     t = centered_y - X @ prior (what Ridge still needs to explain).
-# informed_prior_ridge        Ridge       Ridge fit on the residual target.
-# rapm_deviation_from_prior   ndarray     γ coefficients: how much each player deviates from their prior.
-#
 # --- Top-level outputs ---
-# presence_all_games          DataFrame   Full presence table from the all-games run.
-# player_on_off_all_games     DataFrame   On/off stats from the all-games run.
+# presence_regular            DataFrame   Full presence table from the regular-season run.
+# player_on_off_regular       DataFrame   On/off stats from the regular-season run.
 # SHOT_STAT_NAMES             list[str]   Stat names retained in the parquet output.
 # columns_to_save             list[str]   Columns written to presence_full.parquet.

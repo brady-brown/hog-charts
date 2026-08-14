@@ -51,8 +51,8 @@ def calculate_efficiency(team_game_df):
 
     Offensive efficiency = points scored per 100 possessions.
     Defensive efficiency = points allowed per 100 possessions.
-    Possessions estimated with the standard formula:
-        FGA + 0.475 * FTA - ORB + TOV
+    Possessions estimated with the project-wide formula:
+        FGA + 0.44 * FTA - ORB + TOV
 
     Parameters
     ----------
@@ -93,14 +93,14 @@ def calculate_efficiency(team_game_df):
 
     combined_stats['off_poss'] = (
         combined_stats['field_goals_attempted']
-        + 0.475 * combined_stats['free_throws_attempted']
+        + 0.44 * combined_stats['free_throws_attempted']
         - combined_stats['offensive_rebounds']
         + combined_stats['turnovers']
     ).replace(0, 1)    # prevent division by zero
 
     combined_stats['def_poss'] = (
         combined_stats['opp_fga']
-        + 0.475 * combined_stats['opp_fta']
+        + 0.44 * combined_stats['opp_fta']
         - combined_stats['opp_orb']
         + combined_stats['opp_tov']
     ).replace(0, 1)
@@ -142,7 +142,7 @@ def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iteratio
             )
             team_possessions = (
                 game_row['field_goals_attempted']
-                + 0.475 * game_row['free_throws_attempted']
+                + 0.44 * game_row['free_throws_attempted']
                 - game_row['offensive_rebounds']
                 + game_row['turnovers']
             )
@@ -538,7 +538,7 @@ class TempoPredictor(IsotonicPredictor):
         team_game_df = team_game_df.copy()
         team_game_df['possessions'] = (
             team_game_df['field_goals_attempted']
-            + 0.475 * team_game_df['free_throws_attempted']
+            + 0.44 * team_game_df['free_throws_attempted']
             - team_game_df['offensive_rebounds']
             + team_game_df['turnovers']
         )
@@ -549,7 +549,7 @@ class TempoPredictor(IsotonicPredictor):
         """League-average possessions per team per game."""
         possessions = (
             team_game_df['field_goals_attempted']
-            + 0.475 * team_game_df['free_throws_attempted']
+            + 0.44 * team_game_df['free_throws_attempted']
             - team_game_df['offensive_rebounds']
             + team_game_df['turnovers']
         )
@@ -950,7 +950,7 @@ class TempoPredictor(IsotonicPredictor):
 # team_season_stats            DataFrame  Season totals: pts, FGA, FTA, ORB, TOV per team.
 # opponent_season_stats        DataFrame  Same columns but from the opponent's perspective.
 # combined_stats               DataFrame  Merged frame with both team and opponent totals.
-# off_poss                     Series  Estimated offensive possessions = FGA + 0.475*FTA - ORB + TOV.
+# off_poss                     Series  Estimated offensive possessions = FGA + 0.44*FTA - ORB + TOV.
 # def_poss                     Series  Estimated defensive possessions (same formula, opponent's stats).
 # off_eff                      Series  Points scored per 100 offensive possessions.
 # def_eff                      Series  Points allowed per 100 defensive possessions.

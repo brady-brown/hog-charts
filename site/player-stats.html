@@ -291,15 +291,11 @@ const COL_GROUPS = {
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
   ],
   // RAPM columns are merged in from player-impact.json (same model as the old
-  // Impact page). 2-decimal, sign-aware. "Box" variants shrink toward a
-  // Hollinger box-score prior instead of zero (steadier in small samples).
+  // Impact page). 2-decimal, sign-aware.
   rapm: [
     { key:"rapm",     label:"RAPM",     dir:"desc", signed:true, tip:"Regularized Adjusted Plus-Minus: net points/100 vs an average player, adjusting for teammates and opponents." },
     { key:"orapm",    label:"Off RAPM", dir:"desc", signed:true, tip:"Offensive RAPM" },
     { key:"drapm",    label:"Def RAPM", dir:"desc", signed:true, tip:"Defensive RAPM (positive = better defense)" },
-    { key:"rapm_bp",  label:"Box RAPM", dir:"desc", signed:true, tip:"Box-prior RAPM: same model shrunk toward a Hollinger Game Score expectation." },
-    { key:"orapm_bp", label:"Off Box",  dir:"desc", signed:true, tip:"Offensive box-prior RAPM" },
-    { key:"drapm_bp", label:"Def Box",  dir:"desc", signed:true, tip:"Defensive box-prior RAPM" },
     { key:"poss",     label:"Poss",     dir:"desc", tip:"Total possessions in the RAPM sample" },
   ],
 };
@@ -349,7 +345,7 @@ function activeCols() {
 // RAPM fields merged from player-impact.json on demand. Loading impact eagerly
 // doubled the initial payload, so we fetch+merge it lazily — only when the RAPM
 // tab, a possessions filter, a RAPM stat-minimum, or a player card needs it.
-const IMPACT_FIELDS = ["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp","poss"];
+const IMPACT_FIELDS = ["rapm","orapm","drapm","poss"];
 const IMPACT_MERGED = {};   // { "all"|"conf": true } once impact is merged for that scope
 
 // Initial scope load: player-stats only (fast). Impact is merged later.
@@ -627,12 +623,12 @@ const STAT_FILTER_GROUPS = [
   ["Shot diet", [["rimr","Rim%"],["midr","Mid%"],["thr3r","3PA%"]]],
   ["Advanced", [["usg","USG%"],["resp","Resp%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
                 ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["astdp","Ast'd%"],["on_off","On/Off"]]],
-  ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"],["rapm_bp","Box RAPM"]]],
+  ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"]]],
 ];
 // Stats stored as 0-1 fractions; a threshold of "40" should mean 40%.
 const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr","resp"]);
 // Filter keys whose data lives in player-impact.json (lazy-loaded).
-const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm","rapm_bp","orapm_bp","drapm_bp"]);
+const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm"]);
 // Stats where a LOWER value is better (matters for percentile-rank thresholds).
 const LOWER_BETTER = new Set(["tpg","tovp"]);
 // Every key offered in a filter row (used to build percentile pools).
