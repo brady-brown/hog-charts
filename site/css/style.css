@@ -78,6 +78,19 @@ nav a.active         { color: var(--ink); }
   padding: 28px 24px 80px;
 }
 
+/* Injected by buildFooter() in common.js — appended to <body>, so it sits
+   outside .container and spans the page. */
+.site-footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.site-footer p { margin: 0; }
+
 /* ── Typography ───────────────────────────────────────────────────────────── */
 h1, h2, h3 { letter-spacing: -0.02em; font-weight: 800; margin: 0 0 4px; }
 h2 { font-size: 1.6rem; }

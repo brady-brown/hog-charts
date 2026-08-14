@@ -157,6 +157,25 @@ function buildResponsiveNav() {
   });
 }
 
+// ── Site footer (single source of truth) ────────────────────────────────────
+// Attribution + disclaimer. Injected here for the same reason as NAV_LINKS:
+// one edit instead of nine HTML files. Logos and headshots are hotlinked from
+// ESPN's CDN rather than copied into site/img/ — keep it that way; the
+// disclaimer below describes that arrangement.
+const FOOTER_LINES = [
+  "All logos and headshots are the property of their respective owners, displayed for identification purposes.",
+  "No affiliation with or endorsement by ESPN, the NCAA, or any school.",
+  "Data comes from ESPN.com",
+];
+
+function buildFooter() {
+  if (document.querySelector("footer.site-footer")) return;
+  const footer = document.createElement("footer");
+  footer.className = "site-footer";
+  footer.innerHTML = FOOTER_LINES.map(line => `<p>${line}</p>`).join("");
+  document.body.appendChild(footer);
+}
+
 // ── Searchable select ───────────────────────────────────────────────────────
 // Upgrades a native <select> into a type-to-filter combobox WITHOUT changing the
 // markup contract: the <select> stays in the DOM as the source of truth, so all
@@ -273,5 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
   populateNav();          // inject shared links before the nav is wrapped/marked
   buildResponsiveNav();
   markActiveNav();
+  buildFooter();
   enhanceAllSelects();
 });
