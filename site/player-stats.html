@@ -185,10 +185,6 @@
       <label for="min-mpg">Min MPG</label>
       <input type="number" id="min-mpg" value="15" min="0" max="40" step="1">
     </div>
-    <div class="form-group narrow">
-      <label for="min-poss">Min poss</label>
-      <input type="number" id="min-poss" value="0" min="0" max="3000" step="100">
-    </div>
     <div class="form-group" style="flex:1 1 100%;min-width:0">
       <label>Stat thresholds <span style="text-transform:none;font-weight:500;color:var(--muted)">— stack multiple (all must pass)</span></label>
       <div id="stat-filters"></div>
@@ -213,7 +209,6 @@
     <div class="col-toggle" style="margin-bottom:0">
       <button class="active" onclick="setGroup('box')">Box Score</button>
       <button onclick="setGroup('advanced')">Advanced</button>
-      <button onclick="setGroup('rapm')">RAPM</button>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <div class="col-toggle" style="margin-bottom:0" title="Browse the full leaderboard, or hand-pick players to compare">
@@ -290,14 +285,6 @@ const COL_GROUPS = {
     { key:"thr3r", label:"3PA%",  dir:"desc", tip:"Shot diet — share of field-goal attempts taken from three. Rim% + Mid% + 3PA% sum to 100. Current season only." },
     { key:"on_off",label:"On/Off",dir:"desc", tip:"Net rating differential on vs. off court (min 200 poss)" },
   ],
-  // RAPM columns are merged in from player-impact.json (same model as the old
-  // Impact page). 2-decimal, sign-aware.
-  rapm: [
-    { key:"rapm",     label:"RAPM",     dir:"desc", signed:true, tip:"Regularized Adjusted Plus-Minus: net points/100 vs an average player, adjusting for teammates and opponents." },
-    { key:"orapm",    label:"Off RAPM", dir:"desc", signed:true, tip:"Offensive RAPM" },
-    { key:"drapm",    label:"Def RAPM", dir:"desc", signed:true, tip:"Defensive RAPM (positive = better defense)" },
-    { key:"poss",     label:"Poss",     dir:"desc", tip:"Total possessions in the RAPM sample" },
-  ],
 };
 
 // Game scopes. PS holds the loaded player array for each (null until first
@@ -342,41 +329,9 @@ function activeCols() {
   return cols;
 }
 
-// RAPM fields merged from player-impact.json on demand. Loading impact eagerly
-// doubled the initial payload, so we fetch+merge it lazily — only when the RAPM
-// tab, a possessions filter, a RAPM stat-minimum, or a player card needs it.
-const IMPACT_FIELDS = ["rapm","orapm","drapm","poss"];
-const IMPACT_MERGED = {};   // { "all"|"conf": true } once impact is merged for that scope
-
-// Initial scope load: player-stats only (fast). Impact is merged later.
 async function loadScopeData(scope) {
   const stats = await loadJSON(`data/${SEASON}/${SCOPE_FILE[scope]}`);
   return stats?.players || null;
-}
-
-// Lazily fetch player-impact for the scope and merge the RAPM fields into its
-// rows. Cached per (season,scope) so it runs at most once each.
-async function ensureImpact(scope) {
-  const rows = PS[scope];
-  if (!rows || IMPACT_MERGED[scope]) return;
-  // Conference uses conference RAPM; every other scope uses the season (overall)
-  // RAPM — it's a regular-season-based metric attached to the player by id.
-  const impactFile = scope === "conf" ? "player-impact-conf.json" : "player-impact.json";
-  const impact = await loadJSON(`data/${SEASON}/${impactFile}`);
-  const byId = new Map((impact?.players || []).map(ip => [ip.id, ip]));
-  rows.forEach(p => {
-    const ip = byId.get(p.id);
-    IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
-  });
-  IMPACT_MERGED[scope] = true;
-  delete PCT_SORTED[scope];   // RAPM fields now present — rebuild percentile pools
-}
-
-// Whether the current view/filters need RAPM data merged in.
-function needsImpact() {
-  if (colGroup === "rapm") return true;
-  if ((parseFloat(document.getElementById("min-poss").value) || 0) > 0) return true;
-  return activeStatFilters().some(s => IMPACT_FILTER_KEYS.has(s.key));
 }
 
 // (Re)build the conference / team / class dropdowns from the current rows.
@@ -500,7 +455,6 @@ function applyScopeMinDefaults(scope) {
 async function reload() {
   PS = { all: null, reg: null, post: null, conf: null };
   allPlayers = [];
-  SCOPES.forEach(s => { IMPACT_MERGED[s] = false; });  // re-merge for the new season
   PCT_SORTED = {};   // recompute percentile pools for the new season
   curScope = "all";
   markScopeButtons();
@@ -525,7 +479,7 @@ async function reload() {
   // otherwise stack duplicate listeners.
   if (!handlersBound) {
     ["search","conf-sel","team-sel","pos-sel","class-sel",
-     "min-gp","min-mpg","min-poss"].forEach(id =>
+     "min-gp","min-mpg"].forEach(id =>
       document.getElementById(id).addEventListener("input", render)
     );
     document.getElementById("add-stat-filter")
@@ -550,7 +504,7 @@ function setGroup(g) {
   sortDir  = COL_GROUPS[g][0].dir;
   // only toggle within the first col-toggle group
   document.querySelectorAll(".col-toggle")[0].querySelectorAll("button")
-    .forEach((b,i) => b.classList.toggle("active", ["box","advanced","rapm"][i] === g));
+    .forEach((b,i) => b.classList.toggle("active", ["box","advanced"][i] === g));
   buildHead();
   render();
 }
@@ -623,12 +577,9 @@ const STAT_FILTER_GROUPS = [
   ["Shot diet", [["rimr","Rim%"],["midr","Mid%"],["thr3r","3PA%"]]],
   ["Advanced", [["usg","USG%"],["resp","Resp%"],["astp","AST%"],["tovp","TOV%"],["orbp","ORB%"],["drbp","DRB%"],
                 ["trbp","TRB%"],["stlp","STL%"],["blkp","BLK%"],["astdp","Ast'd%"],["on_off","On/Off"]]],
-  ["RAPM", [["rapm","RAPM"],["orapm","Off RAPM"],["drapm","Def RAPM"]]],
 ];
 // Stats stored as 0-1 fractions; a threshold of "40" should mean 40%.
 const PCT_STATS = new Set(["ts","efg","fg","fg3","ft","par3","ftr","resp"]);
-// Filter keys whose data lives in player-impact.json (lazy-loaded).
-const IMPACT_FILTER_KEYS = new Set(["rapm","orapm","drapm"]);
 // Stats where a LOWER value is better (matters for percentile-rank thresholds).
 const LOWER_BETTER = new Set(["tpg","tovp"]);
 // Every key offered in a filter row (used to build percentile pools).
@@ -704,7 +655,6 @@ function filtered() {
   const klass = document.getElementById("class-sel").value;
   const minG  = parseFloat(document.getElementById("min-gp").value)   || 0;
   const minM  = parseFloat(document.getElementById("min-mpg").value)  || 0;
-  const minP  = parseFloat(document.getElementById("min-poss").value) || 0;
   const statMins = activeStatFilters();
 
   return allPlayers.filter(p => {
@@ -715,7 +665,6 @@ function filtered() {
     if (klass && p.exp !== klass) return false;
     if (p.gp  != null && p.gp  < minG) return false;
     if (p.mpg != null && p.mpg < minM) return false;
-    if (minP > 0 && (p.poss == null || p.poss < minP)) return false;
     for (const s of statMins) {
       if (p[s.key] == null) return false;
       if (isPctOp(s.op)) {
@@ -768,7 +717,7 @@ function onOffClass(val) {
 // (not the filtered view), so "98th percentile in points" holds regardless of
 // the conference/team filters — the way Cleaning the Glass does it. Identity /
 // sample-size columns are never converted to percentiles.
-const PCT_EXCLUDE = new Set(["gp", "poss"]);
+const PCT_EXCLUDE = new Set(["gp"]);
 let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 
 // Percentiles are computed against players with a real sample only: at least
@@ -821,10 +770,10 @@ function rowHTML(p, idx) {
         return `<td class="num ps-pct-blur" title="Not enough games/minutes for a reliable percentile (min ${PCT_MIN_GP} GP & ${PCT_MIN_MPG} MPG)" style="color:${fg};font-weight:700">${Math.round(pr)}</td>`;
       return `<td class="num" style="background:${bg};color:${fg};font-weight:700">${Math.round(pr)}</td>`;
     }
-    const signed = c.signed || c.key === "on_off";
+    const signed = c.key === "on_off";
     const cls  = signed ? onOffClass(p[c.key]) : "";
     const sign = signed && p[c.key] != null && p[c.key] > 0 ? "+" : "";
-    const dec  = c.key === "poss" ? 0 : (c.signed ? 2 : 1);
+    const dec  = 1;
     return `<td class="num ${cls}">${sign}${v(p[c.key], c.pct, dec)}</td>`;
   }).join("");
   return `<tr onclick="openModal(_currentRows[${idx}])" title="View player card">
@@ -889,14 +838,6 @@ function ensureObserver() {
 }
 
 function render() {
-  // Lazy-load RAPM data the first time the view/filters actually need it,
-  // then re-render once it's merged in.
-  if (needsImpact() && !IMPACT_MERGED[curScope]) {
-    document.getElementById("count-label").textContent = "Loading RAPM…";
-    ensureImpact(curScope).then(render);
-    return;
-  }
-
   // Percentile pools are needed for the display toggle AND for any %ile threshold.
   const needPct = displayMode === "pct" || activeStatFilters().some(s => isPctOp(s.op));
   if (needPct && !PCT_SORTED[curScope]) buildPctSorted(curScope);
@@ -918,16 +859,9 @@ function render() {
 }
 
 // ── Player card modal (shared component: js/player-card.js) ────────────────
-// Open the shared card, resolving scope-aware RAPM lazily: the row handed in is
-// a shallow copy made before the impact merge, so re-read it from the active
-// scope once impact for this scope has loaded.
 function openModal(p) {
   PlayerCard.open(p, {
     season: SEASON, curSeason: CUR_SEASON, hasOnOff: HAS_ONOFF,
-    resolveRapm: async () => {
-      await ensureImpact(curScope);
-      return (activeScope() || []).find(row => row.id === p.id) || p;
-    },
   });
 }
 function closeModal() { PlayerCard.close(); }

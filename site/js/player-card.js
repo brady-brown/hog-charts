@@ -4,7 +4,7 @@
  * API. Both pages hand it a fully-formed player row (the same shape used on the
  * Player Stats table) so the card renders identically wherever it is opened.
  *
- *   PlayerCard.open(row, {season, curSeason, hasOnOff, resolveRapm})
+ *   PlayerCard.open(row, {season, curSeason, hasOnOff})
  *   PlayerCard.close()
  *
  * Dependencies (already loaded on both pages): common.js (loadJSON, logoUrl,
@@ -89,12 +89,6 @@
           <div id="pc-adv"></div>
         </div>
       </div>
-      <div id="pc-rapm-section" style="border-top:1px solid var(--line); padding:18px 28px 4px; display:none">
-        <div class="pc-col-hdr" style="margin-bottom:8px">RAPM / 100 possessions</div>
-        <div class="pc-stats" style="padding:0 0 18px">
-          <div class="pc-stat-col" id="pc-rapm-vals"></div>
-        </div>
-      </div>
       <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
         <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
         <div id="pc-charts" style="display:none">
@@ -164,7 +158,7 @@
   // ── open / close ──────────────────────────────────────────────────────────
   async function open(p, opts = {}) {
     injectOnce();
-    const { season, curSeason, hasOnOff = false, resolveRapm = null } = opts;
+    const { season, curSeason, hasOnOff = false } = opts;
     const pg = posGroup(p.pos);
 
     document.getElementById("pc-img").src = playerUrl(p.id);
@@ -258,22 +252,6 @@
         renderZone(document.getElementById("pc-chart-zone"), zoneData);
         renderDensity(document.getElementById("pc-chart-density"), mx, my, hx, hy);
       }).catch(() => { chartStatus.textContent = "Shot data not available."; });
-    }
-
-    // RAPM block — read from the row, or resolve it lazily if a provider is given.
-    const rapmSection = document.getElementById("pc-rapm-section");
-    const r = resolveRapm ? (await resolveRapm(p)) || p : p;
-    if (r.rapm != null) {
-      const sg = (val) => val == null ? "—" : (val >= 0 ? "+" : "−") + Math.abs(val).toFixed(2);
-      const sc = (val) => val == null ? "" : val > 0 ? "good" : val < 0 ? "bad" : "";
-      const rRow = (lbl, val, bold) =>
-        `<div class="pc-stat-row"><span class="pc-stat-lbl">${lbl}</span>
-         <span class="pc-stat-val ${sc(val)}" ${bold ? 'style="font-weight:900"' : ""}>${sg(val)}</span></div>`;
-      document.getElementById("pc-rapm-vals").innerHTML =
-        rRow("Offense", r.orapm) + rRow("Defense", r.drapm) + rRow("Total", r.rapm, true);
-      rapmSection.style.display = "block";
-    } else {
-      rapmSection.style.display = "none";
     }
   }
 

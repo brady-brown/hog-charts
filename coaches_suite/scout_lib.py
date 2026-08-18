@@ -7,7 +7,7 @@ views for a single opponent:
     1. Three-Point Threat Board  — who is a real threat from deep, in coach language
     2. Shot Diet                 — where the opponent likes to shoot (vs. D-I average)
     3. Shot Quality              — where the opponent actually shoots best (vs. NCAA baseline)
-    4. Who To Attack             — the defensive weak links (drapm + on/off)
+    4. Who To Attack             — the defensive weak links (defensive on/off)
 
 Everything is parametric on (team_name, season).  Nothing here prints or plots;
 the notebook owns presentation.  Zone math comes from hoglib.zones so the zones
@@ -51,7 +51,7 @@ LEAGUE_3P_PCT = 0.345    # D-I average, matches avg of the three-zone baselines
 
 # ── data loading ────────────────────────────────────────────────────────────
 def _find_rows(obj):
-    """player-stats/impact JSON may be a dict wrapping the list — dig out the list."""
+    """player-stats JSON may be a dict wrapping the list — dig out the list."""
     if isinstance(obj, list):
         return obj
     for v in obj.values():
@@ -90,8 +90,7 @@ def load_data(season, root="."):
     _ps_all = os.path.join(site, "player-stats-all.json")
     _ps_path = _ps_all if os.path.exists(_ps_all) else os.path.join(site, "player-stats.json")
     pstats = pd.DataFrame(_find_rows(json.load(open(_ps_path))))
-    impact = pd.DataFrame(_find_rows(json.load(open(os.path.join(site, "player-impact.json")))))
-    # defensive on/off (drtg_on / drtg_off) — available early season, unlike RAPM
+    # defensive on/off (drtg_on / drtg_off)
     onoff = pd.read_csv(os.path.join(root, f"mbb_onoff_{season}_v2.csv"),
                         usecols=["athlete_id", "team_id", "drtg_on", "drtg_off",
                                  "poss_off_on", "poss_def_on"])
@@ -125,7 +124,7 @@ def load_data(season, root="."):
                                             "assist_pct", "resp_pct"])
 
     return {"shots": shots, "box": box, "names": names,
-            "pstats": pstats, "impact": impact, "onoff": onoff,
+            "pstats": pstats, "onoff": onoff,
             "fouls": fouls, "points_resp": points_resp}
 
 
@@ -385,7 +384,7 @@ def _load_baselines(path):
         return {}
 
 
-# ── 4. Who to attack (defensive on/off — available early season, unlike RAPM) ─
+# ── 4. Who to attack (defensive on/off) ──────────────────────────────────────
 def attack_board(data, tid, name, min_mpg=0.0, min_def_poss=0):
     """Rank the opponent's rotation by defensive on/off.
 
@@ -393,7 +392,7 @@ def attack_board(data, tid, name, min_mpg=0.0, min_def_poss=0):
     ON minus OFF).  Positive = the team's defense gets WORSE with them on the
     floor -> attack them.  drtg_on = raw points allowed per 100 while on court.
     Both come from mbb_onoff_{season}_v2.csv, which is built from box/PBP and is
-    ready at the start of the season (RAPM needs a stabilising sample first).
+    ready at the start of the season.
 
     Players below `min_def_poss` defensive possessions are dropped (noise);
     height / usage are shown as context only.

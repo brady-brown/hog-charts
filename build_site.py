@@ -15,8 +15,6 @@ Outputs (written into site/data/{SEASON}/):
                             (powers the Team Stats page; net-ratings.json retired).
     player-stats.json       Per-player overall season stats.
     player-stats-conf.json  Per-player conference-only stats.
-    player-impact.json      RAPM + on/off impact hub (overall).
-    player-impact-conf.json RAPM + on/off impact hub (conference only).
     lineup-index.json       Small index of teams + URL slugs for the dropdown.
     lineups/{slug}.json     One per team; 1/2/3/5-man lineup combo data.
     shots-meta.json         Zone stats, territory maps, player zones (shots page).
@@ -484,7 +482,7 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
         stl_pct Steal % of opponent possessions ended by a steal while on court
         blk_pct Block % of opponent two-point attempts blocked while on court
         bpm     Box Plus/Minus (a Hollinger Game Score proxy, centered on 0 = average)
-        on_off  Net rating on-court minus net rating off-court (from RAPM pipeline)
+        on_off  Net rating on-court minus net rating off-court (from the on/off pipeline)
 
     The rebound/steal/block rates need opponent totals (team_context_csv_path,
     keyed by team_id) since they compare against what opponents generated.
@@ -913,26 +911,12 @@ for stats_csv_name, onoff_csv, stint_csv, team_ctx_name, assist_share_csv, min_g
 
 
 # ===========================================================================
-# 3c. player-impact.json  +  player-impact-conf.json  (RAPM + on/off)
+# 3c. (retired) player-impact.json — RAPM hub
 # ===========================================================================
-print("\nBuilding player-impact JSON files…")
-from impact_artifact import build_impact_records
-
-overall_impact_records = build_impact_records(
-    PROJECT_ROOT, SEASON, conf_map=conference_label_map, conf_variant=False, min_possessions=400
-)
-if overall_impact_records is not None:
-    write_json({"players": overall_impact_records, "meta": build_metadata}, "player-impact.json")
-    print(f"  → {len(overall_impact_records)} players (overall)")
-else:
-    print(f"  [warn] no RAPM file for {SEASON} — player-impact skipped")
-
-conference_impact_records = build_impact_records(
-    PROJECT_ROOT, SEASON, conf_map=conference_label_map, conf_variant=True, min_possessions=200
-)
-if conference_impact_records is not None:
-    write_json({"players": conference_impact_records, "meta": build_metadata}, "player-impact-conf.json")
-    print(f"  → {len(conference_impact_records)} players (conference)")
+# RAPM was retired from the site, so player-impact.json is no longer built and
+# nothing reads it. impact_artifact.build_impact_records() is left in the repo
+# intact; re-enable it here (and turn fit_rapm back on in build_onoff_rapm.py)
+# if RAPM ever returns.
 
 
 # ===========================================================================

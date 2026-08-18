@@ -96,27 +96,17 @@ let PZB = null;              // zone baselines
 const SHOT_CACHE = {};
 
 // Full player rows (Player Stats data) so a board row can open the shared player
-// card. Loaded once for the season, RAPM merged from player-impact, then indexed
-// by athlete id and — per rendered team — by display name (board rows carry the
-// name, not the id).
-let PLAYERS_BY_ID = new Map();   // id -> full row (+RAPM)
+// card. Loaded once for the season, then indexed by athlete id and — per rendered
+// team — by display name (board rows carry the name, not the id).
+let PLAYERS_BY_ID = new Map();   // id -> full row
 let HAS_ONOFF = false;
 let NAME2ID = {};                // display name -> id, rebuilt for the current team
 
 async function ensurePlayers(){
   if(PLAYERS_BY_ID.size) return;
-  const [stats, impact] = await Promise.all([
-    loadJSON(`data/${SEASON}/player-stats-all.json`).catch(()=>null),
-    loadJSON(`data/${SEASON}/player-impact.json`).catch(()=>null),
-  ]);
+  const stats = await loadJSON(`data/${SEASON}/player-stats-all.json`).catch(()=>null);
   const rows = stats?.players || [];
-  const IMPACT_FIELDS = ["rapm","orapm","drapm","poss"];
-  const imp = new Map((impact?.players || []).map(ip => [ip.id, ip]));
-  rows.forEach(p => {
-    const ip = imp.get(p.id);
-    IMPACT_FIELDS.forEach(f => { p[f] = ip ? (ip[f] ?? null) : null; });
-    PLAYERS_BY_ID.set(p.id, p);
-  });
+  rows.forEach(p => { PLAYERS_BY_ID.set(p.id, p); });
   HAS_ONOFF = rows.some(p => p.on_off != null);
 }
 

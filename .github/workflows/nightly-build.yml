@@ -55,7 +55,7 @@ jobs:
       - name: Build lineup CSVs
         run: python build_lineups.py
 
-      - name: Build on/off + RAPM CSVs
+      - name: Build on/off CSVs
         run: python -u build_onoff_rapm.py
 
       - name: Build points-responsible tables

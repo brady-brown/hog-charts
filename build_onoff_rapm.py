@@ -1,5 +1,5 @@
 """
-Generates on/off splits and RAPM for both overall and conference games.
+Generates on/off splits for both overall and conference games.
 
 Run locally:
     python3 build_onoff_rapm.py
@@ -7,10 +7,18 @@ Run locally:
 Outputs (season auto-detected from current date):
     mbb_onoff_{SEASON}_v2.csv          regular season
     mbb_onoff_{SEASON}_conf_v2.csv     conference games
-    mbb_onoff_{SEASON}_all_v2.csv      regular + postseason (no RAPM)
-    mbb_rapm_{SEASON-1}{SEASON%100:02d}.csv
+    mbb_onoff_{SEASON}_all_v2.csv      regular + postseason
     presence_full.parquet              regular season only
     player_lookup.csv
+
+RAPM IS TURNED OFF
+------------------
+The RAPM engine (ridge solve, design matrix, box prior) is intact and still
+lives in run_pipeline(), but every pass now runs with fit_rapm=False, so no
+mbb_rapm_*.csv is written and nothing on the site reads or reports it.  RAPM
+was retired from the site as a metric, not deleted as machinery — to bring it
+back, flip the reg/conf passes at the bottom of this file to fit_rapm=True and
+re-wire player-impact.json in build_site.py.
 
 HIGH-LEVEL APPROACH
 -------------------
@@ -23,18 +31,18 @@ HIGH-LEVEL APPROACH
 4.  Build a "presence table": one row per (player, stint), marking whether the
     player was on or off the court.  Aggregating on/off gives each player's
     on-court and off-court net rating.
-5.  Fit RAPM (Regularized Adjusted Plus-Minus) via Ridge regression over the
-    design matrix, shrinking every player toward 0.
+5.  (Dormant) Fit RAPM via Ridge regression over the design matrix, shrinking
+    every player toward 0.  Only runs when a pass is given fit_rapm=True; no
+    pass does today.
 
 SCOPES
 ------
 The pipeline runs three times.  "reg" (regular season) is the canonical pass —
-it writes presence_full.parquet and the RAPM tables, and its on/off file is what
-the site treats as the season on/off metric.  "conf" restricts to conference
-games.  "all" covers regular + postseason and exists so the site's all-games
-scope can compute stint-based advanced rates against what actually happened on
-the floor instead of a minutes-share approximation; it skips the RAPM solve,
-since RAPM stays a regular-season metric.
+it writes presence_full.parquet, and its on/off file is what the site treats as
+the season on/off metric.  "conf" restricts to conference games.  "all" covers
+regular + postseason and exists so the site's all-games scope can compute
+stint-based advanced rates against what actually happened on the floor instead
+of a minutes-share approximation.
 """
 
 import pandas as pd
@@ -724,13 +732,18 @@ def run_pipeline(game_filter="reg", fit_rapm=True):
 # ---------------------------------------------------------------------------
 # "reg" is the canonical pass — its presence table and player lookup are what the
 # rest of the pipeline consumes, and it owns the unsuffixed filenames.
-presence_regular, player_on_off_regular = run_pipeline("reg")
-run_pipeline("conf")
-# Regular + postseason. Exists so build_site can compute stint-based advanced
-# rates for the all-games scope instead of the minutes-share approximation. No
-# RAPM: that stays a regular-season metric, and skipping the solve keeps the
-# added nightly cost to the stint/presence build alone.
-run_pipeline("all", fit_rapm=False)
+# fit_rapm=False on every pass: RAPM is retired from the site, so the ridge solve
+# is skipped entirely (see "RAPM IS TURNED OFF" at the top of this file).
+presence_regular, player_on_off_regular = run_pipeline("reg", fit_rapm=False)
+
+# Write the reg-pass outputs NOW, before the conf/all passes, then drop the
+# frames.  This lowers the baseline the later passes build on top of (measured:
+# the conf pass starts ~3 GB lighter, and the run ends at 0.4 GB instead of
+# 3.6 GB).  It is NOT on its own a fix for the nightly OOM: the peak lives
+# inside the presence-table build below (~6-7 GB in EVERY pass, on a 7 GB
+# runner), dominated by materialising presence_rows as ~17M Python dicts before
+# pd.DataFrame() sees them.  Rebuilding that as a merge/explode over typed
+# columns is the change that would actually move the ceiling.
 
 # Presence parquet: used downstream by build_lineups.py for WOWY synergy, and by
 # build_points_resp.py for the on-court points denominator. REGULAR SEASON ONLY —
@@ -751,13 +764,20 @@ player_on_off_regular[
     ["athlete_id", "athlete_display_name", "team_id", "team_display_name"]
 ].drop_duplicates("athlete_id").reset_index(drop=True).to_csv("player_lookup.csv", index=False)
 
-_season_suffix = f"{SEASON-1}{str(SEASON)[2:]}"
+del presence_regular, player_on_off_regular
+_gc.collect()
+
+run_pipeline("conf", fit_rapm=False)
+_gc.collect()
+# Regular + postseason. Exists so build_site can compute stint-based advanced
+# rates for the all-games scope instead of the minutes-share approximation.
+run_pipeline("all", fit_rapm=False)
+_gc.collect()
+
 print("\nDone. Files saved:")
 print(f"  mbb_onoff_{SEASON}_v2.csv")
 print(f"  mbb_onoff_{SEASON}_conf_v2.csv")
 print(f"  mbb_onoff_{SEASON}_all_v2.csv")
-print(f"  mbb_rapm_{_season_suffix}.csv")
-print(f"  mbb_rapm_{_season_suffix}_conf.csv")
 print("  presence_full.parquet")
 print("  player_lookup.csv")
 
