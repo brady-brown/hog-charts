@@ -29,6 +29,11 @@ Outputs (8 CSV files):
     3_man_overall_stats_{SEASON}.csv      3_man_conference_stats_{SEASON}.csv
     5_man_overall_stats_{SEASON}.csv      5_man_conference_stats_{SEASON}.csv
 
+Plus the Lineup Builder payload tables (2 parquet files), which ship the raw
+stints + stint-tagged shots the browser aggregates live on lineup-builder.html:
+    lineup_builder_stints_{SEASON}.parquet
+    lineup_builder_shots_{SEASON}.parquet
+
 Run locally:
     python3 build_lineups.py
     OVERRIDE_SEASON=2025 python3 build_lineups.py
@@ -230,6 +235,94 @@ lineup_stints["lineup_key"] = lineup_stints["lineup"].apply(lambda s: tuple(sort
 conference_game_ids = set(
     schedule_df.loc[schedule_df["conference_competition"] == True, "game_id"].astype(int).unique()
 )
+
+
+# ---------------------------------------------------------------------------
+# Lineup Builder payload tables  →  build_site.py turns these into per-team JSON
+# ---------------------------------------------------------------------------
+# The Lineup Builder page answers "these players on the floor, those ones off"
+# for ANY combination. That space is far too large to precompute — a 12-man
+# rotation is hundreds of thousands of on/off filters per team, and nearly all
+# of them are tiny samples. So instead of shipping answers, ship the evidence:
+# every stint (who was on, what happened) plus every field-goal attempt tagged
+# with the stint it fell in. The browser aggregates any filter live.
+#
+# This lives HERE because stint_id only exists inside this script: `pbp` carries
+# it after stints.build_stints, so tagging a shot to a stint is a column read
+# instead of a second pass over the 3M-row play-by-play. The same stints feed
+# the combo CSVs above, so the Builder and the Lineup Stats page agree.
+#
+# Outputs (parquet, repo root — inputs to build_site.py, not site data):
+#     lineup_builder_stints_{SEASON}.parquet
+#     lineup_builder_shots_{SEASON}.parquet
+from hoglib import scopes as scope_sets_lib
+from hoglib.zones import classify_shot_zones, ZONE_NAME_TO_INDEX
+
+# Scope membership travels with each stint as a bitfield so ONE payload per team
+# serves every scope toggle on the page (the browser masks the stints it wants).
+SCOPE_BIT = {"reg": 1, "post": 2, "conf": 4, "nonconf": 8}
+_scope_sets = scope_sets_lib.game_id_sets(schedule_df)
+scope_bits_by_game = {}
+for _scope_name, _bit in SCOPE_BIT.items():
+    for _gid in getattr(_scope_sets, _scope_name):
+        scope_bits_by_game[_gid] = scope_bits_by_game.get(_gid, 0) | _bit
+
+print("Building Lineup Builder payload tables…")
+
+# --- stints: one row per (game, stint, team) with a valid 5-man lineup --------
+# Stints where nothing happened (back-to-back substitution events produce a run
+# of them) carry no points, possessions or clock, so dropping them changes no
+# aggregate — it just removes ~70% of the rows from the shipped payload.
+builder_stints = lineup_stints[
+    lineup_stints["team_id"].isin(qualifying_team_ids)
+    & (lineup_stints["lineup"].apply(len) == 5)
+].copy()
+_has_content = (builder_stints[["PF", "PA", "Poss_Off", "Poss_Def", "Seconds"]] > 0).any(axis=1)
+builder_stints = builder_stints[_has_content]
+
+_sorted_lineups = np.array([sorted(lu) for lu in builder_stints["lineup"]], dtype="int64")
+for _slot in range(5):
+    builder_stints[f"p{_slot + 1}"] = _sorted_lineups[:, _slot]
+builder_stints["scope"] = (
+    builder_stints["game_id"].astype("int64").map(scope_bits_by_game).fillna(0).astype("int16")
+)
+builder_stints["team_id"] = builder_stints["team_id"].astype("int64")
+builder_stints = builder_stints.sort_values(["team_id", "game_id", "stint_id"])
+
+BUILDER_STINT_COLS = (["game_id", "stint_id", "team_id"] + [f"p{i}" for i in range(1, 6)]
+                      + ["PF", "PA", "Poss_Off", "Poss_Def", "Seconds", "scope"])
+builder_stints[BUILDER_STINT_COLS].to_parquet(
+    f"lineup_builder_stints_{SEASON}.parquet", index=False)
+
+# --- shots: every FGA with coordinates, tagged with its stint and zone --------
+# Only shots inside a kept stint are useful (the others have nothing to attach
+# to), and free throws are excluded because zones are field-goal geometry.
+kept_stint_keys = set(zip(builder_stints["game_id"], builder_stints["stint_id"]))
+# Take only the columns the zone classifier and the payload need — `pbp` is 59
+# columns wide and ~3M rows, and copying all of them here is what pushes the
+# nightly runner toward its memory ceiling.
+BUILDER_SHOT_COLS = ["game_id", "stint_id", "team_id", "coordinate_x", "coordinate_y", "is_fgm"]
+builder_shots = pbp.loc[
+    pbp["is_fga"] & pbp["coordinate_x"].notna() & pbp["coordinate_y"].notna(),
+    BUILDER_SHOT_COLS,
+].copy()
+builder_shots = builder_shots[
+    (builder_shots["coordinate_x"].abs() <= 50) & (builder_shots["coordinate_y"].abs() <= 30)
+]
+builder_shots["zone"] = classify_shot_zones(builder_shots)
+builder_shots = builder_shots[~builder_shots["zone"].isin(["Heave", "Unknown"])]
+builder_shots["zone_index"] = builder_shots["zone"].map(ZONE_NAME_TO_INDEX).astype("int16")
+builder_shots["made"] = builder_shots["is_fgm"].astype("int8")
+builder_shots = builder_shots[
+    [(g, s) in kept_stint_keys for g, s in zip(builder_shots["game_id"], builder_shots["stint_id"])]
+]
+builder_shots["team_id"] = builder_shots["team_id"].astype("int64")
+builder_shots[["game_id", "stint_id", "team_id", "zone_index", "made"]].to_parquet(
+    f"lineup_builder_shots_{SEASON}.parquet", index=False)
+
+print(f"  lineup_builder_stints_{SEASON}.parquet — {len(builder_stints):,} team-stints")
+print(f"  lineup_builder_shots_{SEASON}.parquet  — {len(builder_shots):,} shots tagged")
+del builder_stints, builder_shots, kept_stint_keys   # the combo roll-up below needs the room
 
 
 # ---------------------------------------------------------------------------

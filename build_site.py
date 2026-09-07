@@ -17,6 +17,9 @@ Outputs (written into site/data/{SEASON}/):
     player-stats-conf.json  Per-player conference-only stats.
     lineup-index.json       Small index of teams + URL slugs for the dropdown.
     lineups/{slug}.json     One per team; 1/2/3/5-man lineup combo data.
+    lineup-builder-index.json  Teams + slugs for the Lineup Builder dropdown.
+    builder/{slug}.json     One per team; raw stints + stint-tagged shots the
+                            Lineup Builder page aggregates live in the browser.
     shots-meta.json         Zone stats, territory maps, player zones (shots page).
     site/data/shots/{slug}.json  Raw shot coordinates per team for interactive charts.
     site/data/seasons.json  List of all built season years (for the season dropdown).
@@ -1001,6 +1004,139 @@ write_json(
     {"teams": sorted(all_team_names_across_sizes), "slugs": team_slug_map, "meta": build_metadata},
     "lineup-index.json"
 )
+
+
+# ===========================================================================
+# 4b. lineup-builder-index.json  +  builder/{slug}.json
+# ===========================================================================
+# Section 4 ships ANSWERS: the combos build_lineups precomputed above a
+# possession threshold. This ships EVIDENCE instead — every lineup a team
+# played and every shot taken while it was out there — so lineup-builder.html
+# can answer combinations nobody precomputed ("these three on, that one off")
+# with no threshold at all.
+#
+# One payload per team covers all five scopes: each row carries a scope
+# bitfield (reg 1 / post 2 / conf 4 / nonconf 8) and the browser masks it.
+# Current season only — the page needs shot coordinates, which ESPN only
+# supplies densely for the live season (same rule as Shot Charts and Scout).
+#
+# Stints that share the same five (and the same scope) are summed into ONE row
+# before shipping. Every query the page makes selects whole stints by who was
+# on the floor, so merging them changes no total and cuts the payload ~4x.
+#
+# Encoding (both arrays are flat ints, to keep the payloads small):
+#     stints  11 per row — [p0..p4, PF, Poss_Off×10, PA, Poss_Def×10,
+#                           seconds, scope_bits]
+#             pN index into `roster`; possessions are ×10 because 0.44·FTA
+#             makes them fractional.
+#     shots    2 per shot — [row_index, code]
+#             code = zone_index×4 + made×2 + is_our_shot
+print("\nBuilding lineup-builder payloads…")
+BUILDER_STINTS_PARQUET = os.path.join(PROJECT_ROOT, f"lineup_builder_stints_{SEASON}.parquet")
+BUILDER_SHOTS_PARQUET  = os.path.join(PROJECT_ROOT, f"lineup_builder_shots_{SEASON}.parquet")
+BUILDER_BOX_PARQUET    = os.path.join(PROJECT_ROOT, f"box_{SEASON}.parquet")
+
+if all(os.path.exists(p) for p in
+       (BUILDER_STINTS_PARQUET, BUILDER_SHOTS_PARQUET, BUILDER_BOX_PARQUET)):
+    builder_stints_df = pd.read_parquet(BUILDER_STINTS_PARQUET)
+    builder_shots_df  = pd.read_parquet(BUILDER_SHOTS_PARQUET)
+    builder_box_df    = pd.read_parquet(BUILDER_BOX_PARQUET)
+
+    # Identity comes from the box score, the same source the shot pages use, so
+    # a team's builder slug matches its shots/{slug}.json slug.
+    builder_player_names = (
+        builder_box_df.drop_duplicates("athlete_id")
+        .set_index("athlete_id")["athlete_display_name"].to_dict()
+    )
+    builder_team_names = (
+        builder_box_df[["team_id", "team_display_name"]].drop_duplicates()
+        .set_index("team_id")["team_display_name"].to_dict()
+    )
+
+    # --- collapse stints into one row per (team, five, scope) ----------------
+    BUILDER_UNIT_KEY = ["team_id", "p1", "p2", "p3", "p4", "p5", "scope"]
+    BUILDER_SUM_COLS = ["PF", "PA", "Poss_Off", "Poss_Def", "Seconds"]
+    builder_units_df = (
+        builder_stints_df.groupby(BUILDER_UNIT_KEY, as_index=False)[BUILDER_SUM_COLS].sum()
+        .sort_values(BUILDER_UNIT_KEY)
+    )
+    # Index of each row inside its team's payload — what the shot array points at.
+    builder_units_df["payload_index"] = builder_units_df.groupby("team_id").cumcount()
+    builder_stint_index = builder_stints_df.merge(
+        builder_units_df[BUILDER_UNIT_KEY + ["payload_index"]], on=BUILDER_UNIT_KEY, how="left"
+    )[["game_id", "stint_id", "team_id", "payload_index"]]
+
+    # Attach every shot to BOTH teams on the floor for that stint: our own shots
+    # (is_our_shot=1) and the opponent's (0, i.e. our defense was out there).
+    # The latter is what answers "how do teams attack the rim against this five".
+    builder_shot_rows = builder_shots_df.merge(
+        builder_stint_index, on=["game_id", "stint_id"], how="inner", suffixes=("_shooter", ""),
+    )
+    builder_shot_rows["code"] = (
+        builder_shot_rows["zone_index"].astype("int64") * 4
+        + builder_shot_rows["made"].astype("int64") * 2
+        + (builder_shot_rows["team_id_shooter"] == builder_shot_rows["team_id"]).astype("int64")
+    )
+    builder_shot_rows = builder_shot_rows.sort_values(["team_id", "payload_index"])
+    shot_rows_by_team = dict(tuple(builder_shot_rows.groupby("team_id")))
+
+    BUILDER_DIR = os.path.join(SEASON_DATA_DIR, "builder")
+    os.makedirs(BUILDER_DIR, exist_ok=True)
+    builder_slug_map, builder_total_bytes = {}, 0
+
+    for team_id, team_units in builder_units_df.groupby("team_id"):
+        team_display_name = builder_team_names.get(team_id)
+        if not team_display_name:
+            continue
+
+        roster_index = {}          # athlete_id → position in the roster array
+        stint_values = []
+        for unit_row in team_units.itertuples(index=False):
+            for athlete_id in (unit_row.p1, unit_row.p2, unit_row.p3,
+                               unit_row.p4, unit_row.p5):
+                if athlete_id not in roster_index:
+                    roster_index[athlete_id] = len(roster_index)
+                stint_values.append(roster_index[athlete_id])
+            stint_values += [
+                int(round(unit_row.PF)),
+                int(round(unit_row.Poss_Off * 10)),
+                int(round(unit_row.PA)),
+                int(round(unit_row.Poss_Def * 10)),
+                int(round(unit_row.Seconds)),
+                int(unit_row.scope),
+            ]
+
+        team_shots = shot_rows_by_team.get(team_id)
+        shot_values = []
+        if team_shots is not None and len(team_shots):
+            interleaved = np.empty(len(team_shots) * 2, dtype="int64")
+            interleaved[0::2] = team_shots["payload_index"].to_numpy()
+            interleaved[1::2] = team_shots["code"].to_numpy()
+            shot_values = interleaved.tolist()
+
+        team_slug = slugify(team_display_name)
+        builder_slug_map[team_display_name] = team_slug
+        payload = {
+            "team":    team_display_name,
+            "team_id": int(team_id),
+            "roster":  [{"id": int(pid), "n": str(builder_player_names.get(pid, pid))}
+                        for pid in roster_index],
+            "stints":  stint_values,
+            "shots":   shot_values,
+        }
+        payload_path = os.path.join(BUILDER_DIR, f"{team_slug}.json")
+        with open(payload_path, "w") as payload_file:
+            payload_file.write(json.dumps(sanitize_for_json(payload), separators=(",", ":")))
+        builder_total_bytes += os.path.getsize(payload_path)
+
+    print(f"  builder files:         {len(builder_slug_map):5d} teams → builder/{{slug}}.json "
+          f"({builder_total_bytes / 1024 / 1024:.1f} MB total)")
+    write_json(
+        {"teams": sorted(builder_slug_map), "slugs": builder_slug_map, "meta": build_metadata},
+        "lineup-builder-index.json"
+    )
+else:
+    print("  [skip] lineup-builder payloads: run build_lineups.py first")
 
 
 # ===========================================================================

@@ -50,6 +50,9 @@ pages/
 /team_stats_*.csv
 /net_ratings_*.csv
 /[0-9]_man_*_stats_*.csv
+# Lineup Builder payload tables — build_lineups.py writes them, build_site.py
+# turns them into site/data/{season}/builder/, which is what ships.
+/lineup_builder_*_[0-9][0-9][0-9][0-9].parquet
 
 # Raw ESPN feed cache written by build_ingest.py (nightly step 0). Large
 # (pbp ~1GB); regenerated each run, read by the builders via hoglib.feeds.

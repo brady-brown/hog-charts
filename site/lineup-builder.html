@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lineup Builder | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    /* Scope tabs — same bar the other pages use. */
+    .scope-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px;
+      flex-wrap: wrap; }
+    .scope-tabs button {
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      color: var(--muted); padding: 10px 18px;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .12s;
+    }
+    .scope-tabs button:hover { color: var(--ink); }
+    .scope-tabs button.active { color: var(--ink); border-bottom-color: var(--t1); }
+
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
+    .filters .form-group { flex: 1; min-width: 160px; }
+    .filters .form-group.narrow { flex: 0 0 130px; }
+
+    /* Roster picker — drag players between buckets, or click to cycle. */
+    .picker { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 18px; }
+    .picker-head { display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+    .picker-head .lbl { font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); }
+    .picker-head .actions { display: flex; gap: 12px; align-items: center; }
+    .pool { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pp {
+      display: inline-flex; align-items: center; gap: 6px; cursor: grab;
+      background: var(--card2); border: 1px solid var(--line); border-radius: 999px;
+      padding: 3px 12px; font-size: .82rem; font-weight: 600; color: var(--ink);
+      transition: border-color .12s; user-select: none;
+    }
+    .pp:hover { border-color: var(--t1); }
+    .pp:active { cursor: grabbing; }
+    .pp.dragging { opacity: .45; }
+    .pp.in-on  { border-color: #16A34A; box-shadow: inset 3px 0 0 #16A34A; }
+    .pp.in-off { border-color: var(--t1); box-shadow: inset 3px 0 0 var(--t1); }
+    .pp .mins { color: var(--dim); font-weight: 500; font-size: .74rem; }
+    .link-btn { background: none; border: none; color: var(--muted); cursor: pointer;
+      font-family: inherit; font-size: .8rem; text-decoration: underline; padding: 0; }
+    .link-btn:hover { color: var(--t1); }
+    .flip-btn { background: var(--card2); border: 1px solid var(--line); border-radius: 8px;
+      color: var(--ink); cursor: pointer; font-family: inherit; font-size: .8rem;
+      font-weight: 600; padding: 5px 12px; }
+    .flip-btn:hover:not(:disabled) { border-color: var(--t1); color: var(--t1); }
+    .flip-btn:disabled { opacity: .4; cursor: default; }
+
+    /* The two drop buckets. */
+    .buckets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .buckets { grid-template-columns: 1fr; } }
+    .zone-drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 10px 12px;
+      background: var(--card2); transition: border-color .12s, background .12s; }
+    .zone-drop.over { border-color: var(--t1); border-style: solid; background: var(--card); }
+    .zone-drop .zt { font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px; }
+    .zone-drop .zt .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .drop-on  .zt .dot { background: #16A34A; }
+    .drop-off .zt .dot { background: var(--t1); }
+    .zchips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }
+    .zchips .ph, .pool .ph { color: var(--dim); font-size: .8rem; }
+
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    @media (max-width: 880px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px) { .cards { grid-template-columns: 1fr; } }
+    .rcard { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 14px 16px; }
+    .rcard .t { font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+    .rcard .big { font-size: 1.9rem; font-weight: 900; line-height: 1.1;
+      font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+    .rcard .sub { color: var(--dim); font-size: .76rem; margin-top: 5px; }
+    .good { color: #16A34A; } .bad { color: var(--t1); }
+
+    /* Chart + table sit side by side on desktop. */
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px; align-items: start; }
+    @media (max-width: 880px) { .split { grid-template-columns: 1fr; } }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .panel h3 { margin: 0 0 4px; font-size: .95rem; font-weight: 800; }
+    .panel .psub { color: var(--muted); font-size: .78rem; margin: 0 0 12px; }
+    .side-toggle { display: flex; gap: 4px; margin-bottom: 12px; }
+    .side-toggle button { background: var(--card2); border: 1px solid var(--line);
+      color: var(--muted); border-radius: 8px; cursor: pointer; font-family: inherit;
+      font-size: .78rem; font-weight: 700; padding: 5px 12px; }
+    .side-toggle button.active { color: var(--ink); border-color: var(--t1); }
+
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead th { background: var(--card2); color: var(--muted); font-size: .72rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+    thead th:first-child { text-align: left; }
+    tbody td { padding: 7px 10px; text-align: right; font-variant-numeric: tabular-nums;
+      border-bottom: 1px solid #1a2235; }
+    tbody td:first-child { text-align: left; font-weight: 600; }
+    tbody tr:last-child td { border-bottom: none; }
+    .empty { color: var(--muted); font-size: .9rem; padding: 26px; text-align: center; }
+    .hint { color: var(--dim); font-size: .78rem; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+
+  <h2>Lineup Builder</h2>
+  <p class="page-sub" id="page-sub">
+    Drag players into On Floor and Off Floor to see how the team performed with that
+    exact combination, plus how both teams shot with it on the court. No minimum
+    possessions. Current season only.
+  </p>
+
+  <div class="scope-tabs" id="scope-tabs"></div>
+
+  <div class="filters">
+    <div class="form-group narrow">
+      <label for="season-sel">Season</label>
+      <select id="season-sel"></select>
+    </div>
+    <div class="form-group">
+      <label for="team-sel">Team</label>
+      <select id="team-sel" disabled><option>Loading…</option></select>
+    </div>
+  </div>
+
+  <div class="picker">
+    <div class="picker-head">
+      <span class="lbl" id="pick-lbl">Drag players into a bucket</span>
+      <span class="actions">
+        <button class="flip-btn" id="flip-btn" title="Swap the two buckets">⇄ Flip</button>
+        <button class="link-btn" id="clear-btn">Clear</button>
+      </span>
+    </div>
+    <div class="buckets">
+      <div class="zone-drop drop-on" id="drop-on" data-bucket="on">
+        <div class="zt"><span class="dot"></span>On floor</div>
+        <div class="zchips" id="chips-on"></div>
+      </div>
+      <div class="zone-drop drop-off" id="drop-off" data-bucket="off">
+        <div class="zt"><span class="dot"></span>Off floor</div>
+        <div class="zchips" id="chips-off"></div>
+      </div>
+    </div>
+    <div class="pool" id="pool" data-bucket="pool"></div>
+    <div class="hint">Sorted by minutes. Drag a player into a bucket, or click to cycle him
+      Available → On → Off → Available. Drop him back on this row to remove him.</div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="split">
+    <div class="panel">
+      <h3 id="chart-title">Shot chart</h3>
+      <p class="psub" id="chart-sub"></p>
+      <div class="side-toggle" id="side-toggle">
+        <button id="side-own" class="active">Our shots</button>
+        <button id="side-opp">Opponent shots</button>
+      </div>
+      <div id="zone-chart"></div>
+    </div>
+    <div class="panel">
+      <h3>Shot profile</h3>
+      <p class="psub" id="tbl-sub"></p>
+      <table>
+        <thead><tr><th>Area</th><th>FG%</th><th>FGA</th><th>Freq</th></tr></thead>
+        <tbody id="z-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="caption" style="margin-top:12px">
+    Ratings are per 100 possessions from the same stints that build the Lineup Stats page,
+    so a single player on the floor matches his 1-Man row there.
+  </p>
+
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/zone-chart.js"></script>
+<script src="js/lineup-engine.js"></script>
+<script>
+// Label and order match the scope toggle on Team Stats / Player Stats.
+const SCOPES = [
+  ["all",     "All games"],
+  ["reg",     "Regular"],
+  ["post",    "Postseason"],
+  ["conf",    "Conference"],
+  ["nonconf", "Non-Conf"],
+];
+
+let SEASON    = null;
+let INDEX     = null;   // lineup-builder-index.json: {teams, slugs, meta}
+let PAYLOAD   = null;   // current team's payload
+let ENGINE    = null;   // LineupEngine.index(PAYLOAD)
+let BASELINES = null;   // NCAA per-zone FG% for the chart colours
+let curScope  = "all";
+let curSide   = "own";
+let onFloor   = [];     // roster indices
+let offFloor  = [];
+const TEAM_CACHE = {};
+
+const clearPicks = () => { onFloor = []; offFloor = []; };
+
+async function init() {
+  // Shot coordinates only exist for the live season, so the Builder is
+  // current-season only — same rule as Shot Charts and Scout.
+  const seasons = await loadJSON("data/seasons.json").catch(() => null);
+  SEASON = seasons?.length ? seasons[0] : new Date().getFullYear();
+  const sSel = document.getElementById("season-sel");
+  sSel.innerHTML = `<option value="${SEASON}">${seasonLabel(SEASON)}</option>`;
+  sSel.disabled = true;
+
+  const tabs = document.getElementById("scope-tabs");
+  SCOPES.forEach(([key, label]) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = key === curScope ? "active" : "";
+    b.onclick = () => {
+      if (key === curScope) return;
+      curScope = key;
+      [...tabs.children].forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      renderPicker(); render();
+    };
+    tabs.appendChild(b);
+  });
+
+  document.getElementById("team-sel").addEventListener("change", e => {
+    clearPicks(); loadTeam(e.target.value);
+  });
+  document.getElementById("clear-btn").addEventListener("click", () => {
+    clearPicks(); renderPicker(); render();
+  });
+  document.getElementById("flip-btn").addEventListener("click", () => {
+    [onFloor, offFloor] = [offFloor, onFloor]; renderPicker(); render();
+  });
+  document.getElementById("side-own").addEventListener("click", () => setSide("own"));
+  document.getElementById("side-opp").addEventListener("click", () => setSide("opp"));
+  ["drop-on", "drop-off", "pool"].forEach(bindDropZone);
+
+  BASELINES = await loadJSON("data/zone-baselines.json").catch(() => null);
+
+  INDEX = await loadJSON(`data/${SEASON}/lineup-builder-index.json`);
+  if (!INDEX?.teams?.length) {
+    document.getElementById("pool").innerHTML =
+      `<div class="empty">Data not found for this season.</div>`;
+    return;
+  }
+  const tSel = document.getElementById("team-sel");
+  tSel.innerHTML = INDEX.teams.map(t => `<option value="${t}">${t}</option>`).join("");
+  const defaultTeam = INDEX.teams.find(t => t.includes("Arkansas")) || INDEX.teams[0];
+  tSel.value = defaultTeam;
+  tSel.disabled = false;
+
+  await loadTeam(defaultTeam);
+}
+
+async function loadTeam(teamName) {
+  const slug = INDEX?.slugs?.[teamName];
+  if (!slug) return;
+  if (!TEAM_CACHE[slug]) {
+    document.getElementById("pool").innerHTML = `<div class="empty">Loading…</div>`;
+    TEAM_CACHE[slug] = await loadJSON(`data/${SEASON}/builder/${slug}.json`);
+  }
+  PAYLOAD = TEAM_CACHE[slug];
+  if (!PAYLOAD) {
+    document.getElementById("pool").innerHTML = `<div class="empty">Team data not found.</div>`;
+    return;
+  }
+  ENGINE = LineupEngine.index(PAYLOAD);
+  renderPicker(); render();
+}
+
+function setSide(side) {
+  curSide = side;
+  document.getElementById("side-own").classList.toggle("active", side === "own");
+  document.getElementById("side-opp").classList.toggle("active", side === "opp");
+  render();
+}
+
+// ── the picker ─────────────────────────────────────────────────────────────
+const bucketOf = i => onFloor.includes(i) ? "on" : offFloor.includes(i) ? "off" : "pool";
+
+/** Move a roster index into a bucket, removing it from the other one. */
+function place(i, bucket) {
+  onFloor  = onFloor.filter(x => x !== i);
+  offFloor = offFloor.filter(x => x !== i);
+  if (bucket === "on") onFloor.push(i);
+  else if (bucket === "off") offFloor.push(i);
+  renderPicker(); render();
+}
+
+/** Click cycles Available → On → Off → Available. */
+function cycle(i) {
+  const b = bucketOf(i);
+  place(i, b === "pool" ? "on" : b === "on" ? "off" : "pool");
+}
+
+function chip(i, where, mins) {
+  const cls = where === "on" ? "in-on" : where === "off" ? "in-off" : "";
+  const name = PAYLOAD.roster[i].n;
+  return `<span class="pp ${cls}" draggable="true" data-i="${i}" title="${name}">${name}` +
+         `<span class="mins">${Math.round(mins)}m</span></span>`;
+}
+
+function renderPicker() {
+  if (!PAYLOAD) return;
+  const mins = LineupEngine.minutes(ENGINE, curScope);
+  // Players with no minutes in this scope can't contribute to any filter in it.
+  const order = mins.map((m, i) => [m, i]).filter(([m]) => m > 0)
+    .sort((a, b) => b[0] - a[0]).map(([, i]) => i);
+
+  // A player with no minutes in this scope can't appear in any filter for it —
+  // and a team with no games at all in the scope has an empty pool, which reads
+  // very differently from "you already picked everybody".
+  const available = order.filter(i => bucketOf(i) === "pool");
+  document.getElementById("pool").innerHTML = available.length
+    ? available.map(i => chip(i, "pool", mins[i])).join("")
+    : `<span class="ph">${order.length || onFloor.length || offFloor.length
+        ? "Everyone is in a bucket." : "No games in this scope."}</span>`;
+  document.getElementById("chips-on").innerHTML =
+    onFloor.map(i => chip(i, "on", mins[i])).join("") || `<span class="ph">Drag players here</span>`;
+  document.getElementById("chips-off").innerHTML =
+    offFloor.map(i => chip(i, "off", mins[i])).join("") || `<span class="ph">Drag players here</span>`;
+
+  document.querySelectorAll(".pp[data-i]").forEach(el => {
+    const i = +el.dataset.i;
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", String(i));
+      e.dataTransfer.effectAllowed = "move";
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    el.addEventListener("click", () => cycle(i));
+  });
+
+  document.getElementById("flip-btn").disabled = !onFloor.length && !offFloor.length;
+  document.getElementById("pick-lbl").textContent =
+    (onFloor.length || offFloor.length) ? conditionText() : "Drag players into a bucket";
+}
+
+/** Readable summary of the current filter, e.g. "Aidoo + Davis on · Green off". */
+function conditionText() {
+  const names = arr => arr.map(i => PAYLOAD.roster[i].n).join(" + ");
+  const parts = [];
+  if (onFloor.length)  parts.push(`${names(onFloor)} on`);
+  if (offFloor.length) parts.push(`${names(offFloor)} off`);
+  return parts.join(" · ");
+}
+
+function bindDropZone(id) {
+  const el = document.getElementById(id);
+  el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("over"); });
+  el.addEventListener("dragleave", e => { if (!el.contains(e.relatedTarget)) el.classList.remove("over"); });
+  el.addEventListener("drop", e => {
+    e.preventDefault(); el.classList.remove("over");
+    const i = +e.dataTransfer.getData("text/plain");
+    if (Number.isInteger(i)) place(i, el.dataset.bucket);
+  });
+}
+
+// ── results ────────────────────────────────────────────────────────────────
+const signed = (v, d = 1) => v == null ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const rate = (v, d = 1) => v == null ? "—" : v.toFixed(d);
+const netClass = v => v == null ? "" : v > 0 ? "good" : v < 0 ? "bad" : "";
+const pct = v => v == null ? "—" : (v * 100).toFixed(1) + "%";
+
+function render() {
+  const cards = document.getElementById("cards");
+  const body  = document.getElementById("z-body");
+  const chart = document.getElementById("zone-chart");
+  const chartTitle = document.getElementById("chart-title");
+
+  if (!PAYLOAD) return;
+  document.getElementById("side-toggle").style.display =
+    (onFloor.length || offFloor.length) ? "" : "none";
+
+  if (!onFloor.length && !offFloor.length) {
+    cards.innerHTML = "";
+    chart.innerHTML = `<div class="empty">Pick at least one player above.</div>`;
+    chartTitle.textContent = "Shot chart";
+    document.getElementById("chart-sub").textContent = "";
+    document.getElementById("tbl-sub").textContent = "";
+    body.innerHTML = `<tr><td colspan="4" class="empty">Pick at least one player above.</td></tr>`;
+    return;
+  }
+
+  const result = LineupEngine.filter(ENGINE, onFloor, offFloor, curScope);
+  const r = result.ratings;
+  const who = conditionText();
+
+  if (!r) {
+    cards.innerHTML = `<div class="rcard" style="grid-column:1/-1">
+      <div class="t">No possessions</div>
+      <div class="sub">No stints in this scope matched <strong>${who}</strong>.
+      Try a smaller combination.</div></div>`;
+    chart.innerHTML = `<div class="empty">No shots for this filter.</div>`;
+    body.innerHTML = `<tr><td colspan="4" class="empty">No possessions for this filter.</td></tr>`;
+    document.getElementById("chart-sub").textContent = who;
+    document.getElementById("tbl-sub").textContent = "";
+    return;
+  }
+
+  cards.innerHTML = `
+    <div class="rcard">
+      <div class="t">Net rating</div>
+      <div class="big ${netClass(r.net)}">${signed(r.net)}</div>
+      <div class="sub">${Math.round(r.poss)} poss · ${Math.round(r.mins)} min</div>
+    </div>
+    <div class="rcard">
+      <div class="t">Offense</div>
+      <div class="big">${rate(r.ortg)}</div>
+      <div class="sub">points per 100</div>
+    </div>
+    <div class="rcard">
+      <div class="t">Defense</div>
+      <div class="big">${rate(r.drtg)}</div>
+      <div class="sub">points allowed per 100</div>
+    </div>
+    <div class="rcard">
+      <div class="t">Pace</div>
+      <div class="big">${rate(r.pace)}</div>
+      <div class="sub">possessions per 40 min</div>
+    </div>`;
+
+  const zoneData = curSide === "own" ? result.ownZones : result.oppZones;
+  chartTitle.textContent = curSide === "own" ? "How we shoot" : "How opponents shoot";
+  document.getElementById("chart-sub").textContent = who;
+
+  if (zoneData.length) {
+    ZoneChart.render(chart, zoneData, {
+      zones: BASELINES?.zones,
+      baselines: BASELINES?.baselines,
+      compact: true,
+      minAtt: 5,
+    });
+  } else {
+    chart.innerHTML = `<div class="empty">No shots with coordinates for this filter.</div>`;
+  }
+
+  const rows = LineupEngine.buckets(zoneData);
+  const totalAtt = rows.reduce((s, b) => s + b.att, 0);
+  document.getElementById("tbl-sub").textContent =
+    curSide === "own"
+      ? `Our attempts with ${who}. Freq = share of our shots from that area.`
+      : `Opponent attempts with ${who}. Freq = share of their shots from that area.`;
+  body.innerHTML = rows.map(b => `<tr>
+      <td>${b.label}</td>
+      <td>${pct(b.pct)}</td>
+      <td>${b.att}</td>
+      <td>${pct(totalAtt ? b.att / totalAtt : null)}</td>
+    </tr>`).join("");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
