@@ -6,7 +6,7 @@ plotly
 scipy
 scikit-learn
 mplbasketball
-pyarrow
+pyarrow<26  # 26 needs numpy>=2; sportsdataverse pins numpy 1.26 (broke nightly 2026-10-15)
 requests
 sportsdataverse
 tqdm
