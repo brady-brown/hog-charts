@@ -49,6 +49,8 @@
     .filters .form-group { flex: 1; min-width: 140px; }
     .filters .form-group.narrow { flex: 0 0 110px; }
     .count-label { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
+    .early-note { border-left: 3px solid var(--t1); background: var(--card);
+                  color: var(--ink); font-size: .85rem; padding: 8px 12px; margin-bottom: 10px; }
     /* custom-table builder */
     .custom-bar {
       display: flex; flex-direction: column; gap: 10px;
@@ -203,6 +205,7 @@
     </div>
   </div>
 
+  <div class="early-note" id="early-note" hidden></div>
   <div class="count-label" id="count-label">Loading…</div>
 
   <div class="tbl-wrap">
@@ -324,6 +327,9 @@ const SCOPE_FILE = {
 const SCOPE_BTN = { all:"sc-all", reg:"sc-reg", post:"sc-post", conf:"sc-conf", nonconf:"sc-nonconf" };
 // Default Min games per scope — teams play far fewer post/conf/nonconf games.
 const SCOPE_MIN_GAMES = { all:20, reg:20, post:1, conf:10, nonconf:5 };
+// Shown on the live season until the typical team has played this many games.
+const EARLY_NOTE_GAMES = 5;
+const EARLY_NOTE_TEXT = "Early-season numbers: most teams have played fewer than 5 games.";
 
 let TS = { all:null, reg:null, post:null, conf:null };
 let allRows  = [];
@@ -381,6 +387,11 @@ async function reload() {
   allRows = await loadScope(curScope);
   // Same rule as hoglib.season.scaled_min_games, so early-season tables aren't blank.
   const mostGames = allRows.reduce((most, r) => Math.max(most, r.games || 0), 0);
+  const gameCounts = allRows.map(r => r.games || 0).sort((a, b) => a - b);
+  const typicalGames = gameCounts[Math.floor(gameCounts.length / 2)];
+  const earlyNote = document.getElementById("early-note");
+  earlyNote.hidden = !(SEASON === CUR_SEASON && typicalGames < EARLY_NOTE_GAMES);
+  earlyNote.textContent = EARLY_NOTE_TEXT;
   const fullMin = SCOPE_MIN_GAMES[curScope] ?? 0;
   document.getElementById("min-games").value = mostGames
     ? Math.min(fullMin, Math.max(1, mostGames - 3)) : fullMin;

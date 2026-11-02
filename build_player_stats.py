@@ -356,14 +356,43 @@ _EFF_INPUT_COLUMNS = [
 ]
 
 
-def build_scope_net_ratings(scope_team_box_df):
+def prior_season_ratings():
+    """Last season's opponent-adjusted ratings, solved the way the predictor does."""
+    global _prior_season_ratings
+    if _prior_season_ratings is None:
+        print(f"  Solving {SEASON - 1} ratings for the live-season blend…")
+        prior_games = feeds.load_team_box_numpy(SEASON - 1)
+        _prior_season_ratings = calculate_adjusted_efficiency(prior_games, calculate_efficiency(prior_games))
+    return _prior_season_ratings
+
+
+def fade_in_season_ratings(adjusted, games):
+    """Blend each team with last season, fading to 100% this season by PRIOR_FADE_GAMES."""
+    games_played = games.groupby("team_id").size()
+    blended = adjusted.merge(prior_season_ratings()[["team_id", "off_eff", "def_eff"]],
+                             on="team_id", how="left", suffixes=("", "_prior"))
+    blended[["off_eff_prior", "def_eff_prior"]] = (
+        blended[["off_eff_prior", "def_eff_prior"]].fillna(100))   # no prior: assume average
+    this_season_share = (blended["team_id"].map(games_played) / PRIOR_FADE_GAMES).clip(upper=1)
+    for col in ("off_eff", "def_eff"):
+        blended[col] = (blended[col] * this_season_share
+                        + blended[f"{col}_prior"] * (1 - this_season_share))
+    blended["net_eff"] = blended["off_eff"] - blended["def_eff"]
+    return blended[["team_id", "off_eff", "def_eff", "net_eff"]]
+
+
+def build_scope_net_ratings(scope_team_box_df, blend_prior=False):
     """Opponent-adjusted Off/Def/Net efficiency + SOS for ONE scope's games.
 
     Re-runs the predictor's season solve (calculate_adjusted_efficiency) but on
     just this scope's game set, so the Team Stats ratings reflect only those
-    games. No prior-season blend — a scope is its own sample. "D-I" self-limits
-    to teams appearing in the scope, and SOS is the mean adjusted net rating of
-    opponents faced within the scope.
+    games. "D-I" self-limits to teams appearing in the scope, and SOS is the mean
+    adjusted net rating of opponents faced within the scope.
+
+    A one-game solve just hands back that game's margin, so blend_prior (the live
+    season's reg/all scopes) drops non-D-I games and fades from last season's rating
+    to this season's over PRIOR_FADE_GAMES games. Teams with no D-I game yet show
+    last season's rating.
 
     Returns a DataFrame: team_id, off_eff, def_eff, net_eff, sos.
     """
@@ -372,8 +401,22 @@ def build_scope_net_ratings(scope_team_box_df):
     for col in _EFF_INPUT_COLUMNS:
         games[col] = pd.to_numeric(games[col], errors="coerce").fillna(0)
 
-    adjusted = calculate_adjusted_efficiency(games, calculate_efficiency(games))
-    net_eff_by_team = adjusted.set_index("team_id")["net_eff"]
+    if blend_prior:
+        scope_d1_teams = set(games["team_id"]) & D1_TEAM_IDS
+        games = games[games["team_id"].isin(D1_TEAM_IDS) & games["opponent_team_id"].isin(D1_TEAM_IDS)]
+
+    if games.empty:
+        adjusted = pd.DataFrame(columns=["team_id", "off_eff", "def_eff", "net_eff"])
+    else:
+        adjusted = calculate_adjusted_efficiency(games, calculate_efficiency(games))
+    if blend_prior:
+        prior = prior_season_ratings()
+        if not adjusted.empty:
+            adjusted = fade_in_season_ratings(adjusted, games)
+        unplayed = prior[prior["team_id"].isin(scope_d1_teams - set(adjusted["team_id"]))]
+        adjusted = pd.concat([adjusted, unplayed[["team_id", "off_eff", "def_eff", "net_eff"]]],
+                             ignore_index=True)
+    net_eff_by_team = adjusted.set_index("team_id")["net_eff"].astype(float)
 
     vs_rated = games[games["opponent_team_id"].isin(net_eff_by_team.index)].copy()
     vs_rated["opp_net_eff"] = vs_rated["opponent_team_id"].map(net_eff_by_team)
@@ -384,6 +427,12 @@ def build_scope_net_ratings(scope_team_box_df):
     )
     return out.round({"off_eff": 1, "def_eff": 1, "net_eff": 1, "sos": 1})
 
+
+# The live season blends with last season; past-season regens stay on their own games.
+IS_LIVE_SEASON = not os.environ.get("OVERRIDE_SEASON")
+D1_TEAM_IDS = {int(team_id) for team_id, label in team_conference_label_map.items() if label}
+PRIOR_FADE_GAMES = 5    # same mark that clears the early-season note on Team Stats
+_prior_season_ratings = None
 
 print("Loading team box scores for opponent context…")
 raw_team_boxscores_df = feeds.load_team_box(SEASON)
@@ -444,7 +493,8 @@ for scope_name, output_filename, scope_mask in TEAM_STATS_SCOPES:
 
     # Scope-specific opponent-adjusted net ratings (re-solved on this scope only).
     net_filename = f"net_ratings_{scope_name}_{SEASON}.csv"
-    scope_net_df = build_scope_net_ratings(scope_team_box_df)
+    blend_prior = IS_LIVE_SEASON and scope_name in ("reg", "all") and bool(D1_TEAM_IDS)
+    scope_net_df = build_scope_net_ratings(scope_team_box_df, blend_prior=blend_prior)
     scope_net_df.to_csv(net_filename, index=False)
     print(f"  {net_filename}  — {len(scope_net_df):,} teams ({scope_name})")
 
