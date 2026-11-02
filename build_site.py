@@ -1212,6 +1212,9 @@ if os.path.exists(shots_parquet_path) and os.path.exists(box_score_parquet_path)
         team_display_name = team_id_to_display_name.get(team_id)
         if not team_display_name:
             continue
+        # Shot Charts' min-games filter is too low to hide non-D-I teams this early.
+        if most_games_played < NON_D1_GATE_GAMES and team_display_name not in conference_label_map:
+            continue
         zone_record_list = build_zone_records(team_shot_group)
         if zone_record_list:
             team_zone_stats[team_display_name] = {
