@@ -448,7 +448,10 @@ function markScopeButtons() {
 
 // Apply this scope's default games/MPG floors (e.g. postseason can't require 15).
 function applyScopeMinDefaults(scope) {
-  document.getElementById("min-gp").value  = SCOPE_MIN_GP[scope];
+  // Same rule as hoglib.season.scaled_min_games, so early-season tables aren't blank.
+  const mostGp = (PS[scope] || []).reduce((most, p) => Math.max(most, p.gp || 0), 0);
+  document.getElementById("min-gp").value  = mostGp
+    ? Math.min(SCOPE_MIN_GP[scope], Math.max(1, mostGp - 3)) : SCOPE_MIN_GP[scope];
   document.getElementById("min-mpg").value = SCOPE_MIN_MPG[scope];
 }
 
@@ -468,6 +471,7 @@ async function reload() {
     return;
   }
   allPlayers = PS.all;
+  applyScopeMinDefaults("all");
 
   // On/Off is only computed for some seasons — drop the column when absent.
   HAS_ONOFF = PS.all.some(p => p.on_off != null);

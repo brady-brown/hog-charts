@@ -109,10 +109,27 @@ player_identity_df = raw_player_boxscores[
 del raw_player_boxscores
 
 # ---------------------------------------------------------------------------
+# Per-team game list for the Shot Charts game dropdown (two rows per game)
+# ---------------------------------------------------------------------------
+team_box_df = feeds.load_team_box(SEASON)
+game_schedule_df = pd.DataFrame({
+    "game_id":  team_box_df["game_id"].astype("int64"),
+    "team":     team_box_df["team_display_name"],
+    "opponent": team_box_df["opponent_team_display_name"],
+    "location": team_box_df["team_home_away"],
+    "date":     team_box_df["game_date"].astype(str).str[:10],
+})
+game_schedule_df["label"] = (
+    game_schedule_df["location"].map({"home": "vs ", "away": "@ "})
+    + game_schedule_df["opponent"] + "  (" + game_schedule_df["date"] + ")"
+)
+
+# ---------------------------------------------------------------------------
 # Save parquet files
 # ---------------------------------------------------------------------------
 player_identity_df.to_parquet(f"box_{SEASON}.parquet", index=False)
 shots_with_game_info_df.to_parquet(SHOTS_OUTPUT_FILE, index=False)
+game_schedule_df.to_parquet("game_schedule.parquet", index=False)
 
 print(f"\nDone.")
 print(f"  shots_{SEASON}.parquet  — {len(shots_with_game_info_df):,} shot rows")

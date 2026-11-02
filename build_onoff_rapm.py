@@ -198,6 +198,13 @@ def run_pipeline(game_filter="reg", fit_rapm=True):
 
     print(f"  {play_by_play['game_id'].nunique()} games, {len(play_by_play):,} plays")
 
+    # Early in a season a scope can be empty (no conference games until late
+    # November, no postseason until March). Nothing to write; downstream builders
+    # treat a missing scope CSV as "no data yet".
+    if play_by_play.empty:
+        print(f"  no games yet, skipping {game_filter}")
+        return None, None
+
     # -----------------------------------------------------------------------
     # Prepare play-by-play
     # -----------------------------------------------------------------------

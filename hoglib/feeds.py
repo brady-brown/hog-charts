@@ -56,6 +56,30 @@ def load_team_box(season):   return _load("team_box", season)
 def load_schedule(season):   return _load("schedule", season)
 
 
+def _numpy_dtypes(df):
+    """The cache comes back with nullable dtypes (pd.NA); predictor.py does plain
+    numeric comparisons and needs the NaN-based frames polars' .to_pandas() gives."""
+    import polars as pl
+    return pl.from_pandas(df).to_pandas()
+
+
+def load_team_box_numpy(season): return _numpy_dtypes(load_team_box(season))
+def load_schedule_numpy(season): return _numpy_dtypes(load_schedule(season))
+
+
+def write_cache_espn(season):
+    """Fill raw_{season}/ straight from ESPN. Used for the live season: the
+    sportsdataverse releases lag it (opening night of 2027 had a schedule but no
+    pbp or box scores). Returns {feed: row_count}."""
+    import shutil
+    from raw_hogcharts import ingest
+    ingest.ingest_season(season, full=True)
+    os.makedirs(raw_dir(season), exist_ok=True)
+    for feed in FEEDS:
+        shutil.copy(ingest.feed_path(season, feed), cache_path(season, feed))
+    return ingest.read_manifest(season)["rows"]
+
+
 def write_cache(season, feeds=FEEDS):
     """Download each feed once and write raw_{season}/{feed}.parquet. Returns
     {feed: row_count}. Used by build_ingest.py."""

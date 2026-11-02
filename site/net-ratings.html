@@ -378,8 +378,12 @@ async function loadScope(scope) {
 
 async function reload() {
   document.getElementById("count-label").textContent = "Loading…";
-  document.getElementById("min-games").value = SCOPE_MIN_GAMES[curScope] ?? 0;
   allRows = await loadScope(curScope);
+  // Same rule as hoglib.season.scaled_min_games, so early-season tables aren't blank.
+  const mostGames = allRows.reduce((most, r) => Math.max(most, r.games || 0), 0);
+  const fullMin = SCOPE_MIN_GAMES[curScope] ?? 0;
+  document.getElementById("min-games").value = mostGames
+    ? Math.min(fullMin, Math.max(1, mostGames - 3)) : fullMin;
   if (!allRows.length) {
     document.getElementById("count-label").textContent = "Data not found for this season.";
     document.getElementById("ts-body").innerHTML = "";

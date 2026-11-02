@@ -209,7 +209,8 @@ def _game_stint_seconds(game_df):
         prev_clock = clock
     return pd.Series(elapsed, index=game_df.index)
 
-pbp["_secs"] = pbp.groupby("game_id", group_keys=False).apply(_game_stint_seconds)
+# concat, not groupby.apply: apply returns a wide frame when there is only one game.
+pbp["_secs"] = pd.concat([_game_stint_seconds(game_df) for _, game_df in pbp.groupby("game_id")])
 stint_seconds = (pbp.groupby(["game_id", "stint_id"])["_secs"].sum()
                  .reset_index().rename(columns={"_secs": "Seconds"}))
 

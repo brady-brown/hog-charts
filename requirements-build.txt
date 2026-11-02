@@ -1,0 +1,14 @@
+# Nightly build dependencies. Deliberately not named requirements.txt: Cloudflare
+# auto-installs that file on every deploy, and the site itself needs no Python.
+#
+# numpy/pandas/pyarrow are pinned together. numpy 2 is a real upgrade this pipeline
+# hasn't been tested on, and unpinned pip resolved different pandas majors depending
+# on its backtracking (pandas>=3.1 and pyarrow>=26 both require numpy>=2).
+numpy==1.26.4
+pandas==3.0.6
+pyarrow==25.0.1
+scipy
+scikit-learn
+requests
+sportsdataverse
+tqdm

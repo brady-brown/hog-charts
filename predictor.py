@@ -34,6 +34,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import log_loss, roc_auc_score
 
+from hoglib import feeds
+
 warnings.filterwarnings("ignore")
 
 # Bayesian shrinkage constant for blending current-season and prior-season
@@ -240,12 +242,11 @@ class BasePredictor:
     def _walk_forward_raw(self, season, prior_season):
         """Collect (actual_outcome, margin, net_eff_diff, location_code) for a season
         via a monthly walk-forward: only games from prior months are used as ratings inputs."""
-        import sportsdataverse.mbb.mbb_loaders as mbb_loaders
-        season_game_df = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
+        season_game_df = feeds.load_team_box_numpy(season)
         season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period('M')
         chronological_months = sorted(season_game_df['month'].unique())
 
-        prior_season_game_df   = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_game_df   = feeds.load_team_box_numpy(prior_season)
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_season_game_df, calculate_efficiency(prior_season_game_df)
         )
@@ -379,19 +380,16 @@ class BasePredictor:
 
     def _build_ratings(self, current_season, prior_season=None, as_of_date=None):
         """Load and blend efficiency ratings for the current season."""
-        import sportsdataverse.mbb.mbb_loaders as mbb_loaders
         if prior_season is None:
             prior_season = current_season - 1
 
-        current_season_game_df = mbb_loaders.load_mbb_team_boxscore(
-            seasons=[current_season]
-        ).to_pandas()
+        current_season_game_df = feeds.load_team_box_numpy(current_season)
         if as_of_date is not None:
             current_season_game_df = current_season_game_df[
                 pd.to_datetime(current_season_game_df['game_date']) <= pd.Timestamp(as_of_date)
             ]
 
-        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_season_game_df, calculate_efficiency(prior_season_game_df)
         )
@@ -496,9 +494,8 @@ class TempoPredictor(IsotonicPredictor):
     @classmethod
     def _conference_game_ids(cls, season):
         """Return the set of game_ids flagged as conference competition for a season."""
-        import sportsdataverse.mbb.mbb_loaders as mbb_loaders
         if season not in cls._conference_game_id_cache:
-            schedule = mbb_loaders.load_mbb_schedule(seasons=[season]).to_pandas()
+            schedule = feeds.load_schedule_numpy(season)
             cls._conference_game_id_cache[season] = set(
                 schedule.loc[schedule['conference_competition'] == True, 'game_id']
             )
@@ -637,15 +634,14 @@ class TempoPredictor(IsotonicPredictor):
         features (tempo_adj, home_court, form_diff) plus the actual margin and
         win indicator.
         """
-        import sportsdataverse.mbb.mbb_loaders as mbb_loaders
-        season_game_df = mbb_loaders.load_mbb_team_boxscore(seasons=[season]).to_pandas()
+        season_game_df = feeds.load_team_box_numpy(season)
         season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period('M')
         season_game_df = season_game_df.sort_values('game_date')
         chronological_months = sorted(season_game_df['month'].unique())
 
         conference_game_id_set = self._conference_game_ids(season)
 
-        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_season_game_df, calculate_efficiency(prior_season_game_df)
         )
@@ -779,18 +775,15 @@ class TempoPredictor(IsotonicPredictor):
 
     def _build_ratings(self, current_season, prior_season=None, as_of_date=None):
         """Extend BasePredictor._build_ratings to also compute pace, home court, and form."""
-        import sportsdataverse.mbb.mbb_loaders as mbb_loaders
         if prior_season is None:
             prior_season = current_season - 1
 
-        current_season_game_df = mbb_loaders.load_mbb_team_boxscore(
-            seasons=[current_season]
-        ).to_pandas()
+        current_season_game_df = feeds.load_team_box_numpy(current_season)
         if as_of_date is not None:
             current_season_game_df = current_season_game_df[
                 pd.to_datetime(current_season_game_df['game_date']) <= pd.Timestamp(as_of_date)
             ]
-        prior_season_game_df    = mbb_loaders.load_mbb_team_boxscore(seasons=[prior_season]).to_pandas()
+        prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
 
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_season_game_df, calculate_efficiency(prior_season_game_df)

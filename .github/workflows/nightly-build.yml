@@ -37,9 +37,10 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: requirements-build.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-build.txt
 
       # ── Current-season data pipeline ─────────────────────────────────────
       # OVERRIDE_SEASON is not set — each script auto-detects the current season.
@@ -85,7 +86,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Bail early if the build produced no changes.
-          git add site/data/
+          git add site/data/ site/_headers
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -99,12 +100,14 @@ jobs:
           for i in 1 2 3 4 5; do
             git fetch origin main
             git reset --soft origin/main      # newest remote tree; keep our files staged
-            git add site/data/
+            git add site/data/ site/_headers
             if git diff --cached --quiet; then
               echo "Remote already up to date — nothing to push."
               exit 0
             fi
-            git commit -m "chore: nightly site rebuild [skip ci]"
+            # No "[skip ci]": Cloudflare honours it too, so tagged commits never
+            # deploy. This workflow has no push trigger, so nothing loops.
+            git commit -m "chore: nightly site rebuild"
             if git push origin HEAD:main; then
               echo "Pushed on attempt $i."
               exit 0

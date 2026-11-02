@@ -29,7 +29,11 @@ from hoglib import feeds
 SEASON = detect_season()
 
 print(f"Ingesting {SEASON} ESPN feeds → {os.path.relpath(feeds.raw_dir(SEASON))}/ …")
-counts = feeds.write_cache(SEASON)
+# Past-season regens stay on the sportsdataverse archives (see feeds.write_cache_espn).
+if os.environ.get("OVERRIDE_SEASON"):
+    counts = feeds.write_cache(SEASON)
+else:
+    counts = feeds.write_cache_espn(SEASON)
 print("\nDone.")
 for feed in feeds.FEEDS:
     print(f"  {feed + '.parquet':<22s} — {counts[feed]:,} rows")

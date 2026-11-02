@@ -30,7 +30,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-import sportsdataverse.mbb.mbb_loaders as mbb_loaders
 from predictor import TempoPredictor
 
 import os as _os
@@ -38,7 +37,8 @@ import os as _os
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-from hoglib.season import detect_season
+from hoglib import feeds
+from hoglib.season import detect_season, scaled_min_games
 _season = detect_season()
 
 # Set RATINGS_ONLY=1 to skip model training (faster for historical seasons
@@ -72,7 +72,7 @@ def build_net_ratings_table(trained_predictor):
     displayed value represents the actual point contribution in a prediction.
     """
     current_season = trained_predictor.current_season
-    season_team_game_df = mbb_loaders.load_mbb_team_boxscore(seasons=[current_season]).to_pandas()
+    season_team_game_df = feeds.load_team_box_numpy(current_season)
 
     # Win/loss record per team.
     team_record_df = (
@@ -120,7 +120,8 @@ def build_net_ratings_table(trained_predictor):
         .merge(team_record_df[['team_id', 'wins', 'losses', 'games']], on='team_id', how='left')
         .merge(sos_per_team, on='team_id', how='left')
     )
-    net_ratings_df = net_ratings_df[net_ratings_df['games'].fillna(0) >= MIN_GAMES_TO_QUALIFY].copy()
+    min_games = scaled_min_games(MIN_GAMES_TO_QUALIFY, net_ratings_df['games'].max())
+    net_ratings_df = net_ratings_df[net_ratings_df['games'].fillna(0) >= min_games].copy()
     net_ratings_df = net_ratings_df.dropna(subset=['team'])
 
     net_ratings_df = net_ratings_df.sort_values('net_eff', ascending=False).reset_index(drop=True)

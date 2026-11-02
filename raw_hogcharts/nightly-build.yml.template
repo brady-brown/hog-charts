@@ -1,0 +1,63 @@
+# Nightly build for the ESPN-sourced pipeline.
+#
+# This is a TEMPLATE, deliberately not installed under .github/workflows — copy
+# it there when you want it live. Dropping it in as-is would run a second
+# nightly job alongside the existing one.
+#
+# The difference from the root nightly: there is no full-season download step.
+# Past seasons are already cached under raw_hogcharts/data/ and frozen, so this
+# pulls only what changed today. That is a handful of scoreboard calls plus the
+# day's ~100 summaries, rather than a ~1 GB season-wide parquet.
+#
+# One thing to settle before enabling: raw_hogcharts/data/ is gitignored, so a
+# fresh CI runner starts with no cached seasons. Either restore it from
+# actions/cache (keyed on the season, since archives never change) or point
+# INGEST_DATA_DIR at object storage. Without one of those, every run would have
+# to re-pull every season it needs.
+
+name: nightly-build-espn
+
+on:
+  schedule:
+    - cron: "0 9 * * *"      # 09:00 UTC ≈ 4-5am Eastern, after West Coast finals
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install pandas numpy pyarrow polars requests tqdm scipy scikit-learn
+
+      - name: Restore cached seasons
+        uses: actions/cache@v4
+        with:
+          path: raw_hogcharts/data
+          key: espn-feeds-${{ github.run_id }}
+          restore-keys: espn-feeds-
+
+      - name: Ingest today's games
+        run: python -m raw_hogcharts.ingest --season ${{ vars.SEASON || '' }} --workers 8
+
+      - name: Verify feeds against sportsdataverse
+        continue-on-error: true      # informational while both sources exist
+        run: python -m raw_hogcharts.validate
+
+      - name: Build the site
+        run: python -m raw_hogcharts.run_pipeline
+
+      - name: Upload the built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-espn
+          path: raw_hogcharts/build/site
+          retention-days: 7
