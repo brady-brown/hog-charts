@@ -41,7 +41,8 @@ import requests
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-from hoglib.season import detect_season, scaled_min_games, NON_D1_GATE_GAMES
+from hoglib.season import (detect_season, scaled_min_games, scaled_min_possessions,
+                           NON_D1_GATE_GAMES, MIN_BASELINE_SHOTS)
 SEASON = detect_season()
 
 PROJECT_ROOT    = os.path.dirname(os.path.abspath(__file__))
@@ -975,14 +976,15 @@ all_team_names_across_sizes = set()
 overall_combos_by_size      = {}    # {"1": {team: [records]}, "2": ..., ...}
 conference_combos_by_size   = {}
 
+most_games_played = net_ratings_df["games"].max()
 for combo_size in ["1", "2", "3", "5"]:
-    overall_combos, overall_teams = load_lineup_csv(combo_size, "all",  LINEUP_MIN_POSS_OVERALL[combo_size])
+    overall_combos, overall_teams = load_lineup_csv(combo_size, "all",  scaled_min_possessions(LINEUP_MIN_POSS_OVERALL[combo_size], most_games_played))
     overall_combos_by_size[combo_size] = overall_combos
     all_team_names_across_sizes |= overall_teams
     print(f"  {combo_size}-man overall:     "
           f"{sum(len(v) for v in overall_combos.values()):5d} combos, {len(overall_combos)} teams")
 
-    conf_combos, _ = load_lineup_csv(combo_size, "conf", LINEUP_MIN_POSS_CONF[combo_size])
+    conf_combos, _ = load_lineup_csv(combo_size, "conf", scaled_min_possessions(LINEUP_MIN_POSS_CONF[combo_size], most_games_played))
     conference_combos_by_size[combo_size] = conf_combos
     print(f"  {combo_size}-man conference:  "
           f"{sum(len(v) for v in conf_combos.values()):5d} combos, {len(conf_combos)} teams")
@@ -1191,11 +1193,17 @@ if os.path.exists(shots_parquet_path) and os.path.exists(box_score_parquet_path)
     ].copy()
 
     # --- NCAA per-zone baseline FG% (drives the relative-to-average colours) ---
-    zone_baselines = compute_zone_baselines(field_goal_shots_df)
-    write_json(
-        {"zones": ZONE_NAMES, "baselines": zone_baselines, "meta": build_metadata},
-        "zone-baselines.json", output_directory=ROOT_DATA_DIR
-    )
+    # A few early-season games give nonsense rates (75% from mid-range), so last
+    # season's baselines stand in until there's a real sample.
+    prior_baselines_path = os.path.join(ROOT_DATA_DIR, str(SEASON - 1), "zone-baselines.json")
+    if len(field_goal_shots_df) < MIN_BASELINE_SHOTS and os.path.exists(prior_baselines_path):
+        with open(prior_baselines_path) as prior_baselines_file:
+            zone_baselines = json.load(prior_baselines_file)["baselines"]
+    else:
+        zone_baselines = compute_zone_baselines(field_goal_shots_df)
+    zone_baselines_payload = {"zones": ZONE_NAMES, "baselines": zone_baselines, "meta": build_metadata}
+    write_json(zone_baselines_payload, "zone-baselines.json", output_directory=ROOT_DATA_DIR)
+    write_json(zone_baselines_payload, "zone-baselines.json")   # next season's stand-in
 
     # --- Team zone efficiency ---
     print("  Team zone stats…")

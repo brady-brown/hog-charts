@@ -195,6 +195,7 @@ async function reload() {
   INDEX = await loadJSON(`data/${SEASON}/lineup-index.json`);
   if (!INDEX?.teams?.length) {
     document.getElementById("count-label").textContent = "Data not found for this season.";
+    document.getElementById("team-sel").innerHTML = "";
     return;
   }
 

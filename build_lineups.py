@@ -49,7 +49,7 @@ from tqdm import tqdm
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-from hoglib.season import detect_season
+from hoglib.season import detect_season, scaled_min_possessions
 SEASON = detect_season()
 
 # ---------------------------------------------------------------------------
@@ -102,6 +102,7 @@ schedule_teams_long_df = schedule_df.melt(
 )
 games_per_team = schedule_teams_long_df.groupby("team_id")["game_id"].nunique()
 qualifying_team_ids = games_per_team[games_per_team >= MIN_GAMES_TO_QUALIFY].index.astype(int).tolist()
+most_games_played = team_box_df.groupby("team_id")["game_id"].nunique().max()
 
 
 # ---------------------------------------------------------------------------
@@ -379,7 +380,7 @@ def process_all_teams(qualifying_teams, game_scope="overall"):
     combo_frames_by_size = {1: [], 2: [], 3: [], 5: []}
     scope_stints = (lineup_stints[lineup_stints["game_id"].isin(conference_game_ids)]
                     if game_scope == "conference" else lineup_stints)
-    minimum_poss_threshold = 30 if game_scope == "conference" else 50
+    minimum_poss_threshold = scaled_min_possessions(30 if game_scope == "conference" else 50, most_games_played)
 
     for team_id in tqdm(qualifying_teams, desc=f"Processing {game_scope.upper()}"):
         team_rows = scope_stints[scope_stints["team_id"] == team_id]

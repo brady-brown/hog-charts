@@ -13,6 +13,7 @@ This is lifted verbatim from the block every build_*.py used to re-declare:
         _today = date.today()
         SEASON = _today.year + 1 if _today.month >= 11 else _today.year
 """
+import math
 import os
 from datetime import date
 
@@ -30,6 +31,13 @@ def detect_season(override_env="OVERRIDE_SEASON"):
 # (they play 4 or fewer), so builders drop teams with no conference instead.
 NON_D1_GATE_GAMES = 8
 
+# Possession floors were set for a full schedule, so they scale up to this many games.
+FULL_SEASON_GAMES = 30
+
+# Below this many field goal attempts league-wide, zone rates are too noisy to use
+# as baselines (roughly the first month), so last season's stand in.
+MIN_BASELINE_SHOTS = 100_000
+
 
 def scaled_min_games(full_min, most_played):
     """Scale a games-played gate to how far the season has got.
@@ -43,3 +51,10 @@ def scaled_min_games(full_min, most_played):
     if not most_played > 0:      # also False for NaN (no games at all)
         return full_min
     return min(full_min, max(1, int(most_played) - 3))
+
+
+def scaled_min_possessions(full_min, most_played):
+    """Scale a possessions floor to how many games the leader has played."""
+    if not most_played > 0:      # also False for NaN (no games at all)
+        return full_min
+    return min(full_min, math.ceil(full_min * most_played / FULL_SEASON_GAMES))

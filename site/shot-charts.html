@@ -68,7 +68,7 @@
 <div class="container">
 
   <h2>Shot Charts</h2>
-  <p class="page-sub">Zone efficiency, shot density, and scatter for any team or player — 2026 season.</p>
+  <p class="page-sub">Zone efficiency, shot density, and scatter for any team or player — <span id="page-season">2026</span> season.</p>
 
   <!-- ── primary tabs ─────────────────────────────────────────────────────── -->
   <div class="tab-bar">
@@ -442,6 +442,12 @@ async function init() {
   ZONES          = zoneBaselineData?.zones || SD.zones;
   ZONE_BASELINES = zoneBaselineData?.baselines || null;
   SEASON         = SD.meta?.season ?? "2026";
+  document.getElementById("page-season").textContent = SEASON;
+
+  // Same rule as hoglib.season.scaled_min_games, so early-season teams aren't hidden.
+  const mostGp = Object.values(SD.team_zones).reduce((most, t) => Math.max(most, t.gp ?? 0), 0);
+  const minGpInput = document.getElementById("min-gp");
+  if (mostGp) minGpInput.value = Math.min(parseInt(minGpInput.value), Math.max(1, mostGp - 3));
 
   function populateTeamSelectors() {
     const minG = parseInt(document.getElementById("min-gp").value) || 0;
