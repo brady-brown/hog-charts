@@ -651,6 +651,15 @@ class TempoPredictor(IsotonicPredictor):
 
         team_form_logs = {}    # {team_id: list of game log entries}
         training_rows  = []
+        # A game appears twice (once per side). Results are held until the date
+        # changes so neither row's form can see this game's own margin.
+        pending_log_entries = []   # (team_id, entry) for current_date
+        current_date        = None
+
+        def _flush_pending_log_entries():
+            for pending_team_id, pending_entry in pending_log_entries:
+                team_form_logs.setdefault(pending_team_id, []).append(pending_entry)
+            pending_log_entries.clear()
 
         for month_index, current_month in enumerate(chronological_months):
             month_games  = season_game_df[season_game_df['month'] == current_month].sort_values('game_date')
@@ -687,6 +696,10 @@ class TempoPredictor(IsotonicPredictor):
             efficiency_lookup = blended_efficiency.set_index('team_id')
 
             for _, game_row in month_games.iterrows():
+                if game_row['game_date'] != current_date:
+                    _flush_pending_log_entries()
+                    current_date = game_row['game_date']
+
                 team1_id = game_row['team_id']
                 team2_id = game_row['opponent_team_id']
                 if team1_id not in efficiency_lookup.index or team2_id not in efficiency_lookup.index:
@@ -720,11 +733,13 @@ class TempoPredictor(IsotonicPredictor):
                     'margin':      actual_margin,
                     'won':         int(game_row['team_winner']),
                 })
-                team_form_logs.setdefault(team1_id, []).append({
+                pending_log_entries.append((team1_id, {
                     'margin': float(actual_margin),
                     'conf':   bool(game_row['game_id'] in conference_game_id_set),
                     'resid':  float(actual_margin - model_expected_margin),
-                })
+                }))
+
+            _flush_pending_log_entries()
 
         return pd.DataFrame(training_rows)
 

@@ -48,10 +48,13 @@ RATINGS_ONLY = bool(_os.environ.get("RATINGS_ONLY"))
 ARTIFACTS_DIR        = Path(__file__).parent / "artifacts" / str(_season)
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# All fully completed seasons before the current one — used to train the model.
+# All fully completed seasons before the current one — used to train the served model.
 CALIBRATION_YEARS    = list(range(2021, _season))
-# Most recently completed season — used as the held-out backtest.
+# Most recently completed season — used as the held-out backtest. It's inside
+# CALIBRATION_YEARS, so the reported number comes from a separate model trained
+# only on the seasons before it.
 BACKTEST_YEAR        = _season - 1
+BACKTEST_CALIBRATION_YEARS = list(range(2021, BACKTEST_YEAR))
 # Teams with fewer than this many games are excluded from the ratings table.
 MIN_GAMES_TO_QUALIFY = 5
 
@@ -185,6 +188,7 @@ def build_model_json(trained_predictor, backtest_metrics):
         "iso_x":             [float(x) for x in trained_predictor.calibrator.X_thresholds_],
         "iso_y":             [float(y) for y in trained_predictor.calibrator.y_thresholds_],
         "backtest_year":     BACKTEST_YEAR,
+        "backtest_calibration_years": BACKTEST_CALIBRATION_YEARS,
         "backtest":          backtest_metrics,
     }
 
@@ -207,9 +211,11 @@ def main():
     trained_predictor._build_ratings(_season)
 
     backtest_metrics = {}
-    if not RATINGS_ONLY and BACKTEST_YEAR is not None:
-        print(f"\nBacktesting on {BACKTEST_YEAR} (held out)...")
-        validation_results, _, _ = trained_predictor.validate_walk_forward(BACKTEST_YEAR)
+    if not RATINGS_ONLY and BACKTEST_CALIBRATION_YEARS:
+        print(f"\nBacktesting on {BACKTEST_YEAR} (held out, trained on {BACKTEST_CALIBRATION_YEARS})...")
+        backtest_predictor = TempoPredictor()
+        backtest_predictor.train(calibration_year=BACKTEST_CALIBRATION_YEARS)
+        validation_results, _, _ = backtest_predictor.validate_walk_forward(BACKTEST_YEAR)
         backtest_metrics = {metric_name: float(metric_val)
                             for metric_name, metric_val in validation_results.items()}
         print(
@@ -247,6 +253,7 @@ def main():
         "league_avg_pace":   round(trained_predictor._league_avg_pace, 2),
         "league_home_adv":   round(trained_predictor._league_home_adv, 2),
         "backtest_year":     BACKTEST_YEAR,
+        "backtest_calibration_years": BACKTEST_CALIBRATION_YEARS,
         "backtest":          backtest_metrics,
     }
     with open(ARTIFACTS_DIR / "metadata.json", "w") as metadata_file:
@@ -269,6 +276,7 @@ if __name__ == "__main__":
 # ARTIFACTS_DIR                Path    Directory where output files are written: artifacts/{season}/.
 # CALIBRATION_YEARS            list    All complete seasons before the current one; training data.
 # BACKTEST_YEAR                int     The most recently completed season, held out to measure accuracy.
+# BACKTEST_CALIBRATION_YEARS   list    Seasons before BACKTEST_YEAR; trains the backtest-only model.
 # MIN_GAMES_TO_QUALIFY         int     Teams below this game count are excluded from net_ratings.
 #
 # --- build_net_ratings_table() ---
@@ -298,6 +306,7 @@ if __name__ == "__main__":
 #
 # --- main() ---
 # trained_predictor            TempoPredictor  Fully loaded predictor with ratings + model.
+# backtest_predictor           TempoPredictor  Trained without BACKTEST_YEAR; only used for backtest_metrics.
 # backtest_metrics             dict     Validation metrics, empty dict in RATINGS_ONLY mode.
 # validation_results           dict     Output of validate_walk_forward().
 # teams_ratings_df             DataFrame  Output of build_teams_table(); written to parquet.
