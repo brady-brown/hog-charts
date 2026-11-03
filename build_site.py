@@ -850,6 +850,16 @@ def load_boxscore_jerseys(season):
 
 
 all_player_bios = fetch_all_player_bios(current_player_stats_csv_path)
+# ESPN's roster only knows a player's class today, and between seasons it moves on to
+# next year's. So a May–Oct rebuild keeps the classes this season already published
+# (an October rebuild once stamped 2026-27 classes on the 2025-26 season; see
+# fix_class_labels.py).
+_published_stats = os.path.join(SEASON_DATA_DIR, "player-stats-all.json")
+if _date.today().month in range(5, 11) and os.path.exists(_published_stats):
+    with open(_published_stats) as _f:
+        for _p in json.load(_f)["players"]:
+            if str(_p.get("id")) in all_player_bios:
+                all_player_bios[str(_p["id"])]["exp"] = _p.get("exp")
 
 # Overlay season-accurate jerseys from the boxscore (authoritative for the
 # season) over the roster-endpoint values, which miss departed players.

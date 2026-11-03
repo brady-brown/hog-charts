@@ -15,8 +15,13 @@ function seasonLabel(s) {
 }
 
 // fetch() wrapper — returns parsed JSON or null on error
+// Past seasons' data is cached as immutable for a year (see build_site _headers).
+// Bump this when frozen files are corrected so browsers fetch the new copy once.
+const DATA_VERSION = "2026-11-03";
+
 async function loadJSON(path) {
   try {
+    if (path.startsWith("data/")) path += (path.includes("?") ? "&" : "?") + "v=" + DATA_VERSION;
     const r = await fetch(path);
     if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
     return r.json();
@@ -96,7 +101,6 @@ const NAV_LINKS = [
   { href: "net-ratings.html",    label: "Team Stats" },
   { href: "player-stats.html",   label: "Player Stats" },
   { href: "lineup-stats.html",   label: "Lineups", page: "lineup-stats.html lineup-builder.html" },
-  { href: "shot-charts.html",    label: "Shot Charts" },
   { href: "postseason.html",     label: "Postseason", months: [3, 4] },   // tournament season only
 ];
 // Glossary is linked from the footer (FOOTER_LINES) instead of the nav.
