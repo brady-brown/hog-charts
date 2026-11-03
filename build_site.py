@@ -66,6 +66,7 @@ from hoglib.zones import (ZONE_NAMES, ZONE_NAME_TO_INDEX, THREE_POINT_ZONES,
 # ---------------------------------------------------------------------------
 
 # NaN-safe JSON sanitizing + slugify now live in hoglib.io (shared, must not drift).
+from hoglib.careers import write_career_shards
 from hoglib.io import sanitize_for_json, slugify
 
 
@@ -1403,6 +1404,8 @@ def write_cloudflare_headers(season_years):
             lines += [f"/data/{year}/*", long_cache, ""]        # frozen
     # Shared current-season shot files (rebuilt nightly).
     lines += ["/data/shots/*", hour_cache, ""]
+    # Career shards span every season, so they change whenever the live one does.
+    lines += ["/data/careers/*", hour_cache, ""]
     # seasons.json must never be cached long — it names the live season.
     lines += ["/data/seasons.json", "  Cache-Control: public, max-age=300", ""]
     # Shared JS.
@@ -1415,6 +1418,13 @@ def write_cloudflare_headers(season_years):
 
 
 write_cloudflare_headers(built_season_years)
+
+
+# ===========================================================================
+# careers/{n}.json — every season per player, for the player card
+# ===========================================================================
+# Reads each season's player-stats-all.json, so it runs after this season's is written.
+write_career_shards(ROOT_DATA_DIR)
 
 print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 

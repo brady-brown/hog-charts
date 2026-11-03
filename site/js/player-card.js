@@ -59,6 +59,22 @@
   .pc-col-hdr { font-size:.7rem; font-weight:700; text-transform:uppercase;
     letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
   #pc-chart .js-plotly-plot { border-radius:10px; overflow:hidden; }
+  .pc-career { border-top:1px solid var(--line); padding:20px 28px 24px; }
+  .pc-career-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .pc-career-switch { display:flex; gap:6px; }
+  .pc-career-switch button { font:inherit; font-size:.72rem; font-weight:700; padding:3px 10px;
+    border-radius:20px; border:1px solid var(--line); background:var(--card2); color:var(--muted); cursor:pointer; }
+  .pc-career-switch button.active { background:rgba(250,100,50,.15); color:var(--t1); border-color:transparent; }
+  .pc-career-wrap { overflow-x:auto; }
+  .pc-career-tbl { width:100%; border-collapse:collapse; font-size:.8rem; font-variant-numeric:tabular-nums; }
+  .pc-career-tbl th { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); text-align:right; padding:0 6px 6px; white-space:nowrap; }
+  .pc-career-tbl td { text-align:right; padding:6px; border-top:1px solid #1a2235; white-space:nowrap; }
+  .pc-career-tbl th:nth-child(-n+2), .pc-career-tbl td:nth-child(-n+2) { text-align:left; }
+  .pc-career-tbl tr.current td { font-weight:800; }
+  .pc-career-school { display:flex; align-items:center; gap:6px; max-width:180px; }
+  .pc-career-school img { width:16px; height:16px; object-fit:contain; flex-shrink:0; }
+  .pc-career-school span { overflow:hidden; text-overflow:ellipsis; }
   `;
 
   const HTML = `
@@ -89,6 +105,16 @@
           <div id="pc-adv"></div>
         </div>
       </div>
+      <div class="pc-career" id="pc-career" style="display:none">
+        <div class="pc-career-head">
+          <div class="pc-col-hdr" style="margin:0">Career</div>
+          <div class="pc-career-switch" id="pc-career-switch">
+            <button data-view="box" class="active">Box Score</button>
+            <button data-view="adv">Advanced</button>
+          </div>
+        </div>
+        <div class="pc-career-wrap"><table class="pc-career-tbl" id="pc-career-tbl"></table></div>
+      </div>
       <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
         <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
         <div id="pc-charts" style="display:none">
@@ -114,6 +140,63 @@
       if (e.target === document.getElementById("pc-overlay")) close();
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    document.getElementById("pc-career-switch").addEventListener("click", (e) => {
+      const view = e.target.dataset?.view;
+      if (!view || view === careerView) return;
+      careerView = view;
+      renderCareer();
+    });
+  }
+
+  // ── career table ──────────────────────────────────────────────────────────
+  // Every season the player appears in, with the school he played for that year.
+  // careers/{id % CAREER_SHARDS}.json comes from hoglib/careers.py.
+  const CAREER_SHARDS = 64;   // MUST match CAREER_SHARDS in hoglib/careers.py
+  const pct  = (v) => v != null ? (v * 100).toFixed(1) : "—";
+  const dec1 = (v) => v != null ? v.toFixed(1) : "—";
+  const CAREER_COLS = {
+    box: [["GP", (r) => r.gp ?? "—"], ["MPG", (r) => dec1(r.mpg)], ["PPG", (r) => dec1(r.ppg)],
+          ["RPG", (r) => dec1(r.rpg)], ["APG", (r) => dec1(r.apg)], ["FG%", (r) => pct(r.fg)],
+          ["3P%", (r) => pct(r.fg3)], ["FT%", (r) => pct(r.ft)], ["TS%", (r) => pct(r.ts)]],
+    adv: [["USG%", (r) => dec1(r.usg)], ["AST%", (r) => dec1(r.astp)], ["TOV%", (r) => dec1(r.tovp)],
+          ["TRB%", (r) => dec1(r.trbp)], ["STL%", (r) => dec1(r.stlp)], ["BLK%", (r) => dec1(r.blkp)],
+          ["TS%", (r) => pct(r.ts)], ["eFG%", (r) => pct(r.efg)]],
+  };
+  const CAREER_SHARD_CACHE = {};
+  let careerView = "box";
+  let career = null;         // {rows, season} for the card on screen
+  let careerRequest = 0;     // ignores a slow fetch for a card that's already been replaced
+
+  async function loadCareer(playerId, season) {
+    const request = ++careerRequest;
+    career = null;
+    document.getElementById("pc-career").style.display = "none";
+    if (playerId == null) return;
+    const shardIndex = Number(playerId) % CAREER_SHARDS;
+    if (!(shardIndex in CAREER_SHARD_CACHE)) {
+      CAREER_SHARD_CACHE[shardIndex] = await loadJSON(`data/careers/${shardIndex}.json`);
+    }
+    const rows = CAREER_SHARD_CACHE[shardIndex]?.[String(playerId)];
+    if (request !== careerRequest || !rows?.length) return;
+    career = { rows: [...rows].sort((a, b) => a.s - b.s), season };
+    renderCareer();
+  }
+
+  function renderCareer() {
+    if (!career) return;
+    document.querySelectorAll("#pc-career-switch button").forEach((b) =>
+      b.classList.toggle("active", b.dataset.view === careerView));
+    const cols = CAREER_COLS[careerView];
+    const head = `<tr><th>Season</th><th>School</th>${cols.map(([lbl]) => `<th>${lbl}</th>`).join("")}</tr>`;
+    const body = career.rows.map((r) => `
+      <tr class="${r.s === career.season ? "current" : ""}">
+        <td>${seasonLabel(r.s)}</td>
+        <td><div class="pc-career-school" title="${r.t ?? ""}">
+          <img src="${logoUrl(r.tid)}" alt="" onerror="this.style.opacity=0"><span>${r.t ?? "—"}</span></div></td>
+        ${cols.map(([, fmt]) => `<td>${fmt(r)}</td>`).join("")}
+      </tr>`).join("");
+    document.getElementById("pc-career-tbl").innerHTML = head + body;
+    document.getElementById("pc-career").style.display = "block";
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────
@@ -225,6 +308,7 @@
 
     document.getElementById("pc-box").innerHTML = boxStats.map(statRow).join("");
     document.getElementById("pc-adv").innerHTML = advStats.map(statRow).join("");
+    loadCareer(p.id, season ?? curSeason);
 
     document.getElementById("pc-overlay").classList.add("open");
     document.body.style.overflow = "hidden";
