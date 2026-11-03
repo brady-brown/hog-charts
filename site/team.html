@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    .tp-head { display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:6px 0 18px; }
+    .tp-logo { width:72px; height:72px; object-fit:contain; }
+    .tp-id { flex:1; min-width:220px; }
+    .tp-name { font-size:1.7rem; font-weight:900; letter-spacing:-.02em; line-height:1.1; }
+    .tp-sub { color:var(--muted); font-size:.92rem; margin-top:4px; }
+    .tp-pickers { display:flex; gap:10px; flex-wrap:wrap; }
+    .tp-pickers .form-group { margin:0; }
+    .tp-strip { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid var(--line); border-radius:14px;
+      background:var(--card); overflow:hidden; margin-bottom:6px; }
+    .tp-strip div { text-align:center; padding:14px 8px; border-right:1px solid var(--line); }
+    .tp-strip div:last-child { border-right:none; }
+    .tp-strip b { display:block; font-size:1.25rem; font-weight:800; }
+    .tp-strip span { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .tp-caption { color:var(--muted); font-size:.75rem; margin-bottom:14px; }
+    .tp-tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto; }
+    .tp-tabs button { font:inherit; font-size:.92rem; font-weight:700; padding:10px 16px; background:none; border:none;
+      border-bottom:2px solid transparent; color:var(--muted); cursor:pointer; margin-bottom:-1px; white-space:nowrap; }
+    .tp-tabs button.active { color:var(--ink); border-bottom-color:var(--t1); }
+    .tp-tabs button[hidden] { display:none; }
+    .tp-panel[hidden] { display:none; }
+    .tp-overview { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
+    @media (max-width:820px) { .tp-overview { grid-template-columns:1fr; } .tp-strip { grid-template-columns:repeat(3,1fr); } }
+    .tp-def-col { margin-top:16px; }
+    /* No shot chart (past seasons): stats take the full width, offense beside defense. */
+    .tp-overview.no-shots { grid-template-columns:1fr; }
+    .tp-overview.no-shots .tp-stats-card { display:grid; grid-template-columns:1fr 1fr; gap:0 32px; }
+    .tp-overview.no-shots .tp-def-col { margin-top:0; }
+    .tp-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+    .tp-hdr { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px; }
+    .tp-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1a2235; font-size:.88rem; }
+    .tp-row:last-child { border-bottom:none; }
+    .tp-row span:first-child { color:var(--muted); }
+    .tp-row b { font-variant-numeric:tabular-nums; }
+    .tp-status { color:var(--muted); font-size:.88rem; }
+    .gm-tbl td.tp-player { display:flex; align-items:center; gap:8px; font-weight:700; }
+    .gm-tbl td.tp-player img { width:28px; height:28px; border-radius:50%; object-fit:cover; object-position:top; background:var(--card2); }
+    .tp-frame { width:100%; border:none; display:block; min-height:400px; }
+    #tp-density .js-plotly-plot { border-radius:10px; overflow:hidden; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+
+  <div class="tp-head">
+    <img id="tp-logo" class="tp-logo" src="" alt="" onerror="this.style.opacity=0">
+    <div class="tp-id">
+      <div class="tp-name" id="tp-name">Loading…</div>
+      <div class="tp-sub" id="tp-sub"></div>
+    </div>
+    <div class="tp-pickers">
+      <div class="form-group"><label for="tp-team">Team</label><select id="tp-team"></select></div>
+      <div class="form-group narrow"><label for="tp-season">Season</label><select id="tp-season"></select></div>
+    </div>
+  </div>
+
+  <div class="tp-strip" id="tp-strip"></div>
+  <div class="tp-caption">Opponent-adjusted, per 100 possessions</div>
+
+  <div class="tp-tabs" id="tp-tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="games">Games</button>
+    <button data-tab="roster">Roster</button>
+    <button data-tab="lineups">Lineups</button>
+    <button data-tab="scout">Scout</button>
+  </div>
+
+  <section class="tp-panel" id="tp-overview">
+    <div class="tp-overview">
+      <div class="tp-card tp-stats-card">
+        <div><div class="tp-hdr">Offense · Box Score (raw)</div><div id="tp-off"></div></div>
+        <div class="tp-def-col"><div class="tp-hdr">Defense · Box Score (raw)</div><div id="tp-def"></div></div>
+      </div>
+      <div class="tp-card" id="tp-shots-card">
+        <div class="tp-hdr">Zone Efficiency</div><div id="tp-zone"></div>
+        <div class="tp-hdr" style="margin-top:16px">Shot Density</div><div id="tp-density"></div>
+        <div class="tp-status" id="tp-shots-status"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tp-panel" id="tp-games" hidden>
+    <div class="tp-status" id="tp-games-status"></div>
+    <div class="gm-wrap"><table class="gm-tbl" id="tp-games-tbl"></table></div>
+  </section>
+
+  <section class="tp-panel" id="tp-roster" hidden>
+    <div class="tp-status" id="tp-roster-status"></div>
+    <div class="gm-wrap"><table class="gm-tbl" id="tp-roster-tbl"></table></div>
+  </section>
+
+  <section class="tp-panel" id="tp-lineups" hidden>
+    <div class="seg page-modes" id="tp-lineup-modes">
+      <button class="active" data-mode="stats">Lineup Stats</button>
+      <button data-mode="builder">Lineup Builder</button>
+    </div>
+    <iframe class="tp-frame" id="tp-lineup-frame" title="Lineups"></iframe>
+  </section>
+
+  <section class="tp-panel" id="tp-scout" hidden>
+    <iframe class="tp-frame" id="tp-scout-frame" title="Scout"></iframe>
+  </section>
+
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/court.js"></script>
+<script src="js/zone-chart.js"></script>
+<script src="js/games.js"></script>
+<script src="js/player-card.js"></script>
+<script>
+// Team page: one place for everything about a team. State lives in the URL
+// (?id=&season=&tab=) so any view can be shared. Lineups and Scout reuse their
+// existing pages, shown with ?embed=1 inside the tabs.
+const params = new URLSearchParams(location.search);
+let SEASONS = [], CUR_SEASON = null, SEASON = null, TEAM_ID = null, TAB = params.get("tab") || "overview";
+let TEAM = null;            // this team's team-stats row
+const loaded = {};          // which tabs have been filled for the current team/season
+
+const pct = v => v == null ? "—" : (v * 100).toFixed(1) + "%";
+const num = (v, d = 1) => v == null ? "—" : Number(v).toFixed(d);
+const sgn = v => v == null ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1);
+const row = (lbl, val) => `<div class="tp-row"><span>${lbl}</span><b>${val}</b></div>`;
+
+function syncUrl() {
+  history.replaceState(null, "", `?id=${TEAM_ID}&season=${SEASON}&tab=${TAB}`);
+}
+
+function showTab(tab) {
+  TAB = tab;
+  document.querySelectorAll("#tp-tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".tp-panel").forEach(p => p.hidden = p.id !== `tp-${tab}`);
+  syncUrl();
+  if (!loaded[tab]) { loaded[tab] = true; ({ overview: loadOverview, games: loadGames, roster: loadRoster,
+                                             lineups: loadLineups, scout: loadScout })[tab](); }
+  const density = document.getElementById("tp-density");
+  if (tab === "overview" && window.Plotly && density?.data) Plotly.Plots.resize(density);
+}
+
+// Embedded pages size the frame to their content (same origin, so read it directly).
+function autoHeight(frame) {
+  frame.onload = () => {
+    const doc = frame.contentDocument;
+    const fit = () => { frame.style.height = doc.documentElement.scrollHeight + "px"; };
+    new ResizeObserver(fit).observe(doc.body);
+    fit();
+  };
+}
+
+// ── header + ratings ──────────────────────────────────────────────────────
+async function loadTeam() {
+  const stats = await loadJSON(`data/${SEASON}/team-stats-all.json`);
+  const rows = stats?.team_stats ?? [];
+  const tSel = document.getElementById("tp-team");
+  tSel.innerHTML = [...rows].sort((a, b) => a.team.localeCompare(b.team))
+    .map(r => `<option value="${r.team_id}">${r.team}</option>`).join("");
+  TEAM = rows.find(r => r.team_id === TEAM_ID) ?? rows.find(r => r.team === "Arkansas Razorbacks") ?? rows[0];
+  TEAM_ID = TEAM?.team_id ?? TEAM_ID;
+  tSel.value = TEAM_ID;
+  if (window.enhanceAllSelects) enhanceAllSelects();
+  if (!TEAM) { document.getElementById("tp-name").textContent = "Team not found for this season."; return; }
+
+  document.title = `${TEAM.team} | Hog Charts`;
+  const logo = document.getElementById("tp-logo");
+  logo.style.opacity = "";          // undo a hide from an earlier failed load
+  logo.src = logoUrl(TEAM_ID);
+  document.getElementById("tp-name").textContent = TEAM.team;
+  document.getElementById("tp-sub").textContent = [TEAM.conf, TEAM.record, TEAM.rank ? `#${TEAM.rank}` : ""].filter(Boolean).join(" · ");
+  document.getElementById("tp-strip").innerHTML = [
+    [sgn(TEAM.net_eff), "Net"], [num(TEAM.off_eff), "Off"], [num(TEAM.def_eff), "Def"],
+    [num(TEAM.pace), "Pace"], [sgn(TEAM.sos), "SOS"],
+  ].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
+
+  // Shot locations, scouting and the builder exist for the live season only.
+  const live = SEASON === CUR_SEASON;
+  document.querySelector('#tp-tabs [data-tab="scout"]').hidden = !live;
+  if (!live && TAB === "scout") TAB = "overview";
+  Object.keys(loaded).forEach(k => delete loaded[k]);
+  showTab(TAB);
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────
+async function loadOverview() {
+  const r = TEAM;
+  document.getElementById("tp-off").innerHTML = [
+    row("PPP (raw)", num(r.ppp)), row("PPG", num(r.ppg)), row("eFG%", pct(r.efg)), row("TS%", pct(r.ts)),
+    row("3PAr", pct(r.par3)), row("FTr", pct(r.ftr)), row("ORB%", num(r.orbp)), row("TOV%", num(r.tovp)),
+    row("AST%", num(r.astp)), row("A:TO", num(r.ast_to, 2)),
+  ].join("");
+  document.getElementById("tp-def").innerHTML = [
+    row("Opp PPP (raw)", num(r.opp_ppp)), row("Opp eFG%", pct(r.opp_efg)), row("Opp 3P%", pct(r.opp_fg3)),
+    row("DRB%", num(r.drbp)), row("TOV% Forced", num(r.opp_tovp)), row("Opp FTr", pct(r.opp_ftr)),
+    row("SOS", sgn(r.sos)), row("Home", sgn(r.home_court)),
+  ].join("");
+
+  const card = document.getElementById("tp-shots-card");
+  const noShots = SEASON !== CUR_SEASON;
+  document.querySelector(".tp-overview").classList.toggle("no-shots", noShots);
+  card.hidden = noShots;
+  if (noShots) return;
+  const status = document.getElementById("tp-shots-status");
+  status.textContent = "Loading…";
+  const [shots, baselines] = await Promise.all([
+    loadJSON(`data/shots/${slugify(r.team)}.json`), loadJSON("data/zone-baselines.json")]);
+  if (!shots?.shots?.length) { status.textContent = "No shot data yet."; return; }
+  status.textContent = "";
+  ZoneChart.render(document.getElementById("tp-zone"), ZoneChart.computeZones(shots.shots, () => true),
+                   { zones: baselines?.zones, baselines: baselines?.baselines, minAtt: 5 });
+  const { mx, my, hx, hy } = shotsXY(shots.shots);
+  ensurePlotly().then(Plotly => Plotly.react("tp-density", densityTraces(mx, my, hx, hy), {
+    paper_bgcolor: "#0B0E14", plot_bgcolor: "#F0E8D5", height: 380, margin: { l: 10, r: 10, t: 10, b: 10 },
+    showlegend: false, dragmode: false,
+    xaxis: { range: X_RANGE, visible: false, scaleanchor: "y", scaleratio: 1, constrain: "domain" },
+    yaxis: { range: Y_RANGE, visible: false, constrain: "domain" },
+  }, { displaylogo: false, staticPlot: true })).catch(() => {});
+}
+
+// ── Games ─────────────────────────────────────────────────────────────────
+async function loadGames() {
+  const status = document.getElementById("tp-games-status");
+  const table = document.getElementById("tp-games-tbl");
+  status.textContent = "Loading…"; table.innerHTML = "";
+  const file = await Games.teamFile(SEASON, TEAM_ID);
+  const games = [...(file?.games ?? [])].reverse();
+  if (!games.length) { status.textContent = "No games yet."; return; }
+  status.textContent = "";
+  const { shortDate, opponentLabel, shootLine } = Games;
+  const cols = ["FG", "3P", "FT", "REB", "AST", "TOV", "STL", "BLK"];
+  table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
+    games.map(g => { const t = g.totals; return `
+      <tr class="gm-row" data-game="${g.g}">
+        <td>${shortDate(g.d)}</td><td>${opponentLabel(g)}</td>
+        <td><span class="${g.w ? "gm-win" : "gm-loss"}">${g.w ? "W" : "L"}</span> ${g.ts}–${g.os}</td>
+        <td>${shootLine(t.fgm, t.fga)}</td><td>${shootLine(t.tpm, t.tpa)}</td><td>${shootLine(t.ftm, t.fta)}</td>
+        <td>${t.reb ?? "—"}</td><td>${t.ast ?? "—"}</td><td>${t.tov ?? "—"}</td><td>${t.stl ?? "—"}</td><td>${t.blk ?? "—"}</td>
+      </tr>`; }).join("");
+  table.onclick = e => {
+    const gameId = e.target.closest("tr.gm-row")?.dataset.game;
+    if (gameId) Games.openBoxScore({ season: SEASON, teamId: TEAM_ID, gameId: Number(gameId),
+      chart: SEASON === CUR_SEASON ? { kind: "team", name: TEAM.team } : null });
+  };
+}
+
+// ── Roster ────────────────────────────────────────────────────────────────
+let ROSTER = [];
+async function loadRoster() {
+  const status = document.getElementById("tp-roster-status");
+  const table = document.getElementById("tp-roster-tbl");
+  status.textContent = "Loading…"; table.innerHTML = "";
+  const stats = await loadJSON(`data/${SEASON}/player-stats-all.json`);
+  ROSTER = (stats?.players ?? []).filter(p => p.tid === TEAM_ID).sort((a, b) => (b.mpg ?? 0) - (a.mpg ?? 0));
+  if (!ROSTER.length) { status.textContent = "No players yet."; return; }
+  status.textContent = "";
+  const cols = ["Pos", "Class", "GP", "MPG", "PPG", "RPG", "APG", "FG%", "3P%", "TS%"];
+  table.innerHTML = `<tr><th>Player</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
+    ROSTER.map((p, i) => `
+      <tr class="gm-row" data-i="${i}">
+        <td class="tp-player"><img src="${playerUrl(p.id)}" alt="" onerror="this.style.visibility='hidden'">${p.jn ? `#${p.jn} ` : ""}${p.n}</td>
+        <td>${p.pos ?? "—"}</td><td>${p.exp ?? "—"}</td><td>${p.gp ?? "—"}</td><td>${num(p.mpg)}</td>
+        <td>${num(p.ppg)}</td><td>${num(p.rpg)}</td><td>${num(p.apg)}</td>
+        <td>${pct(p.fg)}</td><td>${pct(p.fg3)}</td><td>${pct(p.ts)}</td>
+      </tr>`).join("");
+  table.onclick = e => {
+    const i = e.target.closest("tr.gm-row")?.dataset.i;
+    if (i != null) PlayerCard.open(ROSTER[i], { season: SEASON, curSeason: CUR_SEASON, hasOnOff: ROSTER[i].on_off != null });
+  };
+}
+
+// ── Lineups + Scout: the existing pages, embedded ─────────────────────────
+let lineupMode = "stats";
+function loadLineups() {
+  const frame = document.getElementById("tp-lineup-frame");
+  const builder = lineupMode === "builder";
+  document.querySelectorAll("#tp-lineup-modes button").forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === lineupMode);
+    if (b.dataset.mode === "builder") b.disabled = SEASON !== CUR_SEASON;   // builder: live season only
+  });
+  autoHeight(frame);
+  frame.src = `${builder ? "lineup-builder" : "lineup-stats"}.html?embed=1&team=${slugify(TEAM.team)}&season=${SEASON}`;
+}
+document.getElementById("tp-lineup-modes").addEventListener("click", e => {
+  const mode = e.target.dataset?.mode;
+  if (mode && mode !== lineupMode && !e.target.disabled) { lineupMode = mode; loadLineups(); }
+});
+
+function loadScout() {
+  const frame = document.getElementById("tp-scout-frame");
+  autoHeight(frame);
+  frame.src = `scout-report.html?embed=1&team=${slugify(TEAM.team)}`;
+}
+
+// ── init ──────────────────────────────────────────────────────────────────
+async function init() {
+  SEASONS = await loadJSON("data/seasons.json") ?? [];
+  CUR_SEASON = SEASONS[0];
+  const wanted = Number(params.get("season"));
+  SEASON = SEASONS.includes(wanted) ? wanted : CUR_SEASON;
+  TEAM_ID = Number(params.get("id")) || null;
+  const sSel = document.getElementById("tp-season");
+  sSel.innerHTML = SEASONS.map(s => `<option value="${s}">${seasonLabel(s)}</option>`).join("");
+  sSel.value = SEASON;
+  sSel.addEventListener("change", () => { SEASON = Number(sSel.value); loadTeam(); });
+  document.getElementById("tp-team").addEventListener("change", e => { TEAM_ID = Number(e.target.value); loadTeam(); });
+  document.getElementById("tp-tabs").addEventListener("click", e => { if (e.target.dataset?.tab) showTab(e.target.dataset.tab); });
+  loadTeam();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

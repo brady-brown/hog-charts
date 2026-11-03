@@ -79,6 +79,11 @@ function fmtPct(v, decimals = 1) {
   return v != null ? (Number(v) * 100).toFixed(decimals) : "—";
 }
 
+// ?embed=1: this page is showing inside another page (the team page's tabs).
+// style.css hides the site chrome and the page's own team picker under .embedded.
+const EMBEDDED = new URLSearchParams(location.search).get("embed") === "1";
+if (EMBEDDED) document.documentElement.classList.add("embedded");
+
 // ── Site navigation (single source of truth) ────────────────────────────────
 // The link list lives here so adding/renaming a page is a one-line edit instead
 // of touching every HTML file. Each page's <nav> ships with only the brand

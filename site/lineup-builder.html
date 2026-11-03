@@ -131,11 +131,11 @@
     <div class="seg" id="scope-tabs"></div></div></div>
 
   <div class="filters">
-    <div class="form-group narrow">
+    <div class="form-group narrow embed-hide">
       <label for="season-sel">Season</label>
       <select id="season-sel"></select>
     </div>
-    <div class="form-group">
+    <div class="form-group embed-hide">
       <label for="team-sel">Team</label>
       <select id="team-sel" disabled><option>Loading…</option></select>
     </div>
@@ -266,7 +266,9 @@ async function init() {
   }
   const tSel = document.getElementById("team-sel");
   tSel.innerHTML = INDEX.teams.map(t => `<option value="${t}">${t}</option>`).join("");
-  const defaultTeam = INDEX.teams.find(t => t.includes("Arkansas")) || INDEX.teams[0];
+  const wanted = new URLSearchParams(location.search).get("team");
+  const defaultTeam = INDEX.teams.find(t => INDEX.slugs[t] === wanted)
+    || INDEX.teams.find(t => t.includes("Arkansas")) || INDEX.teams[0];
   tSel.value = defaultTeam;
   tSel.disabled = false;
 

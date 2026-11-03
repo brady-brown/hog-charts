@@ -325,6 +325,9 @@
 
   // ── open / close ──────────────────────────────────────────────────────────
   async function open(p, opts = {}) {
+    // Embedded in the team page: a modal inside the frame would sit mid-way down
+    // a tall iframe, so the outer page shows the card.
+    if (window.parent !== window && window.parent.PlayerCard) return window.parent.PlayerCard.open(p, opts);
     injectOnce();
     const { season, curSeason, hasOnOff = false } = opts;
     const pg = posGroup(p.pos);
@@ -332,7 +335,11 @@
     document.getElementById("pc-img").src = playerUrl(p.id);
     document.getElementById("pc-name").textContent = p.n ?? "—";
     document.getElementById("pc-logo").src = logoUrl(p.tid);
-    document.getElementById("pc-team").textContent = p.t ?? "—";
+    const teamLink = document.createElement("a");     // to the team page
+    teamLink.className = "team-link";
+    teamLink.href = `team.html?id=${p.tid}&season=${season ?? curSeason ?? ""}`;
+    teamLink.textContent = p.t ?? "—";
+    document.getElementById("pc-team").replaceChildren(teamLink);
     document.getElementById("pc-conf").textContent = p.conf ?? "";
 
     const chips = [];

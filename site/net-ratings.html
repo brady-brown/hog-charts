@@ -685,7 +685,7 @@ function render() {
     return `<tr onclick="openModal(_rows[${i}])">
       <td class="rk num">${r.rank ?? "—"}</td>
       <td class="logo-cell"><img src="${logoUrl(r.team_id)}" alt="" onerror="this.style.opacity=0"></td>
-      <td class="team-name">${r.team ?? "—"}</td>
+      <td class="team-name"><a class="team-link" href="team.html?id=${r.team_id}&season=${SEASON}" onclick="event.stopPropagation()">${r.team ?? "—"}</a></td>
       <td style="color:var(--muted)">${r.conf ?? "—"}</td>
       <td style="color:var(--muted)">${r.record ?? "—"}</td>
       ${cells}
@@ -735,7 +735,9 @@ function pctStr(v){ return v==null?"—":(v*100).toFixed(1)+"%"; }
 function numStr(v,d=1){ return v==null?"—":v.toFixed(d); }
 
 function openModal(r) {
-  document.getElementById("pc-logo").src = logoUrl(r.team_id);
+  const logo = document.getElementById("pc-logo");
+  logo.style.opacity = "";   // the empty src fails at page load and onerror hides it
+  logo.src = logoUrl(r.team_id);
   document.getElementById("pc-name").textContent = r.team ?? "—";
   document.getElementById("pc-conf").textContent = r.conf ?? "";
   document.getElementById("pc-record").textContent = r.record ?? "";
