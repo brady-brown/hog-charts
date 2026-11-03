@@ -270,7 +270,7 @@ async function loadRoster() {
   table.innerHTML = `<tr><th>Player</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
     ROSTER.map((p, i) => `
       <tr class="gm-row" data-i="${i}">
-        <td class="tp-player"><img src="${playerUrl(p.id)}" alt="" onerror="this.style.visibility='hidden'">${p.jn ? `#${p.jn} ` : ""}${p.n}</td>
+        <td class="tp-player"><img src="${playerUrl(p.id)}" alt="" onerror="this.style.visibility='hidden'">${p.jn ? `#${p.jn} ` : ""}<a class="team-link" href="player.html?id=${p.id}&season=${SEASON}" onclick="event.stopPropagation()">${p.n}</a></td>
         <td>${p.pos ?? "—"}</td><td>${p.exp ?? "—"}</td><td>${p.gp ?? "—"}</td><td>${num(p.mpg)}</td>
         <td>${num(p.ppg)}</td><td>${num(p.rpg)}</td><td>${num(p.apg)}</td>
         <td>${pct(p.fg)}</td><td>${pct(p.fg3)}</td><td>${pct(p.ts)}</td>

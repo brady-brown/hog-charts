@@ -5,6 +5,8 @@
  * Player Stats table) so the card renders identically wherever it is opened.
  *
  *   PlayerCard.open(row, {season, curSeason, hasOnOff})
+ *   PlayerCard.open(row, {..., inline: containerEl, tab, onTab})   — player page: render
+ *     into containerEl instead of a modal, start on `tab`, report tab changes
  *   PlayerCard.close()
  *
  * Dependencies (already loaded on both pages): common.js (loadJSON, logoUrl,
@@ -76,6 +78,11 @@
   .pc-career-school { display:flex; align-items:center; gap:6px; max-width:180px; }
   .pc-career-school img { width:16px; height:16px; object-fit:contain; flex-shrink:0; }
   .pc-career-school span { overflow:hidden; text-overflow:ellipsis; }
+  /* Inline: the card is the player page's content (opts.inline), not a modal. */
+  .pc-inline .pc-overlay { position:static; display:block; background:none; backdrop-filter:none; z-index:auto; }
+  .pc-inline .pc-modal { width:100%; max-height:none; overflow:visible; }
+  .pc-inline .pc-close { display:none; }
+  .pc-inline .pc-header { position:static; }
   .pc-tabs { display:flex; gap:4px; padding:12px 28px 0; border-bottom:1px solid var(--line); }
   .pc-tabs button { font:inherit; font-size:.85rem; font-weight:700; padding:8px 14px; background:none;
     border:none; border-bottom:2px solid transparent; color:var(--muted); cursor:pointer; margin-bottom:-1px; }
@@ -240,7 +247,11 @@
   }
 
   // ── tabs ──────────────────────────────────────────────────────────────────
+  let onTabChange = null;     // player page: keeps ?tab= in the URL
+  let inline = false;
+
   function showTab(tab) {
+    onTabChange?.(tab);
     document.querySelectorAll("#pc-tabs button").forEach((b) =>
       b.classList.toggle("active", b.dataset.tab === tab));
     document.getElementById("pc-tab-season").hidden = tab !== "season";
@@ -331,9 +342,24 @@
     injectOnce();
     const { season, curSeason, hasOnOff = false } = opts;
     const pg = posGroup(p.pos);
+    inline = !!opts.inline;
+    onTabChange = opts.onTab ?? null;
+    if (inline) {
+      document.body.classList.add("pc-inline");
+      opts.inline.appendChild(document.getElementById("pc-overlay"));
+    }
 
     document.getElementById("pc-img").src = playerUrl(p.id);
-    document.getElementById("pc-name").textContent = p.n ?? "—";
+    if (inline) {
+      document.getElementById("pc-name").textContent = p.n ?? "—";
+    } else {
+      const playerLink = document.createElement("a");    // to the player page
+      playerLink.className = "team-link";
+      playerLink.href = `player.html?id=${p.id}&season=${season ?? curSeason ?? ""}`;
+      playerLink.textContent = p.n ?? "—";
+      playerLink.insertAdjacentHTML("beforeend", ' <span class="team-link-arrow">→</span>');
+      document.getElementById("pc-name").replaceChildren(playerLink);
+    }
     document.getElementById("pc-logo").src = logoUrl(p.tid);
     const teamLink = document.createElement("a");     // to the team page
     teamLink.className = "team-link";
@@ -406,10 +432,10 @@
     gamesFor = p.tid != null && cardSeason != null
       ? { playerId: p.id, teamId: p.tid, season: cardSeason, live: cardSeason === curSeason, name: p.n } : null;
     document.querySelector('#pc-tabs [data-tab="games"]').hidden = !gamesFor;
-    showTab("season");
+    showTab(opts.tab && (opts.tab !== "games" || gamesFor) ? opts.tab : "season");
 
     document.getElementById("pc-overlay").classList.add("open");
-    document.body.style.overflow = "hidden";
+    if (!inline) document.body.style.overflow = "hidden";
 
     // Shot charts — only the live season has shot-coordinate data.
     const chartSection = document.getElementById("pc-chart-section");
@@ -439,7 +465,7 @@
 
   function close() {
     const overlay = document.getElementById("pc-overlay");
-    if (!overlay) return;
+    if (!overlay || inline) return;      // the player page's card never closes
     window.Games?.closeBoxScore();
     overlay.classList.remove("open");
     document.body.style.overflow = "";

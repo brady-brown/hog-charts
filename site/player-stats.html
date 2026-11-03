@@ -795,7 +795,7 @@ function rowHTML(p, idx) {
         <img loading="lazy" decoding="async" src="${playerUrl(p.id)}" alt="${p.n}"
              onerror="this.style.opacity=0;this.style.minWidth='34px'">
         <div>
-          <div class="pname">${p.n ?? "—"}</div>
+          <div class="pname"><a class="team-link" href="player.html?id=${p.id}&season=${SEASON}" onclick="event.stopPropagation()">${p.n ?? "—"}</a></div>
           <div class="psub"><span class="pos-chip pos-${posG}">${posLbl}</span></div>
         </div>
       </div>
