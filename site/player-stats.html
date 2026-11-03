@@ -117,13 +117,7 @@
     .grp-sep { border-left: 1px solid var(--line) !important; }
 
     /* stat-group toggle */
-    .col-toggle { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .col-toggle button {
-      background: var(--card2); border: 1px solid var(--line); border-radius: 8px;
-      color: var(--muted); font-family: inherit; font-size: .78rem; font-weight: 700;
-      padding: 5px 13px; cursor: pointer; transition: background .12s, color .12s;
-    }
-    .col-toggle button.active { background: var(--t1); border-color: var(--t1); color: #fff; }
+    /* .col-toggle groups use the shared .seg look (css/style.css) */
 
     /* player rows clickable */
     tbody tr { cursor: pointer; }
@@ -156,6 +150,13 @@
       <label for="search">Player / team</label>
       <input type="text" id="search" placeholder="e.g. Boozer, Duke">
     </div>
+    <div class="form-group" style="flex:0 0 auto">
+      <label>&nbsp;</label>
+      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false">Filters<span class="filters-count" id="filters-count"></span></button>
+    </div>
+  </div>
+  <div class="filter-chips" id="filter-chips"></div>
+  <div class="filters filter-panel" id="filter-panel" hidden>
     <div class="form-group">
       <label for="conf-sel">Conference</label>
       <select id="conf-sel"><option value="">All conferences</option></select>
@@ -205,26 +206,32 @@
     <div class="cb-chips" id="cb-chips"></div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-    <div class="col-toggle" style="margin-bottom:0">
-      <button class="active" onclick="setGroup('box')">Box Score</button>
-      <button onclick="setGroup('advanced')">Advanced</button>
+  <div class="ctl-row">
+    <div class="ctl-group"><span class="ctl-label">Stats</span>
+      <div class="col-toggle seg">
+        <button class="active" onclick="setGroup('box')">Box Score</button>
+        <button onclick="setGroup('advanced')">Advanced</button>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <div class="col-toggle" style="margin-bottom:0" title="Browse the full leaderboard, or hand-pick players to compare">
-        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
-        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
-      </div>
-      <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each player's percentile rank vs. all qualified D-I players">
-        <button class="active" id="ps-btn-raw" onclick="setDisplay('raw')">Raw</button>
-        <button id="ps-btn-pct" onclick="setDisplay('pct')">Percentile</button>
-      </div>
-      <div class="col-toggle" style="margin-bottom:0">
+    <div class="ctl-group"><span class="ctl-label">Games</span>
+      <div class="col-toggle seg">
         <button class="active" id="ps-btn-all"  onclick="setScope('all')">All games</button>
         <button id="ps-btn-reg"  onclick="setScope('reg')">Regular</button>
         <button id="ps-btn-post" onclick="setScope('post')">Postseason</button>
         <button id="ps-btn-conf" onclick="setScope('conf')">Conference</button>
         <button id="ps-btn-nonconf" onclick="setScope('nonconf')">Non-Conf</button>
+      </div>
+    </div>
+    <div class="ctl-group"><span class="ctl-label">Values</span>
+      <div class="col-toggle seg" title="Show raw values or each player's percentile rank vs. all qualified D-I players">
+        <button class="active" id="ps-btn-raw" onclick="setDisplay('raw')">Raw</button>
+        <button id="ps-btn-pct" onclick="setDisplay('pct')">Percentile</button>
+      </div>
+    </div>
+    <div class="ctl-group"><span class="ctl-label">Mode</span>
+      <div class="col-toggle seg" title="Browse the full leaderboard, or hand-pick players to compare">
+        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
+        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
       </div>
     </div>
   </div>
@@ -870,6 +877,57 @@ function openModal(p) {
   });
 }
 function closeModal() { PlayerCard.close(); }
+
+// ── Collapsed filters ───────────────────────────────────────────────────────
+// The panel stays shut; each active filter shows as a chip whose ✕ clears it
+// the same way the control would (value reset + input event → render()).
+const CHIP_SELECTS = ["conf-sel", "team-sel", "pos-sel", "class-sel"];
+const CHIP_MINIMUMS = ["min-gp", "min-mpg"];
+const fieldLabel = (id) => document.querySelector(`label[for="${id}"]`)?.textContent ?? id;
+const fire = (el) => ["input", "change"].forEach((t) => el.dispatchEvent(new Event(t, { bubbles: true })));
+
+function updateFilterChips() {
+  const chips = [];
+  CHIP_SELECTS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el.value) chips.push({ text: `${fieldLabel(id)}: ${el.selectedOptions[0]?.textContent ?? el.value}`,
+                               clear: () => { el.value = ""; fire(el); } });
+  });
+  CHIP_MINIMUMS.forEach((id) => {
+    const el = document.getElementById(id);
+    if ((parseFloat(el.value) || 0) > 0) chips.push({ text: `${fieldLabel(id)}: ${el.value}`,
+                                                       clear: () => { el.value = 0; fire(el); } });
+  });
+  document.querySelectorAll(".stat-filter-row").forEach((row) => {
+    const stat = row.querySelector(".sf-stat"), op = row.querySelector(".sf-op"), val = row.querySelector(".sf-val");
+    if (!stat.value || val.value === "") return;
+    chips.push({ text: `${stat.selectedOptions[0].textContent} ${op.selectedOptions[0].textContent} ${val.value}`,
+                 clear: () => row.querySelector(".sf-remove").click() });
+  });
+  const holder = document.getElementById("filter-chips");
+  holder.innerHTML = "";
+  chips.forEach((c) => {
+    const chip = document.createElement("span");
+    chip.className = "filter-chip";
+    chip.textContent = c.text;
+    const x = document.createElement("button");
+    x.type = "button"; x.textContent = "✕";
+    x.addEventListener("click", c.clear);
+    chip.appendChild(x);
+    holder.appendChild(chip);
+  });
+  document.getElementById("filters-count").textContent = chips.length || "";
+}
+
+// Every filter change ends in render(), so refresh the chips there.
+const renderTable = render;
+render = function () { renderTable(); updateFilterChips(); };
+
+document.getElementById("filters-toggle").addEventListener("click", (e) => {
+  const panel = document.getElementById("filter-panel");
+  panel.hidden = !panel.hidden;
+  e.currentTarget.setAttribute("aria-expanded", String(!panel.hidden));
+});
 
 document.addEventListener("DOMContentLoaded", init);
 </script>

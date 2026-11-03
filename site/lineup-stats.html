@@ -67,6 +67,10 @@
 <div class="container">
 
   <h2>Lineup Stats</h2>
+  <div class="seg page-modes">
+    <a href="lineup-stats.html" class="active">Lineup Stats</a>
+    <a href="lineup-builder.html">Lineup Builder</a>
+  </div>
   <p class="page-sub">
     Per-100 possession efficiency for 1–5 man unit combinations.
     Select a team, then browse by lineup size. NetRtg = points scored minus allowed per 100 possessions.
@@ -79,9 +83,14 @@
       <button onclick="setSize('3')">3-Man</button>
       <button onclick="setSize('5')">5-Man</button>
     </div>
-    <div class="size-tabs" style="border-bottom:none;margin-bottom:0">
-      <button class="active" id="btn-all"  onclick="setScope('all')">All games</button>
-      <button id="btn-conf" onclick="setScope('conf')">Conference only</button>
+    <div class="ctl-group"><span class="ctl-label">Games</span>
+      <div class="seg">
+        <button class="active" id="btn-all"  onclick="setScope('all')">All games</button>
+        <button disabled title="Not available for lineups">Regular</button>
+        <button disabled title="Not available for lineups">Postseason</button>
+        <button id="btn-conf" onclick="setScope('conf')">Conference</button>
+        <button disabled title="Not available for lineups">Non-Conf</button>
+      </div>
     </div>
   </div>
   <div style="border-bottom:1px solid var(--line);margin-bottom:18px"></div>

@@ -77,14 +77,13 @@
       font-size: .78rem; font-weight: 700; text-decoration: underline; padding: 0;
     }
     .cb-clear:hover { color: var(--t1); }
-    .col-toggle { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .col-toggle button {
-      background: var(--card2); border: 1px solid var(--line); border-radius: 8px;
-      color: var(--muted); font-family: inherit; font-size: .78rem; font-weight: 700;
-      padding: 5px 13px; cursor: pointer; transition: background .12s, color .12s;
-    }
-    .col-toggle button.active { background: var(--t1); border-color: var(--t1); color: #fff; }
+    /* .col-toggle groups use the shared .seg look (css/style.css) */
 
+    .tc-tabs { display:flex; gap:4px; padding:12px 28px 0; border-bottom:1px solid var(--line); }
+    .tc-tabs button { font:inherit; font-size:.85rem; font-weight:700; padding:8px 14px; background:none;
+      border:none; border-bottom:2px solid transparent; color:var(--muted); cursor:pointer; margin-bottom:-1px; }
+    .tc-tabs button.active { color:var(--ink); border-bottom-color:var(--t1); }
+    .tc-tabs button[hidden] { display:none; }
     /* ── team card modal (mirrors player-stats) ─────────────────────────── */
     .pc-overlay {
       display: none; position: fixed; inset: 0; z-index: 200;
@@ -179,28 +178,34 @@
     <div class="cb-chips" id="cb-chips"></div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-    <div class="col-toggle" style="margin-bottom:0">
+  <div class="ctl-row">
+    <div class="ctl-group"><span class="ctl-label">Stats</span>
+      <div class="col-toggle seg">
       <button class="active" id="grp-ratings"  onclick="setGroup('ratings')">Ratings</button>
       <button id="grp-shooting" onclick="setGroup('shooting')">Shooting</button>
       <button id="grp-four"     onclick="setGroup('four')">Four Factors</button>
       <button id="grp-box"      onclick="setGroup('box')">Box</button>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <div class="col-toggle" style="margin-bottom:0" title="Browse the full leaderboard, or hand-pick teams to compare">
-        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
-        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
-      </div>
-      <div class="col-toggle" style="margin-bottom:0" title="Show raw values or each team's percentile rank vs. all D-I teams">
-        <button class="active" id="ts-btn-raw" onclick="setDisplay('raw')">Raw</button>
-        <button id="ts-btn-pct" onclick="setDisplay('pct')">Percentile</button>
-      </div>
-      <div class="col-toggle" style="margin-bottom:0">
+    <div class="ctl-group"><span class="ctl-label">Games</span>
+      <div class="col-toggle seg">
         <button class="active" id="sc-all"  onclick="setScope('all')">All games</button>
         <button id="sc-reg"  onclick="setScope('reg')">Regular</button>
         <button id="sc-post" onclick="setScope('post')">Postseason</button>
         <button id="sc-conf" onclick="setScope('conf')">Conference</button>
         <button id="sc-nonconf" onclick="setScope('nonconf')">Non-Conf</button>
+      </div>
+    </div>
+    <div class="ctl-group"><span class="ctl-label">Values</span>
+      <div class="col-toggle seg" title="Show raw values or each team's percentile rank vs. all D-I teams">
+        <button class="active" id="ts-btn-raw" onclick="setDisplay('raw')">Raw</button>
+        <button id="ts-btn-pct" onclick="setDisplay('pct')">Percentile</button>
+      </div>
+    </div>
+    <div class="ctl-group"><span class="ctl-label">Mode</span>
+      <div class="col-toggle seg" title="Browse the full leaderboard, or hand-pick teams to compare">
+        <button class="active" id="mode-browse" onclick="setMode('browse')">Browse</button>
+        <button id="mode-custom" onclick="setMode('custom')">Custom table</button>
       </div>
     </div>
   </div>
@@ -241,6 +246,13 @@
     <div class="pc-bio" id="pc-bio"></div>
     <div class="pc-bio-caption">Opponent-adjusted, per 100 possessions</div>
 
+    <div class="tc-tabs" id="tc-tabs">
+      <button data-tab="season" class="active">Season</button>
+      <button data-tab="shots">Shots</button>
+      <button data-tab="games">Games</button>
+    </div>
+
+    <div id="tc-tab-season">
     <div class="pc-stats">
       <div class="pc-stat-col">
         <div class="pc-col-hdr">Offense <span class="pc-col-hdr-sub">· Box Score (raw)</span></div>
@@ -250,6 +262,7 @@
         <div class="pc-col-hdr">Defense <span class="pc-col-hdr-sub">· Box Score (raw)</span></div>
         <div id="pc-def"></div>
       </div>
+    </div>
     </div>
 
     <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
@@ -785,6 +798,11 @@ function openModal(r) {
       scRenderDensity(document.getElementById("pc-chart-density"), mx,my,hx,hy);
     });
   }
+
+  // Shot locations exist for the live season only. Runs last so the tabs win
+  // over the display the chart code above just set.
+  document.querySelector('#tc-tabs [data-tab="shots"]').hidden = SEASON !== CUR_SEASON;
+  showTeamTab("season");
 }
 
 // ── Team game log: every game from the team's games file (games.js); a row opens
@@ -817,6 +835,21 @@ async function loadTeamGames(r) {
       chart: SEASON === CUR_SEASON ? { kind: "team", name: r.team } : null });   // shot locations: live season only
   };
 }
+
+// ── Team card tabs ──────────────────────────────────────
+function showTeamTab(tab) {
+  document.querySelectorAll("#tc-tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  // style.display, not hidden: openModal sets the chart section's display itself.
+  document.getElementById("tc-tab-season").style.display = tab === "season" ? "" : "none";
+  document.getElementById("pc-chart-section").style.display = tab === "shots" ? "block" : "none";
+  document.getElementById("pc-games-section").style.display = tab === "games" ? "" : "none";
+  // The density chart may have drawn while hidden; size it to the now-visible tab.
+  const density = document.getElementById("pc-chart-density");
+  if (tab === "shots" && window.Plotly && density?.data) Plotly.Plots.resize(density);
+}
+document.getElementById("tc-tabs").addEventListener("click", e => {
+  if (e.target.dataset?.tab) showTeamTab(e.target.dataset.tab);
+});
 
 function closeModal() {
   Games.closeBoxScore();

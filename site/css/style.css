@@ -474,3 +474,34 @@ hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
 }
 .zone-legend .lab { display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:3px; }
 .zone-legend .cap { text-align:center; font-size:10.5px; color:var(--muted); margin-bottom:4px; }
+
+/* ── Shared controls ─────────────────────────────────────────────────────────
+   .seg is the one look for every either/or switch (stat group, display, game
+   scope, page mode), and .ctl-group puts a small label to its left so each
+   switch says what it controls. */
+.ctl-row { display:flex; align-items:center; gap:10px 18px; flex-wrap:wrap; margin-bottom:12px; }
+.ctl-group { display:flex; align-items:center; gap:8px; }
+.ctl-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; background:var(--card); }
+.seg > button, .seg > a { background:none; border:none; border-right:1px solid var(--line); color:var(--muted);
+  font-family:inherit; font-size:.78rem; font-weight:700; padding:6px 12px; cursor:pointer; text-decoration:none;
+  white-space:nowrap; transition:background .12s, color .12s; }
+.seg > button:last-child, .seg > a:last-child { border-right:none; }
+.seg > button:hover:not(:disabled), .seg > a:hover { color:var(--ink); }
+.seg > button.active, .seg > a.active { background:var(--t1); color:#fff; }
+.seg > button:disabled { opacity:.35; cursor:not-allowed; }
+.page-modes { margin:0 0 18px; }
+
+/* Collapsed filter panel + chips for whatever is active. */
+.filters-toggle { background:var(--card2); border:1px solid var(--line); border-radius:10px; color:var(--ink);
+  font-family:inherit; font-size:.85rem; font-weight:700; padding:9px 14px; cursor:pointer; white-space:nowrap; }
+.filters-toggle[aria-expanded="true"] { border-color:var(--t1); }
+.filters-count { display:inline-block; min-width:18px; margin-left:6px; padding:1px 6px; border-radius:10px;
+  background:var(--t1); color:#fff; font-size:.72rem; }
+.filters-count:empty { display:none; }
+.filter-chips { display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 12px; }
+.filter-chip { display:inline-flex; align-items:center; gap:6px; background:var(--card2); border:1px solid var(--line);
+  border-radius:20px; padding:3px 6px 3px 11px; font-size:.75rem; color:var(--ink); }
+.filter-chip button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:.8rem; padding:0 3px; }
+.filter-chip button:hover { color:var(--t1); }
+.filter-panel[hidden] { display:none; }

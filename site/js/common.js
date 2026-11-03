@@ -90,19 +90,20 @@ const NAV_LINKS = [
   { href: "prediction.html",     label: "Predictor" },
   { href: "net-ratings.html",    label: "Team Stats" },
   { href: "player-stats.html",   label: "Player Stats" },
-  { href: "lineup-stats.html",   label: "Lineups" },
-  { href: "lineup-builder.html", label: "Builder" },
+  { href: "lineup-stats.html",   label: "Lineups", page: "lineup-stats.html lineup-builder.html" },
   { href: "shot-charts.html",    label: "Shot Charts" },
-  { href: "postseason.html",     label: "Postseason" },
-  { href: "glossary.html",       label: "Glossary" },
+  { href: "postseason.html",     label: "Postseason", months: [3, 4] },   // tournament season only
 ];
+// Glossary is linked from the footer (FOOTER_LINES) instead of the nav.
 
 function populateNav() {
   const nav = document.querySelector("nav");
   if (!nav || nav.querySelector("a[data-page]")) return;   // absent or already built
   const brand = nav.querySelector(".nav-brand");
   const frag = document.createDocumentFragment();
-  NAV_LINKS.forEach(link => {
+  const month = new Date().getMonth() + 1;
+  const here = location.pathname.split("/").pop();
+  NAV_LINKS.filter(link => !link.months || link.months.includes(month) || link.href === here).forEach(link => {
     const a = document.createElement("a");
     a.href = link.href;
     a.dataset.page = link.page || link.href;
@@ -173,7 +174,7 @@ function buildFooter() {
   if (document.querySelector("footer.site-footer")) return;
   const footer = document.createElement("footer");
   footer.className = "site-footer";
-  footer.innerHTML = FOOTER_LINES.map(line => `<p>${line}</p>`).join("");
+  footer.innerHTML = `<p><a href="glossary.html">Glossary</a></p>` + FOOTER_LINES.map(line => `<p>${line}</p>`).join("");
   document.body.appendChild(footer);
 }
 
@@ -279,6 +280,7 @@ function makeSearchable(sel, threshold = SS_THRESHOLD) {
   });
   document.addEventListener("click", e => { if (!wrap.contains(e.target)) closeList(); });
 
+  sel.addEventListener("change", () => { if (active) syncDisplay(); });
   new MutationObserver(refresh).observe(sel, {
     childList: true, attributes: true, attributeFilter: ["disabled"],
   });
