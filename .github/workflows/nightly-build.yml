@@ -102,9 +102,13 @@ jobs:
           # conflict on every regenerated JSON file vs. an overlapping run), we
           # re-point onto the latest remote and lay our files down as one new
           # commit on top. No replay, so nothing can conflict.
+          #
+          # Everything else comes from the remote: our checkout predates any code
+          # pushed mid-build, and committing it would silently revert that push.
           for i in 1 2 3 4 5; do
             git fetch origin main
-            git reset --soft origin/main      # newest remote tree; keep our files staged
+            git reset --soft origin/main
+            git restore --source=origin/main --staged --worktree -- . ':!site/data' ':!site/_headers'
             git add site/data/ site/_headers
             if git diff --cached --quiet; then
               echo "Remote already up to date — nothing to push."
