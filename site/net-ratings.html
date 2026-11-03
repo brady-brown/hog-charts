@@ -738,7 +738,12 @@ function openModal(r) {
   const logo = document.getElementById("pc-logo");
   logo.style.opacity = "";   // the empty src fails at page load and onerror hides it
   logo.src = logoUrl(r.team_id);
-  document.getElementById("pc-name").textContent = r.team ?? "—";
+  const teamLink = document.createElement("a");       // to the team page
+  teamLink.className = "team-link";
+  teamLink.href = `team.html?id=${r.team_id}&season=${SEASON}`;
+  teamLink.textContent = r.team ?? "—";
+  teamLink.insertAdjacentHTML("beforeend", ' <span class="team-link-arrow">→</span>');
+  document.getElementById("pc-name").replaceChildren(teamLink);
   document.getElementById("pc-conf").textContent = r.conf ?? "";
   document.getElementById("pc-record").textContent = r.record ?? "";
 
