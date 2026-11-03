@@ -502,6 +502,9 @@ async function init(){
   const initial = INDEX.find(t=>t.slug===params.get("team"))
                || INDEX.find(t=>/arkansas razor/i.test(t.name))
                || INDEX[0];
+  // Scout lives on the team page now (its Scout tab embeds this page); a direct
+  // visit or an old link goes to that team's tab.
+  if(!EMBEDDED){ location.replace(`team.html?id=${initial.tid}&tab=scout`); return; }
   sel.value = initial.slug;
   sel.addEventListener("change", ()=>{
     const e = INDEX.find(t=>t.slug===sel.value);

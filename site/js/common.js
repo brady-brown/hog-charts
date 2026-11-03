@@ -96,7 +96,6 @@ if (EMBEDDED) document.documentElement.classList.add("embedded");
 // markActiveNav()'s filename check (space-separated for a hub + its sub-pages).
 const NAV_LINKS = [
   { href: "index.html",          label: "Home" },
-  { href: "scout-report.html",   label: "Scout" },
   { href: "prediction.html",     label: "Predictor" },
   { href: "net-ratings.html",    label: "Team Stats" },
   { href: "player-stats.html",   label: "Player Stats" },
