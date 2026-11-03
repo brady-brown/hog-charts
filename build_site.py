@@ -66,7 +66,7 @@ from hoglib.zones import (ZONE_NAMES, ZONE_NAME_TO_INDEX, THREE_POINT_ZONES,
 # ---------------------------------------------------------------------------
 
 # NaN-safe JSON sanitizing + slugify now live in hoglib.io (shared, must not drift).
-from hoglib.careers import write_career_shards
+from hoglib.careers import CAREER_KEYS, write_career_shards
 from hoglib.io import sanitize_for_json, slugify
 
 
@@ -1421,9 +1421,24 @@ write_cloudflare_headers(built_season_years)
 
 
 # ===========================================================================
-# careers/{n}.json — every season per player, for the player card
+# player-stats-career.json + careers/{n}.json — the player card's career table
 # ===========================================================================
-# Reads each season's player-stats-all.json, so it runs after this season's is written.
+# Career rows have no games or minutes minimum, unlike the Player Stats table, so
+# each season gets its own unfiltered copy of the all-games stats. The live season
+# is rebuilt nightly; a past season is built once, from its committed CSVs.
+for career_season in built_season_years:
+    career_path = os.path.join(ROOT_DATA_DIR, str(career_season), "player-stats-career.json")
+    stats_csv = os.path.join(PROJECT_ROOT, f"player_stats_all_{career_season}.csv")
+    if (career_season != SEASON and os.path.exists(career_path)) or not os.path.exists(stats_csv):
+        continue
+    career_records = build_player_stats_json(
+        stats_csv, None, min_games_played=0, min_mpg=0, label=f"(career {career_season})",
+        team_context_csv_path=os.path.join(PROJECT_ROOT, f"team_context_all_{career_season}.csv"),
+    )
+    if career_records is not None:
+        career_records = [{k: r.get(k) for k in ["id", *CAREER_KEYS]} for r in career_records]
+        write_json({"players": career_records, "meta": {"season": career_season}},
+                   "player-stats-career.json", output_directory=os.path.dirname(career_path))
 write_career_shards(ROOT_DATA_DIR)
 
 print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
