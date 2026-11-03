@@ -75,6 +75,33 @@
   .pc-career-school { display:flex; align-items:center; gap:6px; max-width:180px; }
   .pc-career-school img { width:16px; height:16px; object-fit:contain; flex-shrink:0; }
   .pc-career-school span { overflow:hidden; text-overflow:ellipsis; }
+  .pc-tabs { display:flex; gap:4px; padding:12px 28px 0; border-bottom:1px solid var(--line); }
+  .pc-tabs button { font:inherit; font-size:.85rem; font-weight:700; padding:8px 14px; background:none;
+    border:none; border-bottom:2px solid transparent; color:var(--muted); cursor:pointer; margin-bottom:-1px; }
+  .pc-tabs button.active { color:var(--ink); border-bottom-color:var(--t1); }
+  .pc-tabs button[hidden] { display:none; }
+  .pc-tab-career .pc-career { border-top:none; }
+  .pc-games { padding:20px 28px 24px; }
+  .pc-games-status { color:var(--muted); font-size:.85rem; }
+  .pc-career-tbl tr.pc-game { cursor:pointer; }
+  .pc-career-tbl tr.pc-game:hover td { background:var(--card2); }
+  .pc-win { color:#16A34A; font-weight:700; }
+  .pc-loss { color:#DC2626; font-weight:700; }
+  .pc-box-overlay { display:none; position:fixed; inset:0; z-index:210; background:rgba(0,0,0,.6);
+    align-items:center; justify-content:center; }
+  .pc-box-overlay.open { display:flex; }
+  .pc-box-modal { background:var(--card); border:1px solid var(--line); border-radius:20px;
+    width:min(860px,95vw); max-height:90vh; overflow-y:auto; position:relative; padding:24px 28px; }
+  .pc-box-score { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; padding-right:40px; }
+  .pc-box-team-line { display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:700; color:var(--muted); }
+  .pc-box-team-line.won { color:var(--ink); font-weight:800; }
+  .pc-box-team-line img { width:24px; height:24px; object-fit:contain; }
+  .pc-box-team-line .pc-box-pts { margin-left:auto; font-variant-numeric:tabular-nums; }
+  .pc-box-date { color:var(--muted); font-size:.8rem; margin-bottom:18px; }
+  .pc-box-team { margin-top:18px; }
+  .pc-career-tbl tr.pc-box-player td { font-weight:800; color:var(--t1); }
+  .pc-career-tbl tr.pc-box-totals td { font-weight:800; border-top:2px solid var(--line); }
+  .pc-career-tbl td.pc-dnp { color:var(--muted); text-align:left; }
   `;
 
   const HTML = `
@@ -95,6 +122,12 @@
         </div>
       </div>
       <div class="pc-bio" id="pc-bio"></div>
+      <div class="pc-tabs" id="pc-tabs">
+        <button data-tab="season" class="active">Season</button>
+        <button data-tab="career">Career</button>
+        <button data-tab="games">Games</button>
+      </div>
+      <div class="pc-tab-season" id="pc-tab-season">
       <div class="pc-stats">
         <div class="pc-stat-col">
           <div class="pc-col-hdr">Box Score</div>
@@ -105,9 +138,11 @@
           <div id="pc-adv"></div>
         </div>
       </div>
+      </div>
+      <div class="pc-tab-career" id="pc-tab-career" hidden>
       <div class="pc-career" id="pc-career" style="display:none">
         <div class="pc-career-head">
-          <div class="pc-col-hdr" style="margin:0">Career</div>
+          <div></div>
           <div class="pc-career-switch" id="pc-career-switch">
             <button data-view="box" class="active">Box Score</button>
             <button data-view="adv">Advanced</button>
@@ -115,6 +150,12 @@
         </div>
         <div class="pc-career-wrap"><table class="pc-career-tbl" id="pc-career-tbl"></table></div>
       </div>
+      </div>
+      <div class="pc-games" id="pc-tab-games" hidden>
+        <div class="pc-games-status" id="pc-games-status"></div>
+        <div class="pc-career-wrap"><table class="pc-career-tbl" id="pc-games-tbl"></table></div>
+      </div>
+      <div class="pc-tab-season-charts" id="pc-tab-season-charts">
       <div id="pc-chart-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
         <div id="pc-chart-status" style="color:var(--muted);font-size:.85rem;min-height:24px"></div>
         <div id="pc-charts" style="display:none">
@@ -124,6 +165,13 @@
           <div id="pc-chart-density"></div>
         </div>
       </div>
+      </div>
+    </div>
+  </div>
+  <div class="pc-box-overlay" id="pc-box-overlay">
+    <div class="pc-box-modal">
+      <div class="pc-close" id="pc-box-close">✕</div>
+      <div id="pc-box-body"></div>
     </div>
   </div>`;
 
@@ -134,12 +182,28 @@
     document.head.appendChild(style);
     const holder = document.createElement("div");
     holder.innerHTML = HTML;
-    document.body.appendChild(holder.firstElementChild);
+    while (holder.firstElementChild) document.body.appendChild(holder.firstElementChild);
     document.getElementById("pc-close-btn").addEventListener("click", close);
     document.getElementById("pc-overlay").addEventListener("click", (e) => {
       if (e.target === document.getElementById("pc-overlay")) close();
     });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    document.getElementById("pc-box-close").addEventListener("click", closeBoxScore);
+    document.getElementById("pc-box-overlay").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("pc-box-overlay")) closeBoxScore();
+    });
+    // Escape closes the box score first, then the card.
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (document.getElementById("pc-box-overlay").classList.contains("open")) closeBoxScore();
+      else close();
+    });
+    document.getElementById("pc-tabs").addEventListener("click", (e) => {
+      if (e.target.dataset?.tab) showTab(e.target.dataset.tab);
+    });
+    document.getElementById("pc-games-tbl").addEventListener("click", (e) => {
+      const gameId = e.target.closest("tr.pc-game")?.dataset.game;
+      if (gameId) openBoxScore(Number(gameId));
+    });
     document.getElementById("pc-career-switch").addEventListener("click", (e) => {
       const view = e.target.dataset?.view;
       if (!view || view === careerView) return;
@@ -197,6 +261,109 @@
       </tr>`).join("");
     document.getElementById("pc-career-tbl").innerHTML = head + body;
     document.getElementById("pc-career").style.display = "block";
+  }
+
+  // ── tabs ──────────────────────────────────────────────────────────────────
+  function showTab(tab) {
+    document.querySelectorAll("#pc-tabs button").forEach((b) =>
+      b.classList.toggle("active", b.dataset.tab === tab));
+    document.getElementById("pc-tab-season").hidden = tab !== "season";
+    document.getElementById("pc-tab-season-charts").hidden = tab !== "season";
+    document.getElementById("pc-tab-career").hidden = tab !== "career";
+    document.getElementById("pc-tab-games").hidden = tab !== "games";
+    if (tab === "games") loadGames();
+  }
+
+  // ── games: game log + box scores ──────────────────────────────────────────
+  // data/{season}/games/teams/{team_id}.json (hoglib/gamelogs.py) holds every game
+  // a team played with every player's line, so the log is this player's lines
+  // and a box score is his team's game plus the same game in the opponent's file.
+  const TEAM_GAMES_CACHE = {};
+  let gamesFor = null;       // {playerId, teamId, season} for the card on screen
+  let gamesRequest = 0;
+
+  async function teamGames(season, teamId) {
+    const key = `${season}/${teamId}`;
+    if (!(key in TEAM_GAMES_CACHE)) {
+      TEAM_GAMES_CACHE[key] = await loadJSON(`data/${season}/games/teams/${teamId}.json`);
+    }
+    return TEAM_GAMES_CACHE[key];
+  }
+
+  const shootLine = (made, att) => (att ? `${made}-${att}` : "—");
+  const shortDate = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const opponentLabel = (g) => `${g.ha === "away" ? "@" : "vs"} ${g.o ?? "—"}`;
+
+  async function loadGames() {
+    if (!gamesFor) return;
+    const { playerId, teamId, season } = gamesFor;
+    const request = ++gamesRequest;
+    const status = document.getElementById("pc-games-status");
+    const table = document.getElementById("pc-games-tbl");
+    status.textContent = "Loading…";
+    table.innerHTML = "";
+    const team = await teamGames(season, teamId);
+    if (request !== gamesRequest) return;
+    const games = (team?.games ?? [])
+      .map((g) => ({ g, line: g.players.find((p) => p.id === Number(playerId) && !p.dnp) }))
+      .filter((x) => x.line)
+      .reverse();                                   // newest first
+    if (!games.length) { status.textContent = "No games yet."; return; }
+    status.textContent = "";
+    const cols = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG", "3P", "FT"];
+    table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>` +
+      games.map(({ g, line: l }) => `
+        <tr class="pc-game" data-game="${g.g}">
+          <td>${shortDate(g.d)}</td><td>${opponentLabel(g)}</td>
+          <td><span class="${g.w ? "pc-win" : "pc-loss"}">${g.w ? "W" : "L"}</span> ${g.ts}–${g.os}</td>
+          <td>${l.min ?? "—"}</td><td>${l.pts ?? "—"}</td><td>${l.reb ?? "—"}</td><td>${l.ast ?? "—"}</td>
+          <td>${l.stl ?? "—"}</td><td>${l.blk ?? "—"}</td><td>${l.tov ?? "—"}</td>
+          <td>${shootLine(l.fgm, l.fga)}</td><td>${shootLine(l.tpm, l.tpa)}</td><td>${shootLine(l.ftm, l.fta)}</td>
+        </tr>`).join("");
+  }
+
+  function boxTeamTable(side, highlightId) {
+    const cols = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "PF", "FG", "3P", "FT"];
+    const statCells = (s) => `<td>${s.pts ?? "—"}</td><td>${s.reb ?? "—"}</td><td>${s.ast ?? "—"}</td>
+      <td>${s.stl ?? "—"}</td><td>${s.blk ?? "—"}</td><td>${s.tov ?? "—"}</td><td>${s.pf ?? "—"}</td>
+      <td>${shootLine(s.fgm, s.fga)}</td><td>${shootLine(s.tpm, s.tpa)}</td><td>${shootLine(s.ftm, s.fta)}</td>`;
+    const rows = side.game.players.map((p) => p.dnp
+      ? `<tr><td>${p.n}</td><td>${p.pos ?? ""}</td><td class="pc-dnp" colspan="${cols.length}">DNP</td></tr>`
+      : `<tr class="${p.id === highlightId ? "pc-box-player" : ""}"><td>${p.n}</td><td>${p.pos ?? ""}</td>
+           <td>${p.min ?? "—"}</td>${statCells(p)}</tr>`).join("");
+    return `<div class="pc-box-team">
+      <div class="pc-col-hdr">${side.name}</div>
+      <div class="pc-career-wrap"><table class="pc-career-tbl">
+        <tr><th>Player</th><th>Pos</th>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>
+        ${rows}
+        <tr class="pc-box-totals"><td>Totals</td><td></td><td></td>${statCells(side.game.totals)}</tr>
+      </table></div></div>`;
+  }
+
+  async function openBoxScore(gameId) {
+    if (!gamesFor) return;
+    const { playerId, teamId, season } = gamesFor;
+    const body = document.getElementById("pc-box-body");
+    body.innerHTML = `<div class="pc-games-status">Loading…</div>`;
+    document.getElementById("pc-box-overlay").classList.add("open");
+    const own = (await teamGames(season, teamId))?.games.find((g) => g.g === gameId);
+    if (!own) { body.innerHTML = `<div class="pc-games-status">Box score not available.</div>`; return; }
+    const oppFile = await teamGames(season, own.oid);
+    const opp = oppFile?.games.find((g) => g.g === gameId);
+    const sides = [{ name: (await teamGames(season, teamId)).t, tid: teamId, game: own, score: own.ts, won: own.w, ha: own.ha }];
+    if (opp) sides.push({ name: oppFile.t, tid: own.oid, game: opp, score: opp.ts, won: opp.w, ha: opp.ha });
+    sides.sort((a, b) => (a.ha === "away" ? -1 : 1) - (b.ha === "away" ? -1 : 1));   // away first
+    const scoreLines = sides.map((s) => `
+      <div class="pc-box-team-line ${s.won ? "won" : ""}">
+        <img src="${logoUrl(s.tid)}" alt="" onerror="this.style.opacity=0">
+        <span>${s.name}</span><span class="pc-box-pts">${s.score}</span></div>`).join("");
+    body.innerHTML = `<div class="pc-box-score">${scoreLines}</div>
+      <div class="pc-box-date">${shortDate(own.d)}</div>
+      ${sides.map((s) => boxTeamTable(s, Number(playerId))).join("")}`;
+  }
+
+  function closeBoxScore() {
+    document.getElementById("pc-box-overlay")?.classList.remove("open");
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────
@@ -310,6 +477,12 @@
     document.getElementById("pc-adv").innerHTML = advStats.map(statRow).join("");
     loadCareer(p.id, season ?? curSeason);
 
+    // Game logs exist for the live season only.
+    const isLiveSeason = season == null || curSeason == null || season === curSeason;
+    gamesFor = isLiveSeason && p.tid != null ? { playerId: p.id, teamId: p.tid, season: season ?? curSeason } : null;
+    document.querySelector('#pc-tabs [data-tab="games"]').hidden = !gamesFor;
+    showTab("season");
+
     document.getElementById("pc-overlay").classList.add("open");
     document.body.style.overflow = "hidden";
 
@@ -342,6 +515,7 @@
   function close() {
     const overlay = document.getElementById("pc-overlay");
     if (!overlay) return;
+    closeBoxScore();
     overlay.classList.remove("open");
     document.body.style.overflow = "";
     const z = document.getElementById("pc-chart-zone");

@@ -67,6 +67,7 @@ from hoglib.zones import (ZONE_NAMES, ZONE_NAME_TO_INDEX, THREE_POINT_ZONES,
 
 # NaN-safe JSON sanitizing + slugify now live in hoglib.io (shared, must not drift).
 from hoglib.careers import CAREER_KEYS, write_career_shards
+from hoglib.gamelogs import write_game_logs
 from hoglib.io import sanitize_for_json, slugify
 
 
@@ -1524,3 +1525,10 @@ print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 # raw_shot_array               ndarray  [game_index, plot_x_int, plot_y_int, scored_int, player_index]
 #                                       columns packed into a flat list for minimal JSON size.
 # built_season_years           list    Sorted (newest-first) list of built season directories.
+
+
+# ===========================================================================
+# games/ — live-season game logs + box scores for the player card's Games tab
+# ===========================================================================
+from hoglib import feeds   # cached by build_ingest.py (step 0)
+write_game_logs(feeds.load_player_box(SEASON), SEASON_DATA_DIR)
