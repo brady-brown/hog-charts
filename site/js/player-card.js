@@ -8,8 +8,9 @@
  *   PlayerCard.close()
  *
  * Dependencies (already loaded on both pages): common.js (loadJSON, logoUrl,
- * playerUrl), zone-chart.js (ZoneChart). Plotly is optional — the shot-density
- * chart is skipped gracefully if window.Plotly is absent.
+ * playerUrl), zone-chart.js (ZoneChart), court.js, games.js (Games tab + box
+ * scores). Plotly is optional — the shot-density chart is skipped gracefully if
+ * window.Plotly is absent.
  */
 (function () {
   "use strict";
@@ -83,25 +84,12 @@
   .pc-tab-career .pc-career { border-top:none; }
   .pc-games { padding:20px 28px 24px; }
   .pc-games-status { color:var(--muted); font-size:.85rem; }
+  #pc-games-tbl { font-size:.76rem; }
+  #pc-games-tbl th, #pc-games-tbl td { padding-left:4px; padding-right:4px; }
   .pc-career-tbl tr.pc-game { cursor:pointer; }
   .pc-career-tbl tr.pc-game:hover td { background:var(--card2); }
   .pc-win { color:#16A34A; font-weight:700; }
   .pc-loss { color:#DC2626; font-weight:700; }
-  .pc-box-overlay { display:none; position:fixed; inset:0; z-index:210; background:rgba(0,0,0,.6);
-    align-items:center; justify-content:center; }
-  .pc-box-overlay.open { display:flex; }
-  .pc-box-modal { background:var(--card); border:1px solid var(--line); border-radius:20px;
-    width:min(860px,95vw); max-height:90vh; overflow-y:auto; position:relative; padding:24px 28px; }
-  .pc-box-score { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; padding-right:40px; }
-  .pc-box-team-line { display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:700; color:var(--muted); }
-  .pc-box-team-line.won { color:var(--ink); font-weight:800; }
-  .pc-box-team-line img { width:24px; height:24px; object-fit:contain; }
-  .pc-box-team-line .pc-box-pts { margin-left:auto; font-variant-numeric:tabular-nums; }
-  .pc-box-date { color:var(--muted); font-size:.8rem; margin-bottom:18px; }
-  .pc-box-team { margin-top:18px; }
-  .pc-career-tbl tr.pc-box-player td { font-weight:800; color:var(--t1); }
-  .pc-career-tbl tr.pc-box-totals td { font-weight:800; border-top:2px solid var(--line); }
-  .pc-career-tbl td.pc-dnp { color:var(--muted); text-align:left; }
   `;
 
   const HTML = `
@@ -167,12 +155,6 @@
       </div>
       </div>
     </div>
-  </div>
-  <div class="pc-box-overlay" id="pc-box-overlay">
-    <div class="pc-box-modal">
-      <div class="pc-close" id="pc-box-close">✕</div>
-      <div id="pc-box-body"></div>
-    </div>
   </div>`;
 
   function injectOnce() {
@@ -187,22 +169,16 @@
     document.getElementById("pc-overlay").addEventListener("click", (e) => {
       if (e.target === document.getElementById("pc-overlay")) close();
     });
-    document.getElementById("pc-box-close").addEventListener("click", closeBoxScore);
-    document.getElementById("pc-box-overlay").addEventListener("click", (e) => {
-      if (e.target === document.getElementById("pc-box-overlay")) closeBoxScore();
-    });
-    // Escape closes the box score first, then the card.
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (document.getElementById("pc-box-overlay").classList.contains("open")) closeBoxScore();
-      else close();
-    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });   // games.js closes its box score first
     document.getElementById("pc-tabs").addEventListener("click", (e) => {
       if (e.target.dataset?.tab) showTab(e.target.dataset.tab);
     });
     document.getElementById("pc-games-tbl").addEventListener("click", (e) => {
       const gameId = e.target.closest("tr.pc-game")?.dataset.game;
-      if (gameId) openBoxScore(Number(gameId));
+      if (gameId && gamesFor) Games.openBoxScore({
+        season: gamesFor.season, teamId: gamesFor.teamId, gameId: Number(gameId), highlightId: Number(gamesFor.playerId),
+        chart: gamesFor.live ? { kind: "player", name: gamesFor.name } : null,   // shot locations: live season only
+      });
     });
     document.getElementById("pc-career-switch").addEventListener("click", (e) => {
       const view = e.target.dataset?.view;
@@ -274,25 +250,10 @@
     if (tab === "games") loadGames();
   }
 
-  // ── games: game log + box scores ──────────────────────────────────────────
-  // data/{season}/games/teams/{team_id}.json (hoglib/gamelogs.py) holds every game
-  // a team played with every player's line, so the log is this player's lines
-  // and a box score is his team's game plus the same game in the opponent's file.
-  const TEAM_GAMES_CACHE = {};
-  let gamesFor = null;       // {playerId, teamId, season} for the card on screen
+  // ── games: game log ───────────────────────────────────────────────────────
+  // His lines from his team's games file (see games.js); a row opens the box score.
+  let gamesFor = null;       // {playerId, teamId, season, live, name} for the card on screen
   let gamesRequest = 0;
-
-  async function teamGames(season, teamId) {
-    const key = `${season}/${teamId}`;
-    if (!(key in TEAM_GAMES_CACHE)) {
-      TEAM_GAMES_CACHE[key] = await loadJSON(`data/${season}/games/teams/${teamId}.json`);
-    }
-    return TEAM_GAMES_CACHE[key];
-  }
-
-  const shootLine = (made, att) => (att ? `${made}-${att}` : "—");
-  const shortDate = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const opponentLabel = (g) => `${g.ha === "away" ? "@" : "vs"} ${g.o ?? "—"}`;
 
   async function loadGames() {
     if (!gamesFor) return;
@@ -302,7 +263,7 @@
     const table = document.getElementById("pc-games-tbl");
     status.textContent = "Loading…";
     table.innerHTML = "";
-    const team = await teamGames(season, teamId);
+    const team = await Games.teamFile(season, teamId);
     if (request !== gamesRequest) return;
     const games = (team?.games ?? [])
       .map((g) => ({ g, line: g.players.find((p) => p.id === Number(playerId) && !p.dnp) }))
@@ -310,6 +271,7 @@
       .reverse();                                   // newest first
     if (!games.length) { status.textContent = "No games yet."; return; }
     status.textContent = "";
+    const { shortDate, opponentLabel, shootLine } = Games;
     const cols = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG", "3P", "FT"];
     table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>` +
       games.map(({ g, line: l }) => `
@@ -320,50 +282,6 @@
           <td>${l.stl ?? "—"}</td><td>${l.blk ?? "—"}</td><td>${l.tov ?? "—"}</td>
           <td>${shootLine(l.fgm, l.fga)}</td><td>${shootLine(l.tpm, l.tpa)}</td><td>${shootLine(l.ftm, l.fta)}</td>
         </tr>`).join("");
-  }
-
-  function boxTeamTable(side, highlightId) {
-    const cols = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "PF", "FG", "3P", "FT"];
-    const statCells = (s) => `<td>${s.pts ?? "—"}</td><td>${s.reb ?? "—"}</td><td>${s.ast ?? "—"}</td>
-      <td>${s.stl ?? "—"}</td><td>${s.blk ?? "—"}</td><td>${s.tov ?? "—"}</td><td>${s.pf ?? "—"}</td>
-      <td>${shootLine(s.fgm, s.fga)}</td><td>${shootLine(s.tpm, s.tpa)}</td><td>${shootLine(s.ftm, s.fta)}</td>`;
-    const rows = side.game.players.map((p) => p.dnp
-      ? `<tr><td>${p.n}</td><td>${p.pos ?? ""}</td><td class="pc-dnp" colspan="${cols.length}">DNP</td></tr>`
-      : `<tr class="${p.id === highlightId ? "pc-box-player" : ""}"><td>${p.n}</td><td>${p.pos ?? ""}</td>
-           <td>${p.min ?? "—"}</td>${statCells(p)}</tr>`).join("");
-    return `<div class="pc-box-team">
-      <div class="pc-col-hdr">${side.name}</div>
-      <div class="pc-career-wrap"><table class="pc-career-tbl">
-        <tr><th>Player</th><th>Pos</th>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>
-        ${rows}
-        <tr class="pc-box-totals"><td>Totals</td><td></td><td></td>${statCells(side.game.totals)}</tr>
-      </table></div></div>`;
-  }
-
-  async function openBoxScore(gameId) {
-    if (!gamesFor) return;
-    const { playerId, teamId, season } = gamesFor;
-    const body = document.getElementById("pc-box-body");
-    body.innerHTML = `<div class="pc-games-status">Loading…</div>`;
-    document.getElementById("pc-box-overlay").classList.add("open");
-    const own = (await teamGames(season, teamId))?.games.find((g) => g.g === gameId);
-    if (!own) { body.innerHTML = `<div class="pc-games-status">Box score not available.</div>`; return; }
-    const oppFile = await teamGames(season, own.oid);
-    const opp = oppFile?.games.find((g) => g.g === gameId);
-    const sides = [{ name: (await teamGames(season, teamId)).t, tid: teamId, game: own, score: own.ts, won: own.w, ha: own.ha }];
-    if (opp) sides.push({ name: oppFile.t, tid: own.oid, game: opp, score: opp.ts, won: opp.w, ha: opp.ha });
-    sides.sort((a, b) => (a.ha === "away" ? -1 : 1) - (b.ha === "away" ? -1 : 1));   // away first
-    const scoreLines = sides.map((s) => `
-      <div class="pc-box-team-line ${s.won ? "won" : ""}">
-        <img src="${logoUrl(s.tid)}" alt="" onerror="this.style.opacity=0">
-        <span>${s.name}</span><span class="pc-box-pts">${s.score}</span></div>`).join("");
-    body.innerHTML = `<div class="pc-box-score">${scoreLines}</div>
-      <div class="pc-box-date">${shortDate(own.d)}</div>
-      ${sides.map((s) => boxTeamTable(s, Number(playerId))).join("")}`;
-  }
-
-  function closeBoxScore() {
-    document.getElementById("pc-box-overlay")?.classList.remove("open");
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────
@@ -477,9 +395,9 @@
     document.getElementById("pc-adv").innerHTML = advStats.map(statRow).join("");
     loadCareer(p.id, season ?? curSeason);
 
-    // Game logs exist for the live season only.
-    const isLiveSeason = season == null || curSeason == null || season === curSeason;
-    gamesFor = isLiveSeason && p.tid != null ? { playerId: p.id, teamId: p.tid, season: season ?? curSeason } : null;
+    const cardSeason = season ?? curSeason;
+    gamesFor = p.tid != null && cardSeason != null
+      ? { playerId: p.id, teamId: p.tid, season: cardSeason, live: cardSeason === curSeason, name: p.n } : null;
     document.querySelector('#pc-tabs [data-tab="games"]').hidden = !gamesFor;
     showTab("season");
 
@@ -515,7 +433,7 @@
   function close() {
     const overlay = document.getElementById("pc-overlay");
     if (!overlay) return;
-    closeBoxScore();
+    window.Games?.closeBoxScore();
     overlay.classList.remove("open");
     document.body.style.overflow = "";
     const z = document.getElementById("pc-chart-zone");

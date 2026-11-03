@@ -262,6 +262,12 @@
       </div>
     </div>
 
+    <div id="pc-games-section" style="border-top:1px solid var(--line); padding:20px 28px 24px">
+      <div class="pc-col-hdr" style="margin-bottom:6px">Games</div>
+      <div id="pc-games-status" class="gm-status"></div>
+      <div class="gm-wrap"><table class="gm-tbl" id="pc-games-tbl" style="font-size:.76rem"></table></div>
+    </div>
+
   </div>
 </div>
 
@@ -269,6 +275,7 @@
 <script src="js/percentile.js"></script>
 <script src="js/court.js"></script>
 <script src="js/zone-chart.js"></script>
+<script src="js/games.js"></script>
 <script>
 // ── Column definitions ──────────────────────────────────────────────────────
 // pct: stored 0-1, display ×100.  signed: show +/-.  dir: default sort.
@@ -754,6 +761,7 @@ function openModal(r) {
 
   document.getElementById("pc-overlay").classList.add("open");
   document.body.style.overflow = "hidden";
+  loadTeamGames(r);
 
   // Shot charts — only the live season has shot-coordinate data
   const chartSection = document.getElementById("pc-chart-section");
@@ -779,7 +787,39 @@ function openModal(r) {
   }
 }
 
+// ── Team game log: every game from the team's games file (games.js); a row opens
+// the box score, with the team's shot chart for that game in the live season.
+let teamGamesRequest = 0;
+async function loadTeamGames(r) {
+  const request = ++teamGamesRequest;
+  const status = document.getElementById("pc-games-status");
+  const table = document.getElementById("pc-games-tbl");
+  status.textContent = "Loading…";
+  table.innerHTML = "";
+  const file = await Games.teamFile(SEASON, r.team_id);
+  if (request !== teamGamesRequest) return;
+  const games = [...(file?.games ?? [])].reverse();          // newest first
+  if (!games.length) { status.textContent = "No games yet."; return; }
+  status.textContent = "";
+  const { shortDate, opponentLabel, shootLine } = Games;
+  const cols = ["FG", "3P", "FT", "REB", "AST", "TOV", "STL", "BLK"];
+  table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
+    games.map(g => { const t = g.totals; return `
+      <tr class="gm-row" data-game="${g.g}">
+        <td>${shortDate(g.d)}</td><td>${opponentLabel(g)}</td>
+        <td><span class="${g.w ? "gm-win" : "gm-loss"}">${g.w ? "W" : "L"}</span> ${g.ts}–${g.os}</td>
+        <td>${shootLine(t.fgm, t.fga)}</td><td>${shootLine(t.tpm, t.tpa)}</td><td>${shootLine(t.ftm, t.fta)}</td>
+        <td>${t.reb ?? "—"}</td><td>${t.ast ?? "—"}</td><td>${t.tov ?? "—"}</td><td>${t.stl ?? "—"}</td><td>${t.blk ?? "—"}</td>
+      </tr>`; }).join("");
+  table.onclick = (e) => {
+    const gameId = e.target.closest("tr.gm-row")?.dataset.game;
+    if (gameId) Games.openBoxScore({ season: SEASON, teamId: r.team_id, gameId: Number(gameId),
+      chart: SEASON === CUR_SEASON ? { kind: "team", name: r.team } : null });   // shot locations: live season only
+  };
+}
+
 function closeModal() {
+  Games.closeBoxScore();
   document.getElementById("pc-overlay").classList.remove("open");
   document.body.style.overflow = "";
   const z = document.getElementById("pc-chart-zone");
