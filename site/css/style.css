@@ -70,6 +70,12 @@ nav a.active         { color: var(--ink); }
    hidden; the mobile breakpoint below turns the panel into a dropdown. */
 .nav-links  { display: flex; align-items: center; gap: 2px; }
 .nav-toggle { display: none; }
+/* Social icons (injected by buildSocialNav in common.js), pinned to the right. */
+.nav-social { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+nav .nav-social a { display: flex; padding: 7px; color: var(--ink); }
+.nav-social svg { width: 21px; height: 21px; display: block; }
+nav .nav-social a.ig:hover { color: #E4405F; }
+nav .nav-social a.ss:hover { color: #FF6719; }
 
 /* ── Layout ───────────────────────────────────────────────────────────────── */
 .container {
@@ -390,6 +396,8 @@ hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
   nav { padding: 0 14px; gap: 0; }
   .nav-brand { font-size: 1rem; margin-right: auto; }
   .nav-brand img { width: 34px; height: 34px; }
+  .nav-social { order: 1; margin-right: 4px; }   /* icons sit just left of the hamburger */
+  .nav-toggle { order: 2; }
 
   .nav-toggle {
     display: flex; flex-direction: column; justify-content: center; gap: 5px;
@@ -519,3 +527,5 @@ a.team-link:hover { color:var(--t1); text-decoration:underline; }
 a.team-link .team-link-arrow { color:var(--t1); font-size:.85em; }
 .site-footer a { color:var(--muted); text-decoration:none; }
 .site-footer a:hover { color:var(--ink); text-decoration:underline; }
+.caption a { color:var(--muted); text-decoration:none; }
+.caption a:hover { color:var(--ink); text-decoration:underline; }

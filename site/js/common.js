@@ -177,12 +177,38 @@ const FOOTER_LINES = [
   "No affiliation with or endorsement by ESPN, the NCAA, or any school.",
   "Data comes from ESPN.com",
 ];
+// Social accounts: shown as icons at the right end of the nav (buildSocialNav)
+// and as text links in the footer.
+const SOCIAL_LINKS = [
+  { href: "https://www.instagram.com/hogcharts/", label: "Instagram", cls: "ig",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>` },
+  { href: "https://hogcharts.substack.com/", label: "Substack", cls: "ss",
+    svg: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.54 8.24H1.46V5.41h21.08v2.83zM1.46 10.81V24L12 18.11 22.54 24V10.81H1.46zM22.54 0H1.46v2.84h21.08V0z"/></svg>` },
+];
+const FOOTER_LINKS = [
+  { href: "glossary.html", label: "Glossary" },
+  ...SOCIAL_LINKS.map(s => ({ href: s.href, label: s.label, external: true })),
+];
+
+function buildSocialNav() {
+  const nav = document.querySelector("nav");
+  if (!nav || nav.querySelector(".nav-social")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "nav-social";
+  wrap.innerHTML = SOCIAL_LINKS.map(s =>
+    `<a class="${s.cls}" href="${s.href}" target="_blank" rel="noopener" aria-label="${s.label}" title="${s.label}">${s.svg}</a>`
+  ).join("");
+  nav.appendChild(wrap);
+}
 
 function buildFooter() {
   if (document.querySelector("footer.site-footer")) return;
   const footer = document.createElement("footer");
   footer.className = "site-footer";
-  footer.innerHTML = `<p><a href="glossary.html">Glossary</a></p>` + FOOTER_LINES.map(line => `<p>${line}</p>`).join("");
+  const links = FOOTER_LINKS.map(l =>
+    l.external ? `<a href="${l.href}" target="_blank" rel="noopener">${l.label}</a>` : `<a href="${l.href}">${l.label}</a>`
+  ).join(" · ");
+  footer.innerHTML = `<p>${links}</p>` + FOOTER_LINES.map(line => `<p>${line}</p>`).join("");
   document.body.appendChild(footer);
 }
 
@@ -302,6 +328,7 @@ function enhanceAllSelects(threshold = SS_THRESHOLD) {
 document.addEventListener("DOMContentLoaded", () => {
   populateNav();          // inject shared links before the nav is wrapped/marked
   buildResponsiveNav();
+  buildSocialNav();       // after the wrap, so the icons stay out of the hamburger panel
   markActiveNav();
   buildFooter();
   enhanceAllSelects();
