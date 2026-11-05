@@ -31,12 +31,31 @@ THREE_POINT_ZONES  = {"3PT - Right", "3PT - Right Center", "3PT - Center",
                       "3PT - Left Center", "3PT - Left"}
 
 
+def lateral_feet(shot_df):
+    """Feet right (+) / left (-) of the basket on a hoop-at-bottom half court.
+
+    ESPN reports every shot in one half-court frame (x_raw 0-50 across) and
+    sportsdataverse — and raw_hogcharts/espn/normalize.py, which copies it —
+    spreads that onto a full court by rotating the HOME team's shots 180°:
+        coordinate_x = s * (y_raw - 41.75),  coordinate_y = s * (x_raw - 25),
+        s = -1 home, +1 away.
+    Folding back to one half has to undo that rotation, which flips the sign of
+    coordinate_y on the home end (coordinate_x > 0) too. Taking only
+    abs(coordinate_x) mirrors every home-team shot left-to-right. Either way the
+    answer is 25 - x_raw, which matches where ESPN's own gamecast chart draws
+    each shot (checked play-by-play on game 401929372).
+    """
+    y = shot_df["coordinate_y"]
+    return pd.Series(np.where(shot_df["coordinate_x"] > 0, y, -y), index=shot_df.index)
+
+
 def classify_shot_zones(shot_df):
     """Assign each shot to a zone based on its court coordinates.
 
     Coordinate convention (ESPN/sportsdataverse):
         coordinate_x: distance from center-court baseline (0 = baseline, 47 = halfcourt)
-        coordinate_y: distance from court centerline (positive = left side, negative = right)
+        coordinate_y: distance from court centerline; its left/right sign depends
+                      on which end the shot is at, so use lateral_feet()
 
     14-wedge "2K-style" scheme.  Boundaries MUST match the SVG polygons and
     classifyZone() in site/js/zone-chart.js:
@@ -53,9 +72,8 @@ def classify_shot_zones(shot_df):
     zone_series = pd.Series("Unknown", index=shot_df.index, dtype="object")
 
     x_abs   = shot_df.loc[valid_coords_mask, "coordinate_x"].abs()
-    y_coord = shot_df.loc[valid_coords_mask, "coordinate_y"]
 
-    lateral  = -y_coord            # right side positive (matches screen x / svg +x)
+    lateral  = lateral_feet(shot_df.loc[valid_coords_mask])   # right side positive (screen x / svg +x)
     toward   = 41.75 - x_abs       # distance from basket toward halfcourt
     distance = np.sqrt(lateral**2 + toward**2)
     angle    = np.degrees(np.arctan2(toward, lateral))
