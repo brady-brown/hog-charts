@@ -7,7 +7,7 @@
 // ⚠️ The geometry MUST stay identical to build_site.classify_shot_zones (the
 // Python that assigns shots to zones) and to the mirror in js/zone-chart.js.
 // Coordinates are in feet, hoop-relative; the raw shot stream packs 5 numbers
-// per shot: [zoneIdx, x*10, y*10, made(0/1), playerIndex].
+// per shot: [gameIdx, x*10, y*10, made(0/1), playerIndex].
 
 const HOOP_Y   = 5.25;
 const THREE_R  = 22.146;

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Chart | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    .gc-wrap { max-width:640px; margin:0 auto; }
+    .gc-pickers { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .gc-pickers .form-group:last-child { grid-column:1 / -1; }
+    .gc-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+    .gc-tools .btn { width:auto; margin:0; padding:9px 20px; }
+    .gc-status { color:var(--muted); font-size:.92rem; padding:24px 0; }
+    .gc-status:empty { display:none; }
+    #gc-canvas[hidden] { display:none; }
+    #gc-canvas { display:block; width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
+    @media (max-width:520px) { .gc-pickers { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+<div class="gc-wrap">
+  <h2>Game Chart</h2>
+
+  <div class="gc-pickers">
+    <div class="form-group"><label for="gc-team">Team</label><select id="gc-team" disabled><option>Loading…</option></select></div>
+    <div class="form-group"><label for="gc-player">Player</label><select id="gc-player" disabled></select></div>
+    <div class="form-group"><label for="gc-game">Game</label><select id="gc-game" disabled></select></div>
+  </div>
+
+  <div class="gc-tools">
+    <div class="ctl-group">
+      <span class="ctl-label">Court</span>
+      <div class="seg" id="gc-style">
+        <button data-style="dark" class="active">Dark</button>
+        <button data-style="wood">Hardwood</button>
+      </div>
+    </div>
+    <button class="btn" id="gc-save" disabled>Download PNG</button>
+  </div>
+
+  <div class="gc-status" id="gc-status">Loading…</div>
+  <canvas id="gc-canvas" width="1080" height="1350" hidden></canvas>
+</div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/court.js"></script>
+<script src="js/games.js"></script>
+<script>
+// Game Chart: one player's one game — identity, box line, and every field-goal
+// attempt on the court — drawn onto a 1080×1350 canvas (Instagram portrait) so
+// the PNG download is exactly what's on screen.
+//
+// URL: ?id={playerId}&game={gameId}. No game → his most recent one. Live season
+// only: shot coordinates (data/shots/{team}.json) exist for the current season.
+//
+// Sources: player-stats-all.json (name, team, jersey, position, class),
+// data/{season}/games/teams/{tid}.json via Games.teamFile (box line, score),
+// data/shots/{slug}.json (shot x/y; packs [gameIdx, x*10, y*10, made, playerIdx]).
+
+const W = 1080, H = 1350, PAD = 60;
+// The site charts stop at Y_RANGE[1] (31 ft); about 4% of shots land deeper.
+// The graphic shows 5 more feet, which leaves out only heaves (~0.2%).
+const Y_TOP = Y_RANGE[1] + 5;
+const params = new URLSearchParams(location.search);
+let SEASON = null;
+let ROWS = new Map();        // player id → player-stats-all row (identity)
+let TEAMS = [];              // [{tid, t}] sorted by name
+let STYLE = "dark";
+let CURRENT = null;          // what's drawn: {player, team, game, line, shots}
+
+const PALETTES = {
+  dark: { bg:"#0E1320", ink:"#F2F4F8", muted:"#9AA4B2", line:"#262F40", card:"#141925",
+          floor:"#0B0E14", court:"rgba(255,255,255,0.32)", make:"#22C55E", miss:"#EF4444", ring:"#FFFFFF" },
+  wood: { bg:"#0E1320", ink:"#F2F4F8", muted:"#9AA4B2", line:"#262F40", card:"#141925",
+          floor:"#D2A679", court:"rgba(255,255,255,0.95)", make:"#2E7D32", miss:"#D32F2F", ring:"#FFFFFF" },
+};
+
+// ── data ──────────────────────────────────────────────────────────────────
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";        // ESPN's CDN sends ACAO:*, so the canvas stays exportable
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function teamShots(teamName) {
+  return loadJSON(`data/shots/${slugify(teamName)}.json`);
+}
+
+// Players who logged a game for this team, newest-season roster order by points.
+function teamPlayers(file) {
+  const tally = new Map();
+  for (const g of file.games) for (const p of g.players) {
+    if (p.dnp) continue;
+    const t = tally.get(p.id) ?? { id: p.id, n: p.n, pos: p.pos, pts: 0 };
+    t.pts += p.pts ?? 0;
+    tally.set(p.id, t);
+  }
+  return [...tally.values()].sort((a, b) => b.pts - a.pts || a.n.localeCompare(b.n));
+}
+
+function playerGames(file, playerId) {
+  return file.games
+    .map((g) => ({ g, line: g.players.find((p) => p.id === playerId && !p.dnp) }))
+    .filter((x) => x.line)
+    .reverse();                                     // newest first
+}
+
+// ── drawing helpers ───────────────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Largest font size (≤ max) at which text fits in maxW.
+function fitFont(ctx, text, weight, max, maxW) {
+  let size = max;
+  do { ctx.font = `${weight} ${size}px Inter`; } while (ctx.measureText(text).width > maxW && --size > 12);
+  return size;
+}
+
+// Draw an image "cover"-cropped into a box, anchored to the top (headshots).
+function drawCover(ctx, img, x, y, w, h) {
+  const s = Math.max(w / img.width, h / img.height);
+  const sw = w / s, sh = h / s;
+  ctx.drawImage(img, (img.width - sw) / 2, 0, sw, sh, x, y, w, h);
+}
+
+function drawContain(ctx, img, x, y, size) {
+  const s = Math.min(size / img.width, size / img.height);
+  const w = img.width * s, h = img.height * s;
+  ctx.drawImage(img, x + (size - w) / 2, y + (size - h) / 2, w, h);
+}
+
+const fmtDate = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const pct = (m, a) => (a ? `${Math.round((m / a) * 100)}%` : "");
+
+// ── the graphic ───────────────────────────────────────────────────────────
+async function draw() {
+  if (!CURRENT) return;
+  const { player, team, game, line, shots } = CURRENT;
+  const P = PALETTES[STYLE];
+  const canvas = document.getElementById("gc-canvas");
+  const ctx = canvas.getContext("2d");
+
+  await Promise.all(["900 56px Inter", "800 40px Inter", "700 26px Inter", "600 26px Inter"].map((f) => document.fonts.load(f)));
+  const [headshot, teamLogo, oppLogo, brand] = await Promise.all([
+    loadImage(playerUrl(player.id)), loadImage(logoUrl(team.tid)),
+    game.oid ? loadImage(logoUrl(game.oid)) : null, loadImage("img/logo.png"),
+  ]);
+  if (CURRENT?.game !== game || CURRENT?.player !== player) return;   // a newer pick started drawing
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = P.bg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  // Header: headshot + name / team / chips.
+  const HS = 200;
+  roundRect(ctx, PAD, PAD, HS, HS, 22);
+  ctx.save(); ctx.clip();
+  ctx.fillStyle = P.card; ctx.fillRect(PAD, PAD, HS, HS);
+  if (headshot) drawCover(ctx, headshot, PAD - 40, PAD, HS + 80, HS);
+  else if (teamLogo) drawContain(ctx, teamLogo, PAD + 40, PAD + 40, HS - 80);
+  ctx.restore();
+
+  const tx = PAD + HS + 36, textW = W - tx - PAD;
+  ctx.fillStyle = P.ink;
+  fitFont(ctx, player.n, 900, 60, textW);
+  ctx.fillText(player.n, tx, PAD + 64);
+
+  if (teamLogo) drawContain(ctx, teamLogo, tx, PAD + 88, 44);
+  ctx.fillStyle = P.muted;
+  fitFont(ctx, team.t, 700, 30, textW - 58);
+  ctx.fillText(team.t, tx + 58, PAD + 121);
+
+  const chips = [player.jn ? `#${player.jn}` : null, player.pos, player.exp].filter(Boolean);
+  ctx.font = "700 24px Inter";
+  let cx = tx;
+  for (const chip of chips) {
+    const w = ctx.measureText(chip).width + 32;
+    roundRect(ctx, cx, PAD + 146, w, 44, 22);
+    ctx.fillStyle = P.card; ctx.fill();
+    ctx.fillStyle = P.muted; ctx.fillText(chip, cx + 16, PAD + 176);
+    cx += w + 10;
+  }
+
+  // Game strip: opponent + date, result on the right.
+  const gy = PAD + HS + 36;
+  roundRect(ctx, PAD, gy, W - 2 * PAD, 84, 18);
+  ctx.fillStyle = P.card; ctx.fill();
+  let gx = PAD + 26;
+  ctx.fillStyle = P.muted; ctx.font = "700 28px Inter";
+  const at = game.ha === "away" ? "@" : "vs";
+  ctx.fillText(at, gx, gy + 53);
+  gx += ctx.measureText(at).width + 14;
+  if (oppLogo) { drawContain(ctx, oppLogo, gx, gy + 20, 44); gx += 56; }
+  const result = `${game.w ? "W" : "L"} ${game.ts}–${game.os}`;
+  ctx.font = "800 30px Inter";
+  const resultW = ctx.measureText(result).width;
+  const oppText = `${game.o ?? "—"}  ·  ${fmtDate(game.d)}`;
+  ctx.fillStyle = P.ink;
+  fitFont(ctx, oppText, 700, 28, W - PAD - 26 - resultW - 30 - gx);
+  ctx.fillText(oppText, gx, gy + 53);
+  ctx.font = "800 30px Inter";
+  ctx.fillStyle = game.w ? "#16A34A" : "#DC2626";
+  ctx.textAlign = "right";
+  ctx.fillText(result, W - PAD - 26, gy + 54);
+  ctx.textAlign = "left";
+
+  // Stat line.
+  const sy = gy + 84 + 26;
+  const stats = [
+    { v: line.pts ?? "—", l: "PTS" }, { v: line.reb ?? "—", l: "REB" }, { v: line.ast ?? "—", l: "AST" },
+    { v: Games.shootLine(line.fgm, line.fga), l: "FG", p: pct(line.fgm, line.fga) },
+    { v: Games.shootLine(line.tpm, line.tpa), l: "3P", p: pct(line.tpm, line.tpa) },
+    { v: Games.shootLine(line.ftm, line.fta), l: "FT", p: pct(line.ftm, line.fta) },
+  ];
+  const cellW = (W - 2 * PAD) / stats.length;
+  ctx.textAlign = "center";
+  stats.forEach((s, i) => {
+    const mid = PAD + cellW * i + cellW / 2;
+    ctx.fillStyle = P.ink;
+    fitFont(ctx, String(s.v), 900, 54, cellW - 14);
+    ctx.fillText(String(s.v), mid, sy + 58);
+    ctx.fillStyle = P.muted; ctx.font = "700 22px Inter";
+    ctx.fillText(s.p ? `${s.l} · ${s.p}` : s.l, mid, sy + 94);
+    if (i) { ctx.fillStyle = P.line; ctx.fillRect(PAD + cellW * i, sy + 12, 2, 86); }
+  });
+  ctx.textAlign = "left";
+
+  // Court + shots. Same feet-based geometry and orientation as the site charts (court.js).
+  const top = sy + 120, courtW = W - 2 * PAD;
+  const scale = courtW / (X_RANGE[1] - X_RANGE[0]);
+  const courtH = (Y_TOP - Y_RANGE[0]) * scale;
+  const px = (x) => PAD + (x - X_RANGE[0]) * scale;
+  const py = (y) => top + (Y_TOP - y) * scale;
+  roundRect(ctx, PAD, top, courtW, courtH, 18);
+  ctx.save(); ctx.clip();
+  ctx.fillStyle = P.floor; ctx.fillRect(PAD, top, courtW, courtH);
+  ctx.strokeStyle = P.court; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  for (const seg of courtTraces()) {
+    ctx.beginPath();
+    seg.x.forEach((x, i) => (i ? ctx.lineTo(px(x), py(seg.y[i])) : ctx.moveTo(px(x), py(seg.y[i]))));
+    ctx.stroke();
+  }
+  for (const x of [-25, 25]) {                        // sidelines out to the deeper edge
+    ctx.beginPath(); ctx.moveTo(px(x), py(Y_RANGE[1])); ctx.lineTo(px(x), py(Y_TOP)); ctx.stroke();
+  }
+  const R = 13;
+  ctx.lineWidth = 5;
+  for (let i = 0; i < shots.hx.length; i++) {           // misses under makes
+    const x = px(shots.hx[i]), y = py(shots.hy[i]);
+    ctx.strokeStyle = P.ring; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(x - R, y - R); ctx.lineTo(x + R, y + R); ctx.moveTo(x + R, y - R); ctx.lineTo(x - R, y + R); ctx.stroke();
+    ctx.strokeStyle = P.miss; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x - R, y - R); ctx.lineTo(x + R, y + R); ctx.moveTo(x + R, y - R); ctx.lineTo(x - R, y + R); ctx.stroke();
+  }
+  for (let i = 0; i < shots.mx.length; i++) {
+    ctx.beginPath(); ctx.arc(px(shots.mx[i]), py(shots.my[i]), R + 1, 0, 2 * Math.PI);
+    ctx.fillStyle = P.make; ctx.fill();
+    ctx.strokeStyle = P.ring; ctx.lineWidth = 3; ctx.stroke();
+  }
+  ctx.restore();
+
+  // Legend + brand footer.
+  const fy = H - PAD + 6;
+  ctx.font = "700 26px Inter";
+  let lx = PAD + 4;
+  ctx.beginPath(); ctx.arc(lx + 12, fy - 9, 12, 0, 2 * Math.PI);
+  ctx.fillStyle = P.make; ctx.fill();
+  ctx.fillStyle = P.muted; ctx.fillText(`Make (${shots.mx.length})`, lx + 34, fy);
+  lx += 34 + ctx.measureText(`Make (${shots.mx.length})`).width + 30;
+  ctx.strokeStyle = P.miss; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(lx + 2, fy - 19); ctx.lineTo(lx + 22, fy + 1); ctx.moveTo(lx + 22, fy - 19); ctx.lineTo(lx + 2, fy + 1); ctx.stroke();
+  ctx.fillStyle = P.muted; ctx.fillText(`Miss (${shots.hx.length})`, lx + 34, fy);
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = P.ink; ctx.font = "800 28px Inter";
+  const handle = "@hogcharts";
+  ctx.fillText(handle, W - PAD, fy);
+  const handleW = ctx.measureText(handle).width;
+  if (brand) drawContain(ctx, brand, W - PAD - handleW - 56, fy - 36, 46);
+  ctx.textAlign = "left";
+
+  canvas.hidden = false;
+  document.getElementById("gc-save").disabled = false;
+}
+
+// ── selection flow: team → player → game ──────────────────────────────────
+function setStatus(text) { document.getElementById("gc-status").textContent = text; }
+function syncUrl() {
+  if (CURRENT) history.replaceState(null, "", `?id=${CURRENT.player.id}&game=${CURRENT.game.g}`);
+}
+
+async function chooseTeam(tid, wantPlayer = null, wantGame = null) {
+  const pSel = document.getElementById("gc-player");
+  pSel.disabled = true;
+  pSel.innerHTML = "<option>Loading…</option>";
+  const file = await Games.teamFile(SEASON, tid);
+  if (Number(document.getElementById("gc-team").value) !== tid) return;
+  const players = file ? teamPlayers(file) : [];
+  if (!players.length) {
+    pSel.innerHTML = ""; document.getElementById("gc-game").innerHTML = "";
+    CURRENT = null; document.getElementById("gc-canvas").hidden = true;
+    setStatus("No games yet.");
+    return;
+  }
+  pSel.innerHTML = players.map((p) => `<option value="${p.id}">${p.n}</option>`).join("");
+  pSel.disabled = false;
+  pSel.value = players.some((p) => p.id === wantPlayer) ? wantPlayer : players[0].id;
+  choosePlayer(file, Number(pSel.value), wantGame);
+}
+
+function choosePlayer(file, playerId, wantGame = null) {
+  const gSel = document.getElementById("gc-game");
+  const games = playerGames(file, playerId);
+  gSel.innerHTML = games.map(({ g }) =>
+    `<option value="${g.g}">${Games.shortDate(g.d)} · ${Games.opponentLabel(g)}</option>`).join("");
+  gSel.disabled = !games.length;
+  if (!games.length) return;
+  gSel.value = games.some(({ g }) => g.g === wantGame) ? wantGame : games[0].g.g;
+  chooseGame(file, playerId, Number(gSel.value));
+}
+
+async function chooseGame(file, playerId, gameId) {
+  const tid = Number(document.getElementById("gc-team").value);
+  const team = TEAMS.find((t) => t.tid === tid) ?? { tid, t: file.t };
+  const game = file.games.find((g) => g.g === gameId);
+  const line = game.players.find((p) => p.id === playerId);
+  const row = ROWS.get(playerId);
+  const positions = { G: "Guard", F: "Forward", C: "Center" };     // box scores abbreviate
+  const player = row ?? { id: playerId, n: line.n, pos: positions[line.pos] ?? line.pos };
+
+  setStatus("");
+  const data = await teamShots(file.t);
+  const gi = data?.games?.findIndex((g) => g.id === gameId) ?? -1;
+  const pi = data?.players?.indexOf(player.n) ?? -1;
+  const shots = gi >= 0 && pi >= 0
+    ? shotsXY(data.shots, (g, p) => g === gi && p === pi)
+    : { mx: [], my: [], hx: [], hy: [] };
+  CURRENT = { player, team, game, line, shots };
+  syncUrl();
+  draw();
+}
+
+async function save() {
+  if (!CURRENT) return;
+  const canvas = document.getElementById("gc-canvas");
+  const name = `${slugify(CURRENT.player.n)}-${CURRENT.game.d}.png`;
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+  if (!blob) return;
+  const file = new File([blob], name, { type: "image/png" });
+  // Phones: the share sheet (Save Image / Instagram). Desktop: a plain download.
+  if (navigator.canShare?.({ files: [file] }) && matchMedia("(pointer:coarse)").matches) {
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function init() {
+  const seasons = await loadJSON("data/seasons.json") ?? [];
+  SEASON = seasons[0];
+  const stats = await loadJSON(`data/${SEASON}/player-stats-all.json`);
+  for (const p of stats?.players ?? []) ROWS.set(p.id, p);
+  const byTeam = new Map();
+  for (const p of ROWS.values()) if (p.tid != null) byTeam.set(p.tid, p.t);
+  TEAMS = [...byTeam].map(([tid, t]) => ({ tid, t })).sort((a, b) => a.t.localeCompare(b.t));
+  if (!TEAMS.length) { setStatus("No games yet."); return; }
+
+  const wantPlayer = Number(params.get("id")) || null;
+  const wantGame = Number(params.get("game")) || null;
+  const tSel = document.getElementById("gc-team");
+  tSel.innerHTML = `<option value="">—</option>` + TEAMS.map((t) => `<option value="${t.tid}">${t.t}</option>`).join("");
+  tSel.disabled = false;
+
+  let pending = { player: wantPlayer, game: wantGame };   // deep link, used by the first team pick only
+  tSel.addEventListener("change", () => {
+    const tid = Number(tSel.value);
+    if (tid) chooseTeam(tid, pending.player, pending.game);
+    pending = {};
+  });
+  document.getElementById("gc-player").addEventListener("change", async (e) => {
+    const file = await Games.teamFile(SEASON, Number(tSel.value));
+    if (file) choosePlayer(file, Number(e.target.value));
+  });
+  document.getElementById("gc-game").addEventListener("change", async (e) => {
+    const file = await Games.teamFile(SEASON, Number(tSel.value));
+    if (file) chooseGame(file, Number(document.getElementById("gc-player").value), Number(e.target.value));
+  });
+  document.getElementById("gc-style").addEventListener("click", (e) => {
+    const style = e.target.dataset?.style;
+    if (!style || style === STYLE) return;
+    STYLE = style;
+    document.querySelectorAll("#gc-style button").forEach((b) => b.classList.toggle("active", b.dataset.style === style));
+    draw();
+  });
+  document.getElementById("gc-save").addEventListener("click", save);
+
+  // Deep link: start on this player's team (stats row first, else whoever's game file names him).
+  let startTid = ROWS.get(wantPlayer)?.tid ?? null;
+  if (wantPlayer && startTid == null && wantGame) {
+    for (const t of TEAMS) {
+      const f = await Games.teamFile(SEASON, t.tid);
+      if (f?.games.some((g) => g.g === wantGame && g.players.some((p) => p.id === wantPlayer))) { startTid = t.tid; break; }
+    }
+  }
+  if (startTid != null) {
+    tSel.value = startTid;
+    tSel.dispatchEvent(new Event("change"));      // also refreshes the searchable box's label
+  } else {
+    pending = {};
+  }
+  setStatus("");
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
