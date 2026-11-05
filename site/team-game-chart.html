@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Game Chart | Hog Charts</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    .gc-wrap { max-width:640px; margin:0 auto; }
+    .gc-pickers { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .gc-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+    .gc-tools .btn { width:auto; margin:0; padding:9px 20px; }
+    .gc-status { color:var(--muted); font-size:.92rem; padding:24px 0; }
+    .gc-status:empty { display:none; }
+    #gc-canvas[hidden] { display:none; }
+    #gc-canvas { display:block; width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
+    @media (max-width:520px) { .gc-pickers { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+<div class="gc-wrap">
+  <h2>Team Game Chart</h2>
+
+  <div class="gc-pickers">
+    <div class="form-group"><label for="gc-team">Team</label><select id="gc-team" disabled><option>Loading…</option></select></div>
+    <div class="form-group"><label for="gc-game">Game</label><select id="gc-game" disabled></select></div>
+  </div>
+
+  <div class="gc-tools">
+    <div class="ctl-group">
+      <span class="ctl-label">Court</span>
+      <div class="seg" id="gc-style">
+        <button data-style="dark" class="active">Dark</button>
+        <button data-style="wood">Hardwood</button>
+      </div>
+    </div>
+    <button class="btn" id="gc-save" disabled>Download PNG</button>
+  </div>
+
+  <div class="gc-status" id="gc-status">Loading…</div>
+  <canvas id="gc-canvas" width="1080" height="1350" hidden></canvas>
+</div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/court.js"></script>
+<script src="js/games.js"></script>
+<script src="js/game-graphic.js"></script>
+<script>
+// Team Game Chart: the player Game Chart's format for a whole team — logo,
+// conference, record through that game, the team box line, and every
+// field-goal attempt the team took — drawn by js/game-graphic.js.
+//
+// URL: ?team={teamId}&game={gameId}. No game → the team's most recent one.
+// Live season only (shot coordinates exist for the current season).
+
+const params = new URLSearchParams(location.search);
+let SEASON = null;
+let TEAMS = [];              // [{tid, t, conf}] sorted by name
+let STYLE = "dark";
+let CURRENT = null;          // what's drawn: {team, game, record, shots}
+
+function setStatus(text) { document.getElementById("gc-status").textContent = text; }
+function syncUrl() {
+  if (CURRENT) history.replaceState(null, "", `?team=${CURRENT.team.tid}&game=${CURRENT.game.g}`);
+}
+
+// W-L through (and including) this game.
+function recordThrough(file, gameId) {
+  let w = 0, l = 0;
+  for (const g of file.games) {
+    if (g.w) w++; else l++;
+    if (g.g === gameId) break;
+  }
+  return `${w}-${l}`;
+}
+
+async function draw() {
+  if (!CURRENT) return;
+  const now = CURRENT, { team, game, record, shots } = now;
+  const canvas = document.getElementById("gc-canvas");
+  const drawn = await GameGraphic.draw(canvas, {
+    image: { src: logoUrl(team.tid), fit: "contain" },
+    title: team.t,
+    sub: { logo: null, text: team.conf },
+    chips: [record],
+    game, line: game.totals, shots,
+  }, STYLE, () => CURRENT === now);
+  if (!drawn) return;
+  canvas.hidden = false;
+  document.getElementById("gc-save").disabled = false;
+}
+
+async function chooseTeam(tid, wantGame = null) {
+  const gSel = document.getElementById("gc-game");
+  gSel.disabled = true;
+  gSel.innerHTML = "<option>Loading…</option>";
+  const file = await Games.teamFile(SEASON, tid);
+  if (Number(document.getElementById("gc-team").value) !== tid) return;
+  const games = [...(file?.games ?? [])].reverse();          // newest first
+  if (!games.length) {
+    gSel.innerHTML = "";
+    CURRENT = null; document.getElementById("gc-canvas").hidden = true;
+    setStatus("No games yet.");
+    return;
+  }
+  setStatus("");
+  gSel.innerHTML = games.map((g) =>
+    `<option value="${g.g}">${Games.shortDate(g.d)} · ${Games.opponentLabel(g)}</option>`).join("");
+  gSel.disabled = false;
+  gSel.value = games.some((g) => g.g === wantGame) ? wantGame : games[0].g;
+  chooseGame(file, Number(gSel.value));
+}
+
+async function chooseGame(file, gameId) {
+  const tid = Number(document.getElementById("gc-team").value);
+  const team = TEAMS.find((t) => t.tid === tid) ?? { tid, t: file.t, conf: "" };
+  const game = file.games.find((g) => g.g === gameId);
+  const data = await loadJSON(`data/shots/${slugify(file.t)}.json`);
+  const gi = data?.games?.findIndex((g) => g.id === gameId) ?? -1;
+  const shots = gi >= 0 ? shotsXY(data.shots, (g) => g === gi) : { mx: [], my: [], hx: [], hy: [] };
+  CURRENT = { team, game, record: recordThrough(file, gameId), shots };
+  syncUrl();
+  draw();
+}
+
+function save() {
+  if (CURRENT) GameGraphic.save(document.getElementById("gc-canvas"), `${slugify(CURRENT.team.t)}-${CURRENT.game.d}.png`);
+}
+
+async function init() {
+  const seasons = await loadJSON("data/seasons.json") ?? [];
+  SEASON = seasons[0];
+  const stats = await loadJSON(`data/${SEASON}/player-stats-all.json`);
+  const byTeam = new Map();
+  for (const p of stats?.players ?? []) if (p.tid != null && !byTeam.has(p.tid)) byTeam.set(p.tid, { tid: p.tid, t: p.t, conf: p.conf ?? "" });
+  TEAMS = [...byTeam.values()].sort((a, b) => a.t.localeCompare(b.t));
+  if (!TEAMS.length) { setStatus("No games yet."); return; }
+
+  const wantTeam = Number(params.get("team")) || null;
+  const wantGame = Number(params.get("game")) || null;
+  const tSel = document.getElementById("gc-team");
+  tSel.innerHTML = `<option value="">—</option>` + TEAMS.map((t) => `<option value="${t.tid}">${t.t}</option>`).join("");
+  tSel.disabled = false;
+
+  let pending = wantGame;     // deep link, used by the first team pick only
+  tSel.addEventListener("change", () => {
+    const tid = Number(tSel.value);
+    if (tid) chooseTeam(tid, pending);
+    pending = null;
+  });
+  document.getElementById("gc-game").addEventListener("change", async (e) => {
+    const file = await Games.teamFile(SEASON, Number(tSel.value));
+    if (file) chooseGame(file, Number(e.target.value));
+  });
+  document.getElementById("gc-style").addEventListener("click", (e) => {
+    const style = e.target.dataset?.style;
+    if (!style || style === STYLE) return;
+    STYLE = style;
+    document.querySelectorAll("#gc-style button").forEach((b) => b.classList.toggle("active", b.dataset.style === style));
+    draw();
+  });
+  document.getElementById("gc-save").addEventListener("click", save);
+
+  if (wantTeam && TEAMS.some((t) => t.tid === wantTeam)) {
+    tSel.value = wantTeam;
+    tSel.dispatchEvent(new Event("change"));      // also refreshes the searchable box's label
+  } else {
+    pending = null;
+  }
+  setStatus("");
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

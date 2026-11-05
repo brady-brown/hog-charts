@@ -182,9 +182,9 @@
           <img src="${logoUrl(s.tid)}" alt="" onerror="this.style.opacity=0">
           <span>${s.name}</span><span class="gm-pts">${s.score}</span></div>`).join("")}</div>
       <div class="gm-date">${shortDate(own.d)}</div>
-      ${chart ? `<div class="gm-section"><div class="gm-hdr">${chart.kind === "player" && highlightId != null
-          ? `<a class="team-link" href="game-chart.html?id=${highlightId}&game=${gameId}">${chart.name} <span class="team-link-arrow">→</span></a>`
-          : chart.name}</div><div id="gm-chart"></div></div>` : ""}
+      ${chart ? `<div class="gm-section"><div class="gm-hdr"><a class="team-link" href="${chart.kind === "player" && highlightId != null
+          ? `game-chart.html?id=${highlightId}&game=${gameId}`
+          : `team-game-chart.html?team=${teamId}&game=${gameId}`}">${chart.name} <span class="team-link-arrow">→</span></a></div><div id="gm-chart"></div></div>` : ""}
       ${sides.map((s) => teamTable(s, highlightId)).join("")}`;
     if (chart) renderChart(ownFile.t, gameId, chart);
   }
