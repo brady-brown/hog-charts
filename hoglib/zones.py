@@ -32,21 +32,25 @@ THREE_POINT_ZONES  = {"3PT - Right", "3PT - Right Center", "3PT - Center",
 
 
 def lateral_feet(shot_df):
-    """Feet right (+) / left (-) of the basket on a hoop-at-bottom half court.
+    """Feet to the SHOOTER'S right (+) / left (-) of the basket.
 
-    ESPN reports every shot in one half-court frame (x_raw 0-50 across) and
+    Charts draw this as screen x with the basket at the bottom, so the shooter's
+    left side of the floor shows on the left of the chart (and the "Left" zones
+    are the shooter's left), the way the floor is talked about.
+
+    ESPN reports every shot in one half-court frame (x_raw 0-50 across;
+    x_raw < 25 is the shooter's left, going by ESPN's own gamecast chart) and
     sportsdataverse — and raw_hogcharts/espn/normalize.py, which copies it —
     spreads that onto a full court by rotating the HOME team's shots 180°:
         coordinate_x = s * (y_raw - 41.75),  coordinate_y = s * (x_raw - 25),
         s = -1 home, +1 away.
     Folding back to one half has to undo that rotation, which flips the sign of
-    coordinate_y on the home end (coordinate_x > 0) too. Taking only
-    abs(coordinate_x) mirrors every home-team shot left-to-right. Either way the
-    answer is 25 - x_raw, which matches where ESPN's own gamecast chart draws
-    each shot (checked play-by-play on game 401929372).
+    coordinate_y on the home end (coordinate_x > 0) too; taking only
+    abs(coordinate_x) put home and away shots on opposite sides. Either way the
+    answer is x_raw - 25 (checked play-by-play on game 401929372).
     """
     y = shot_df["coordinate_y"]
-    return pd.Series(np.where(shot_df["coordinate_x"] > 0, y, -y), index=shot_df.index)
+    return pd.Series(np.where(shot_df["coordinate_x"] > 0, -y, y), index=shot_df.index)
 
 
 def classify_shot_zones(shot_df):
