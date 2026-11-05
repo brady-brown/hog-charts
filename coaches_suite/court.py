@@ -2,8 +2,9 @@
 court.py — matplotlib 14-wedge "hot-zone" shot-chart, matching the geometry of
 site/js/zone-chart.js so the Coaches Suite reads the same as the website.
 
-The court is drawn hoop-at-origin, x = lateral (right +), y = distance toward
-halfcourt (feet).  Each of the 14 zones is a radial wedge filled by a value:
+The court is drawn hoop-at-origin, x = the shooter's right (+), y = distance toward
+halfcourt (feet); the x-axis is reversed so his left shows on screen right,
+like the website.  Each of the 14 zones is a radial wedge filled by a value:
 
     scheme="sequential"  magnitude  (e.g. share of shots) — one hue, light->dark
     scheme="diverging"   polarity   (e.g. FG% vs baseline) — blue(-) / red(+)
@@ -105,7 +106,9 @@ def draw_zone_court(ax, values, *, scheme, cmap, vmin=None, vcenter=None,
                     fontsize=label_size * 0.8, color=tcol, zorder=4)
 
     _draw_lines(ax)
-    ax.set_xlim(-26, 26); ax.set_ylim(-3, THREE_OUT + 1.5)
+    # Reversed x: overhead view, basket at the bottom, so the shooter's left
+    # (the "Left" zones) is screen right — same as the website.
+    ax.set_xlim(26, -26); ax.set_ylim(-3, THREE_OUT + 1.5)
     ax.set_aspect("equal"); ax.axis("off")
     if title:
         ax.set_title(title, fontsize=13, weight="bold", color="#1a1d21",

@@ -13,7 +13,12 @@
      9-13 3PT Right / Right-Center / Center / Left-Center / Left
 
    API:
-     ZoneChart.classifyZone(px, py)               → 0..13 or -1   (px=-coord_y, py=47-|coord_x|)
+     ZoneChart.classifyZone(px, py)               → 0..13 or -1   (px, py = screen feet from the shot files)
+
+   Orientation: zone names are the SHOOTER'S left/right (hoglib.zones.lateral_feet).
+   The court is an overhead view with the basket at the bottom — he faces down
+   the screen — so his left is screen RIGHT: shot files store screen x =
+   -(his right), classifyZone flips it back, and render() mirrors the wedges.
      ZoneChart.computeZones(shots, keepFn)         → [[zi, makes, atts], …]
      ZoneChart.render(containerEl, zoneData, opts) → draws SVG
         opts = { zones, baselines, title, subtitle, minAtt, compact }
@@ -33,7 +38,7 @@ const ZoneChart = (function () {
 
   // ── classification (mirrors build_site.classify_shot_zones) ──────────────
   function classifyZone(px, py) {
-    const lat = px, out = py - HOOP_Y;
+    const lat = -px, out = py - HOOP_Y;     // screen x → shooter's right (+)
     const dist = Math.hypot(lat, out);
     if (dist >= 40) return -1;
     let ang = Math.atan2(out, lat) * 180 / Math.PI;
@@ -93,6 +98,8 @@ const ZoneChart = (function () {
   }
 
   // ── SVG geometry (tenths-of-feet, hoop at polar origin) ──────────────────
+  // Drawn in the shooter's frame (Right = +x), then mirrored as a group in
+  // render() so his left lands on screen right; label x is negated to match.
   const NS = "http://www.w3.org/2000/svg";
   const Y_MIN = -58, Y_MAX = 250, PAD = 10;
   const VB_W = 500 + 2 * PAD, VB_H = (Y_MAX - Y_MIN) + 2 * PAD;
@@ -170,7 +177,7 @@ const ZoneChart = (function () {
         const lp = LABEL[name];
         let col = "#fff";
         if (!low) { const mm = fill.match(/\d+/g); if (mm) col = ((0.299 * mm[0] + 0.587 * mm[1] + 0.114 * mm[2]) / 255) > 0.6 ? "#15181f" : "#fff"; }
-        labels += `<text x="${cx(lp[0]).toFixed(2)}" y="${cy(lp[1]).toFixed(2)}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="${col}" pointer-events="none">${(z.pct * 100).toFixed(0)}%</text>`;
+        labels += `<text x="${cx(-lp[0]).toFixed(2)}" y="${cy(lp[1]).toFixed(2)}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="${col}" pointer-events="none">${(z.pct * 100).toFixed(0)}%</text>`;
       }
     }
 
@@ -187,7 +194,7 @@ const ZoneChart = (function () {
               <rect width="7" height="7" fill="#1c2230"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
             </pattern></defs>
             <rect x="0" y="0" width="${VB_W}" height="${VB_H}" fill="#0B0E14"/>
-            ${polys}${labels}${courtLines()}
+            <g transform="translate(${VB_W},0) scale(-1,1)">${polys}${courtLines()}</g>${labels}
           </svg>
           <div class="zone-tip"></div>
         </div>

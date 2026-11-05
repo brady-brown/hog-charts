@@ -1309,7 +1309,8 @@ if os.path.exists(shots_parquet_path) and os.path.exists(box_score_parquet_path)
         field_goal_shots_df = field_goal_shots_df.copy()
         field_goal_shots_df["game_index"]     = game_index_lookup.reindex(fgs_index).fillna(-1).astype(int).values
         # Convert to integer screen coordinates (×10 for sub-foot precision).
-        field_goal_shots_df["plot_x_int"] = (lateral_feet(field_goal_shots_df) * 10).round().astype(int)
+        # Overhead view, basket at the bottom: the shooter's left is screen right.
+        field_goal_shots_df["plot_x_int"] = (-lateral_feet(field_goal_shots_df) * 10).round().astype(int)
         field_goal_shots_df["plot_y_int"] = ((47 - field_goal_shots_df["coordinate_x"].abs()) * 10).round().astype(int)
         field_goal_shots_df["scored_int"] = field_goal_shots_df["scoring_play"].astype(int)
 

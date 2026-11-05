@@ -34,9 +34,10 @@ THREE_POINT_ZONES  = {"3PT - Right", "3PT - Right Center", "3PT - Center",
 def lateral_feet(shot_df):
     """Feet to the SHOOTER'S right (+) / left (-) of the basket.
 
-    Charts draw this as screen x with the basket at the bottom, so the shooter's
-    left side of the floor shows on the left of the chart (and the "Left" zones
-    are the shooter's left), the way the floor is talked about.
+    Zone names use this frame ("3PT - Left" = his left). Charts draw an
+    overhead view with the basket at the bottom — he faces down the screen —
+    so screen x = -lateral_feet: his left side of the floor is on the RIGHT of
+    the chart (build_site.py's shot files; site/js/zone-chart.js mirrors to match).
 
     ESPN reports every shot in one half-court frame (x_raw 0-50 across;
     x_raw < 25 is the shooter's left, going by ESPN's own gamecast chart) and
