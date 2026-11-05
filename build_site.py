@@ -1391,41 +1391,24 @@ print(f"\nAvailable seasons: {built_season_years}")
 
 
 # ===========================================================================
-# _headers — Cloudflare Pages cache policy, generated from the season list.
+# _headers — Cloudflare Pages cache policy.
 # ===========================================================================
-# Frozen past-season data never changes → cache immutable for a year. The live
-# (current) season is seasons[0]; it (and seasons.json, which decides *which*
-# season is live) rebuild nightly → short cache so viewers pick up new games.
-# Generating this from built_season_years means the immutable/short boundary
-# advances automatically each November when a new current season starts.
+# Every file revalidates on every load: browsers keep their copy but ask
+# Cloudflare first (ETag → 304 when unchanged, so it costs a round trip, not a
+# download). A deploy is then visible on the next page load, everywhere — no
+# hour-long wait on live data, and corrected past-season files actually reach
+# people (the old year-long "immutable" rule pinned whatever a browser had).
+# Cloudflare purges its own edge cache on each deploy.
 #
-# NOTE: Cloudflare Pages *merges* every matching rule's headers (joined with
-# commas), it does not pick the most specific one. So the rules below must NOT
-# overlap — we enumerate the live season explicitly rather than using a broad
-# /data/* fallback that would double up on the frozen-season paths.
+# One "/*" rule on purpose: Cloudflare Pages *merges* every matching rule's
+# headers (joined with commas) instead of picking the most specific, so
+# overlapping rules would produce a garbled Cache-Control.
 def write_cloudflare_headers(season_years):
-    live_season = season_years[0] if season_years else None
-    long_cache = "  Cache-Control: public, max-age=31536000, immutable"
-    hour_cache = "  Cache-Control: public, max-age=3600"
-    lines = []
-    for year in season_years:
-        if year == live_season:
-            lines += [f"/data/{year}/*", hour_cache, ""]        # rebuilt nightly
-        else:
-            lines += [f"/data/{year}/*", long_cache, ""]        # frozen
-    # Shared current-season shot files (rebuilt nightly).
-    lines += ["/data/shots/*", hour_cache, ""]
-    # Career shards span every season, so they change whenever the live one does.
-    lines += ["/data/careers/*", hour_cache, ""]
-    # seasons.json must never be cached long — it names the live season.
-    lines += ["/data/seasons.json", "  Cache-Control: public, max-age=300", ""]
-    # Shared JS.
-    lines += ["/js/*", hour_cache, ""]
+    lines = ["/*", "  Cache-Control: public, max-age=0, must-revalidate"]
     headers_path = os.path.join(PROJECT_ROOT, "site", "_headers")
     with open(headers_path, "w") as headers_file:
-        headers_file.write("\n".join(lines).rstrip() + "\n")
-    frozen = [y for y in season_years if y != live_season]
-    print(f"  {'_headers':<35s} (immutable: {frozen}; live: {live_season})")
+        headers_file.write("\n".join(lines) + "\n")
+    print(f"  {'_headers':<35s} (revalidate every load)")
 
 
 write_cloudflare_headers(built_season_years)

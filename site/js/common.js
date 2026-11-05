@@ -15,9 +15,11 @@ function seasonLabel(s) {
 }
 
 // fetch() wrapper — returns parsed JSON or null on error
-// Past seasons' data is cached as immutable for a year (see build_site _headers).
-// Bump this when frozen files are corrected so browsers fetch the new copy once.
-const DATA_VERSION = "2026-11-03";
+// Browsers revalidate every file on every load (see build_site _headers), so a
+// deploy shows up right away. Bumping this changes every data URL, which also
+// evicts copies cached under an older, longer policy (2026-11-05: the old
+// hour-long live / year-long past-season caching).
+const DATA_VERSION = "2026-11-05";
 
 async function loadJSON(path) {
   try {
