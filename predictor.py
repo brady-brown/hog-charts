@@ -112,7 +112,8 @@ def calculate_efficiency(team_game_df):
     return combined_stats
 
 
-def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iterations=10):
+def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iterations=10,
+                                  opponent_prior=None, fade_games=None):
     """Iteratively adjust efficiency ratings for opponent quality.
 
     Each iteration recomputes each game's offensive/defensive efficiency and
@@ -124,12 +125,25 @@ def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iteratio
     team_game_df         : DataFrame  One row per team per game.
     raw_efficiency_ratings: DataFrame  Starting point from calculate_efficiency().
     iterations            : int        Number of Markov-style adjustment passes.
+    opponent_prior        : dict|None  team_id -> {'off_eff', 'def_eff'} (last season).
+    fade_games            : int|None   With opponent_prior: each opponent is rated as
+                                       share * this-season + (1 - share) * prior, where
+                                       share = min(1, opponent's games / fade_games) —
+                                       how Team Stats shows them early on. A one- or
+                                       two-game solve otherwise goes circular (a 50-point
+                                       loss is the only evidence about the loser, so the
+                                       winner keeps nearly the whole margin). Once every
+                                       team has fade_games games it's the plain solve.
+                                       Omitted (the predictor): unchanged behaviour.
 
     Returns
     -------
     DataFrame with columns: season, team_id, off_eff, def_eff, net_eff.
     """
     current_ratings = raw_efficiency_ratings[['season', 'team_id', 'off_eff', 'def_eff']].copy()
+    anchored = opponent_prior is not None and fade_games
+    if anchored:
+        games_played = team_game_df.groupby(['season', 'team_id']).size().to_dict()
 
     for _ in range(iterations):
         current_ratings_by_team_season = (
@@ -142,6 +156,14 @@ def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iteratio
             opponent_rating = current_ratings_by_team_season.get(
                 opponent_key, {'off_eff': 100, 'def_eff': 100}
             )
+            if anchored:
+                share = min(1.0, games_played.get(opponent_key, 0) / fade_games)
+                if share < 1:
+                    prior = opponent_prior.get(game_row['opponent_team_id'], {'off_eff': 100, 'def_eff': 100})
+                    opponent_rating = {
+                        side: share * opponent_rating[side] + (1 - share) * prior[side]
+                        for side in ('off_eff', 'def_eff')
+                    }
             team_possessions = (
                 game_row['field_goals_attempted']
                 + 0.44 * game_row['free_throws_attempted']

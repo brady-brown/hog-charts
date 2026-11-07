@@ -408,7 +408,13 @@ def build_scope_net_ratings(scope_team_box_df, blend_prior=False):
     if games.empty:
         adjusted = pd.DataFrame(columns=["team_id", "off_eff", "def_eff", "net_eff"])
     else:
-        adjusted = calculate_adjusted_efficiency(games, calculate_efficiency(games))
+        # Live season: rate each opponent the way Team Stats shows it (faded from
+        # last season) so two blowouts of weak teams don't go circular.
+        opponent_prior = (prior_season_ratings().set_index("team_id")[["off_eff", "def_eff"]]
+                          .to_dict("index") if blend_prior else None)
+        adjusted = calculate_adjusted_efficiency(
+            games, calculate_efficiency(games),
+            opponent_prior=opponent_prior, fade_games=PRIOR_FADE_GAMES if blend_prior else None)
     if blend_prior:
         prior = prior_season_ratings()
         if not adjusted.empty:
