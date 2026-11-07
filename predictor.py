@@ -148,7 +148,11 @@ def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iteratio
                 - game_row['offensive_rebounds']
                 + game_row['turnovers']
             )
-            if team_possessions <= 0:
+            # "not > 0" (not "<= 0") also skips NaN: ESPN sometimes posts a final
+            # score with no box stats (2027: Warren Wilson-NC A&T, 2026-11-03).
+            # A team whose only games are like that drops out of the ratings
+            # instead of carrying a NaN that breaks the rank casts downstream.
+            if not team_possessions > 0:
                 continue
             adjusted_offense = (game_row['team_score'] / team_possessions * 100
                                 + (100 - opponent_rating['def_eff']))
