@@ -105,8 +105,10 @@ async function draw() {
   if (!CURRENT) return;
   const now = CURRENT, { player, team, game, line, shots } = now;
   const canvas = document.getElementById("gc-canvas");
+  // A jersey in the team's colors stands in for the player's photo: ESPN's
+  // headshots are theirs, and a posted PNG is a copy (the site only hotlinks).
   const drawn = await GameGraphic.draw(canvas, {
-    image: { src: playerUrl(player.id), fit: "cover" }, fallback: logoUrl(team.tid),
+    jersey: { color: team.colors?.[0], alt: team.colors?.[1], number: player.jn ?? line.jn },
     title: player.n,
     sub: { logo: logoUrl(team.tid), text: team.t },
     chips: [player.jn ? `#${player.jn}` : null, player.pos, player.exp],
@@ -155,7 +157,7 @@ function choosePlayer(file, playerId, wantGame = null) {
 
 async function chooseGame(file, playerId, gameId) {
   const tid = Number(document.getElementById("gc-team").value);
-  const team = TEAMS.find((t) => t.tid === tid) ?? { tid, t: file.t };
+  const team = { ...(TEAMS.find((t) => t.tid === tid) ?? { tid, t: file.t }), colors: file.colors };
   const game = file.games.find((g) => g.g === gameId);
   const line = game.players.find((p) => p.id === playerId);
   const row = ROWS.get(playerId);

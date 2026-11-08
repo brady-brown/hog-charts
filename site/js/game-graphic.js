@@ -7,6 +7,8 @@
  *
  * spec = {
  *   image:  {src, fit: "cover"|"contain"}, fallback: src (shown when image fails)
+ *   jersey: {color, alt, number} instead of image — a jersey in the team's colors
+ *           (hex, "#" optional; missing → neutral grey) with the number on it
  *   title:  big name line
  *   sub:    {logo: src|null, text}            second line (team logo + name, or conference)
  *   chips:  [text, …]
@@ -74,6 +76,55 @@
     ctx.drawImage(img, x + (size - w) / 2, y + (size - h) / 2, w, h);
   }
 
+  // ── jersey (stands in for a player photo) ─────────────────────────────────
+  const hex = (c) => (c ? `#${String(c).replace(/^#/, "")}` : null);
+  function luminance(c) {
+    const n = parseInt(c.slice(1), 16), ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  }
+  const contrast = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+
+  // A basketball tank top filling a size×size box at (x, y): body in the
+  // primary color, neck and armhole trim plus the number in the alternate
+  // color — or white/black when the alternate is missing or too close to read.
+  function drawJersey(ctx, x, y, size, jersey) {
+    const body = hex(jersey.color) ?? "#3B4252";
+    let trim = hex(jersey.alt);
+    if (!trim || contrast(body, trim) < 2.5) trim = luminance(body) > 0.4 ? "#111111" : "#FFFFFF";
+    const k = size / 200, X = (v) => x + v * k, Y = (v) => y + v * k;
+    const neck = () => { ctx.moveTo(X(66), Y(26)); ctx.quadraticCurveTo(X(100), Y(80), X(134), Y(26)); };
+    const armL = () => { ctx.moveTo(X(46), Y(26)); ctx.quadraticCurveTo(X(50), Y(82), X(24), Y(96)); };
+    const armR = () => { ctx.moveTo(X(154), Y(26)); ctx.quadraticCurveTo(X(150), Y(82), X(176), Y(96)); };
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(X(46), Y(26)); ctx.lineTo(X(66), Y(26));
+    ctx.quadraticCurveTo(X(100), Y(80), X(134), Y(26));
+    ctx.lineTo(X(154), Y(26));
+    ctx.quadraticCurveTo(X(150), Y(82), X(176), Y(96));
+    ctx.lineTo(X(172), Y(184));
+    ctx.quadraticCurveTo(X(100), Y(192), X(28), Y(184));
+    ctx.lineTo(X(24), Y(96));
+    ctx.quadraticCurveTo(X(50), Y(82), X(46), Y(26));
+    ctx.closePath();
+    ctx.fillStyle = body; ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 2 * k; ctx.stroke();
+
+    ctx.strokeStyle = trim; ctx.lineWidth = 7 * k; ctx.lineCap = "round";
+    for (const edge of [neck, armL, armR]) { ctx.beginPath(); edge(); ctx.stroke(); }
+
+    const number = jersey.number != null ? String(jersey.number) : "";
+    if (number) {
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = trim;
+      fitFont(ctx, number, 900, 74, 104 * k);
+      ctx.fillText(number, X(100), Y(132));
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+    ctx.restore();
+  }
+
   const fmtDate = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const pct = (m, a) => (a ? `${Math.round((m / a) * 100)}%` : "");
 
@@ -101,7 +152,8 @@
     roundRect(ctx, PAD, PAD, HS, HS, 22);
     ctx.save(); ctx.clip();
     ctx.fillStyle = P.card; ctx.fillRect(PAD, PAD, HS, HS);
-    if (image && fit === "cover") drawCover(ctx, image, PAD - 40, PAD, HS + 80, HS);
+    if (spec.jersey) drawJersey(ctx, PAD + 10, PAD + 8, HS - 20, spec.jersey);
+    else if (image && fit === "cover") drawCover(ctx, image, PAD - 40, PAD, HS + 80, HS);
     else if (image) drawContain(ctx, image, PAD + 24, PAD + 24, HS - 48);
     ctx.restore();
 

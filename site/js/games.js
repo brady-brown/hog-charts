@@ -1,6 +1,6 @@
 /* games.js — shared game data + box-score modal for the player and team cards.
  *
- *   Games.teamFile(season, teamId)   → {t, games:[{g, d, ha, o, oid, ts, os, w, players, totals}]}
+ *   Games.teamFile(season, teamId)   → {t, colors, games:[{g, d, ha, o, oid, ts, os, w, players, totals}]}
  *   Games.openBoxScore({season, teamId, gameId, highlightId, chart})
  *   Games.shortDate(d) · Games.opponentLabel(game) · Games.shootLine(made, att)
  *
@@ -85,9 +85,10 @@
 
   function decode(raw) {
     const line = (arr, offset) => Object.fromEntries(raw.cols.map((c, i) => [c, arr[i + offset]]));
-    const who = (id) => ({ id, n: raw.roster[id]?.[0] ?? "—", pos: raw.roster[id]?.[1] ?? "" });
+    const who = (id) => ({ id, n: raw.roster[id]?.[0] ?? "—", pos: raw.roster[id]?.[1] ?? "", jn: raw.roster[id]?.[2] ?? null });
     return {
       t: raw.t,
+      colors: raw.c ?? [null, null],          // [primary, alternate] hex without "#"
       games: raw.games.map((g) => ({
         ...g, w: !!g.w,
         players: [

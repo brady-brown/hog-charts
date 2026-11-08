@@ -15,7 +15,8 @@ on nights it plays, which keeps the nightly commit small, and ~700 files a seaso
 stays well under Cloudflare's 20,000-file cap (one file per game would be ~12,000).
 
 Compact on purpose (six seasons of box scores would otherwise be ~250 MB): names
-and positions are listed once per file in "roster", and each player line or total
+positions and jersey numbers are listed once per file in "roster" ([name, pos, jersey]),
+"c" is the team's [primary, alternate] color, and each player line or total
 is a plain array in "cols" order. site/js/games.js decodes it.
 """
 import json
@@ -44,6 +45,13 @@ def _number(value):
     return int(value) if float(value).is_integer() else round(float(value), 1)
 
 
+def _team_color(series):
+    """A team's most common hex color in the feed ("a32136"), or None."""
+    values = series.dropna().astype(str).str.strip().str.lstrip("#").str.lower()
+    values = values[values.str.fullmatch(r"[0-9a-f]{6}")]
+    return values.mode().iloc[0] if not values.empty else None
+
+
 def write_game_logs(player_box, season_dir):
     """Rebuild season_dir/games/teams/ from one season's player box scores."""
     box = player_box[player_box["season_type"].isin([2, 3]) & player_box["athlete_id"].notna()].copy()
@@ -66,7 +74,9 @@ def write_game_logs(player_box, season_dir):
             lines, dnp = [], []
             for _, p in game.sort_values(["starter", "minutes"], ascending=False).iterrows():
                 athlete_id = int(p["athlete_id"])
-                roster.setdefault(str(athlete_id), [p["athlete_display_name"], p["athlete_position_abbreviation"]])
+                jersey = p.get("athlete_jersey")
+                roster.setdefault(str(athlete_id), [p["athlete_display_name"], p["athlete_position_abbreviation"],
+                                                    None if pd.isna(jersey) else str(jersey)])
                 if p["played"]:
                     lines.append([athlete_id, int(bool(p["starter"]))]
                                  + [_number(p[col]) for col in STAT_COLUMNS])
@@ -83,6 +93,9 @@ def write_game_logs(player_box, season_dir):
         with open(os.path.join(out_dir, f"{int(team_id)}.json"), "w") as team_file:
             team_file.write(json.dumps(
                 sanitize_for_json({"t": team_box["team_display_name"].iloc[0], "cols": COLS,
+                                   # [primary, alternate] hex, no "#" (the Game Chart jersey)
+                                   "c": [_team_color(team_box[col]) if col in team_box else None
+                                         for col in ("team_color", "team_alternate_color")],
                                    "roster": roster, "games": games}),
                 separators=(",", ":"), allow_nan=False))
         games_written += len(games)
