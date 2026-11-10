@@ -42,7 +42,7 @@ import requests
 # Season detection
 # ---------------------------------------------------------------------------
 from hoglib.season import (detect_season, scaled_min_games, scaled_min_possessions,
-                           NON_D1_GATE_GAMES, MIN_BASELINE_SHOTS)
+                           leader_games, NON_D1_GATE_GAMES, MIN_BASELINE_SHOTS)
 SEASON = detect_season()
 
 PROJECT_ROOT    = os.path.dirname(os.path.abspath(__file__))
@@ -222,7 +222,7 @@ else:
 # ===========================================================================
 net_ratings_df = net_ratings_raw_df.copy()
 net_ratings_df["conf"] = net_ratings_df["team"].map(conference_label_map).fillna("")
-if net_ratings_df["games"].max() < NON_D1_GATE_GAMES:
+if leader_games(net_ratings_df["games"]) < NON_D1_GATE_GAMES:
     net_ratings_df = net_ratings_df[net_ratings_df["conf"] != ""].copy()
 if "wins" in net_ratings_df.columns and "losses" in net_ratings_df.columns:
     net_ratings_df["record"] = (
@@ -782,8 +782,9 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     # stay available but are set to 0 for the scopes that use the team gate.
     team_games = player_stats_df.groupby("team_id")["games_played"].transform("max")
     min_games_played = scaled_min_games(min_games_played, player_stats_df["games_played"].max())
-    is_early_season = team_games.max() < NON_D1_GATE_GAMES
-    min_team_games = scaled_min_games(min_team_games, team_games.max())
+    team_leader_games = leader_games(player_stats_df.groupby("team_id")["games_played"].max())
+    is_early_season = team_leader_games < NON_D1_GATE_GAMES
+    min_team_games = scaled_min_games(min_team_games, team_leader_games)
     player_stats_df = player_stats_df[
         (not is_early_season or player_stats_df["conf."].fillna("").ne(""))
         & (player_stats_df["games_played"] >= min_games_played)
@@ -988,7 +989,7 @@ all_team_names_across_sizes = set()
 overall_combos_by_size      = {}    # {"1": {team: [records]}, "2": ..., ...}
 conference_combos_by_size   = {}
 
-most_games_played = net_ratings_df["games"].max()
+most_games_played = leader_games(net_ratings_df["games"])
 for combo_size in ["1", "2", "3", "5"]:
     overall_combos, overall_teams = load_lineup_csv(combo_size, "all",  scaled_min_possessions(LINEUP_MIN_POSS_OVERALL[combo_size], most_games_played))
     overall_combos_by_size[combo_size] = overall_combos

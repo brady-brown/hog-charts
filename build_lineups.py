@@ -49,7 +49,7 @@ from tqdm import tqdm
 # ---------------------------------------------------------------------------
 # Season detection
 # ---------------------------------------------------------------------------
-from hoglib.season import detect_season, scaled_min_possessions
+from hoglib.season import detect_season, scaled_min_possessions, leader_games
 SEASON = detect_season()
 
 # ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ schedule_teams_long_df = schedule_df.melt(
 )
 games_per_team = schedule_teams_long_df.groupby("team_id")["game_id"].nunique()
 qualifying_team_ids = games_per_team[games_per_team >= MIN_GAMES_TO_QUALIFY].index.astype(int).tolist()
-most_games_played = team_box_df.groupby("team_id")["game_id"].nunique().max()
+most_games_played = leader_games(team_box_df.groupby("team_id")["game_id"].nunique())
 
 
 # ---------------------------------------------------------------------------

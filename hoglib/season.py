@@ -39,6 +39,20 @@ FULL_SEASON_GAMES = 30
 MIN_BASELINE_SHOTS = 100_000
 
 
+def leader_games(games, rank=5):
+    """Games played by the season's leaders, for scaling the gates below.
+
+    Uses the 5th-highest count rather than the max: a non-D-I school stacking
+    guarantee games can out-play every D-I team early (Bethesda had 6 in the
+    first week of 2027 when no D-I team had more than 4), and taking its count
+    as the leader pushes every scaled gate up and drops real teams.
+    """
+    games = [g for g in games if g == g]     # drop NaN
+    if not games:
+        return float("nan")
+    return sorted(games, reverse=True)[min(rank, len(games)) - 1]
+
+
 def scaled_min_games(full_min, most_played):
     """Scale a games-played gate to how far the season has got.
 
