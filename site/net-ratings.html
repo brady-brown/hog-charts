@@ -769,7 +769,7 @@ function openModal(r) {
   ].map(b=>`<div class="pc-bio-item"><div class="pc-bio-val">${b.val}</div><div class="pc-bio-lbl">${b.lbl}</div></div>`).join("");
 
   document.getElementById("pc-off").innerHTML = [
-    modalRow("PPP (raw)",  numStr(r.ppp)),
+    modalRow("Off (raw)",  numStr(r.ppp)),
     modalRow("PPG",  numStr(r.ppg)),
     modalRow("eFG%", pctStr(r.efg)),
     modalRow("TS%",  pctStr(r.ts)),
@@ -781,7 +781,7 @@ function openModal(r) {
     modalRow("A:TO", numStr(r.ast_to,2)),
   ].join("");
   document.getElementById("pc-def").innerHTML = [
-    modalRow("Opp PPP (raw)",  numStr(r.opp_ppp)),
+    modalRow("Def (raw)",  numStr(r.opp_ppp)),
     modalRow("Opp eFG%", pctStr(r.opp_efg)),
     modalRow("Opp 3P%",  pctStr(r.opp_fg3)),
     modalRow("DRB%",     numStr(r.drbp)),

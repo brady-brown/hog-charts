@@ -205,12 +205,12 @@ async function loadTeam() {
 async function loadOverview() {
   const r = TEAM;
   document.getElementById("tp-off").innerHTML = [
-    row("PPP (raw)", num(r.ppp)), row("PPG", num(r.ppg)), row("eFG%", pct(r.efg)), row("TS%", pct(r.ts)),
+    row("Off (raw)", num(r.ppp)), row("PPG", num(r.ppg)), row("eFG%", pct(r.efg)), row("TS%", pct(r.ts)),
     row("3PAr", pct(r.par3)), row("FTr", pct(r.ftr)), row("ORB%", num(r.orbp)), row("TOV%", num(r.tovp)),
     row("AST%", num(r.astp)), row("A:TO", num(r.ast_to, 2)),
   ].join("");
   document.getElementById("tp-def").innerHTML = [
-    row("Opp PPP (raw)", num(r.opp_ppp)), row("Opp eFG%", pct(r.opp_efg)), row("Opp 3P%", pct(r.opp_fg3)),
+    row("Def (raw)", num(r.opp_ppp)), row("Opp eFG%", pct(r.opp_efg)), row("Opp 3P%", pct(r.opp_fg3)),
     row("DRB%", num(r.drbp)), row("TOV% Forced", num(r.opp_tovp)), row("Opp FTr", pct(r.opp_ftr)),
     row("SOS", sgn(r.sos)), row("Home", sgn(r.home_court)),
   ].join("");
