@@ -306,8 +306,9 @@ const COL_GROUPS = {
     { key:"def_eff",   label:"Def",  dir:"asc",  dec:1, grp:"adj", tip:"Defensive rating: points allowed per 100 possessions, adjusted for offenses faced. Lower is better." },
     { key:"sos",       label:"SOS",  dir:"desc", signed:true, dec:1, grp:"adj", tip:"Strength of schedule: average net rating of opponents faced." },
     { key:"home_court",label:"Home", dir:"desc", signed:true, dec:1, grp:"adj", tip:"Points this team's home court is worth in a prediction." },
-    { key:"ppp",       label:"PPP",     dir:"desc", dec:1, grp:"raw", sep:true, tip:"Points scored per 100 possessions — raw box score, not adjusted for schedule strength." },
-    { key:"opp_ppp",   label:"Opp PPP", dir:"asc",  dec:1, grp:"raw", tip:"Points allowed per 100 possessions — raw box score, not adjusted for schedule strength. Lower is better." },
+    { key:"net_ppp",   label:"Net",     dir:"desc", signed:true, dec:1, grp:"raw", sep:true, tip:"Points scored minus allowed per 100 possessions — raw box score, not adjusted for schedule strength." },
+    { key:"ppp",       label:"Off",     dir:"desc", dec:1, grp:"raw", tip:"Points scored per 100 possessions — raw box score, not adjusted for schedule strength." },
+    { key:"opp_ppp",   label:"Def",     dir:"asc",  dec:1, grp:"raw", tip:"Points allowed per 100 possessions — raw box score, not adjusted for schedule strength. Lower is better." },
     { key:"pace",      label:"Pace",    dir:"desc", dec:1, grp:"raw", tip:"Possessions per game (this scope)." },
   ],
   shooting: [
@@ -405,6 +406,10 @@ async function loadScope(scope) {
   if (TS[scope]) return TS[scope];
   const data = await loadJSON(`data/${SEASON}/${SCOPE_FILE[scope]}`).catch(()=>null);
   TS[scope] = data?.team_stats || [];
+  // Raw net per 100 possessions, derived here so every season's file has it.
+  for (const r of TS[scope]) {
+    r.net_ppp = r.ppp != null && r.opp_ppp != null ? Math.round((r.ppp - r.opp_ppp) * 10) / 10 : null;
+  }
   if (data?.meta) META = data.meta;
   return TS[scope];
 }
@@ -633,7 +638,7 @@ function fmtCol(r, c) {
   return v.toFixed(c.dec ?? 1);
 }
 function cellClass(r, c) {
-  if (c.key === "net_eff" || c.key === "sos" || c.key === "home_court") {
+  if (c.key === "net_eff" || c.key === "net_ppp" || c.key === "sos" || c.key === "home_court") {
     const v = r[c.key]; return v>0?"good":v<0?"bad":"";
   }
   return "";
