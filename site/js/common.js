@@ -91,6 +91,40 @@ function fmtPct(v, decimals = 1) {
 const EMBEDDED = new URLSearchParams(location.search).get("embed") === "1";
 if (EMBEDDED) document.documentElement.classList.add("embedded");
 
+// ── Links between pages (single source of truth) ────────────────────────────
+// Every player name goes to his page, every team name to its page, and a game
+// to its chart. Build them here so the URLs match everywhere.
+//   *Href(...)  → URL string
+//   *Link(...)  → <a> markup. stopPropagation so a link inside a clickable row
+//                 doesn't also fire the row; target=_top so a link inside an
+//                 embedded page (the team page's tabs) leaves the frame.
+const qs = (o) => Object.entries(o).filter(([, v]) => v != null && v !== "").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+const playerHref    = (id, season, tab) => `player.html?${qs({ id, season, tab })}`;
+const teamHref      = (id, season, tab) => `team.html?${qs({ id, season, tab })}`;
+const gameChartHref = (id, game) => `game-chart.html?${qs({ id, game })}`;            // live season only
+const teamGameChartHref = (team, game) => `team-game-chart.html?${qs({ team, game })}`; // live season only
+
+function escHtml(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function linkHtml(href, text, cls = "team-link", title = "") {
+  return `<a class="${cls}" href="${href}"${EMBEDDED ? ' target="_top"' : ""}${title ? ` title="${escHtml(title)}"` : ""}`
+       + ` onclick="event.stopPropagation()">${text}</a>`;
+}
+function playerLink(id, name, season) {
+  return id == null ? escHtml(name ?? "—") : linkHtml(playerHref(id, season), escHtml(name ?? "—"));
+}
+function teamLink(id, name, season) {
+  return id == null ? escHtml(name ?? "—") : linkHtml(teamHref(id, season), escHtml(name ?? "—"));
+}
+// Small court icon that opens a game's shot chart (player or team version).
+const CHART_ICON = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/><circle cx="12" cy="12" r="3"/><path d="M8 3v3a4 4 0 0 0 8 0V3"/><path d="M8 21v-3a4 4 0 0 1 8 0v3"/></svg>`;
+function chartLink(href, title = "Shot chart") {
+  return linkHtml(href, CHART_ICON, "chart-link", title);
+}
+// Follow a link from script (a row click) — out of the frame when embedded.
+function goTo(href) { (EMBEDDED ? window.top : window).location.href = href; }
+
 // ── Site navigation (single source of truth) ────────────────────────────────
 // The link list lives here so adding/renaming a page is a one-line edit instead
 // of touching every HTML file. Each page's <nav> ships with only the brand
@@ -190,6 +224,8 @@ const SOCIAL_LINKS = [
 const FOOTER_LINKS = [
   { href: "glossary.html", label: "Glossary" },
   ...SOCIAL_LINKS.map(s => ({ href: s.href, label: s.label, external: true })),
+  { href: "https://www.uatrav.com/sports/ua-data-science-students-launch-sports-analytics-application-hog-charts/article_f1772467-e2e6-4edf-adb7-ae42af6d9e4b.html",
+    label: "In the News", external: true },
 ];
 
 function buildSocialNav() {

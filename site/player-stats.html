@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Player Stats | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Player Stats | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -795,7 +802,7 @@ function rowHTML(p, idx) {
         <img loading="lazy" decoding="async" src="${playerUrl(p.id)}" alt="${p.n}"
              onerror="this.style.opacity=0;this.style.minWidth='34px'">
         <div>
-          <div class="pname"><a class="team-link" href="player.html?id=${p.id}&season=${SEASON}" onclick="event.stopPropagation()">${p.n ?? "—"}</a></div>
+          <div class="pname">${playerLink(p.id, p.n, SEASON)}</div>
           <div class="psub"><span class="pos-chip pos-${posG}">${posLbl}</span></div>
         </div>
       </div>
@@ -804,7 +811,7 @@ function rowHTML(p, idx) {
       <div style="display:flex;align-items:center;gap:7px">
         <img loading="lazy" decoding="async" src="${logoUrl(p.tid)}" alt="${p.t}" width="20" height="20"
              style="object-fit:contain" onerror="this.style.opacity=0">
-        <span style="font-size:.82rem">${p.t ?? "—"}</span>
+        <span style="font-size:.82rem">${teamLink(p.tid, p.t, SEASON)}</span>
       </div>
     </td>
     <td style="color:var(--muted);font-size:.8rem">${p.conf ?? "—"}</td>

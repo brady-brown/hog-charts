@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Game Chart | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Game Chart | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -18,6 +25,10 @@
     .gc-status:empty { display:none; }
     #gc-canvas[hidden] { display:none; }
     #gc-canvas { display:block; width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
+    .gc-links { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:14px 0 0; font-weight:700; }
+    .gc-links:empty { display:none; }
+    .gc-links .sep { color:var(--line); }
+    #gc-box { margin-top:22px; }
     @media (max-width:520px) { .gc-pickers { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -50,6 +61,8 @@
 
   <div class="gc-status" id="gc-status">Loading…</div>
   <canvas id="gc-canvas" width="1080" height="1350" hidden></canvas>
+  <div class="gc-links" id="gc-links"></div>
+  <div id="gc-box"></div>
 </div>
 </div>
 
@@ -75,6 +88,7 @@ let ROWS = new Map();        // player id → player-stats-all row (identity)
 let TEAMS = [];              // [{tid, t}] sorted by name
 let STYLE = "dark";
 let CURRENT = null;          // what's drawn: {player, team, game, line, shots}
+let PENDING = {};            // {player, game} to land on when the next team pick loads
 
 // ── data ──────────────────────────────────────────────────────────────────
 async function teamShots(teamName) {
@@ -173,7 +187,35 @@ async function chooseGame(file, playerId, gameId) {
     : { mx: [], my: [], hx: [], hy: [] };
   CURRENT = { player, team, game, line, shots };
   syncUrl();
+  document.title = `${player.n} ${Games.opponentLabel(game)} | Hog Charts`;
+  document.getElementById("gc-links").innerHTML =
+    `${playerLink(player.id, player.n, SEASON)}<span class="sep">·</span>${teamLink(tid, team.t, SEASON)}`;
+  Games.renderBoxScore(document.getElementById("gc-box"), {
+    season: SEASON, teamId: tid, gameId, highlightId: playerId, live: true,
+    onPlayer: (pid, ptid, gid) => { history.pushState(null, "", gameChartHref(pid, gid)); show(pid, gid, ptid); },
+  });
   draw();
+}
+
+// Land on a player's game: pick his team, then him, then the game.
+async function show(playerId, gameId, teamId = null) {
+  const tid = teamId ?? await teamOf(playerId, gameId);
+  const tSel = document.getElementById("gc-team");
+  if (tid == null || !TEAMS.some((t) => t.tid === tid)) { location.href = playerHref(playerId, SEASON); return; }
+  PENDING = { player: playerId, game: gameId };
+  tSel.value = tid;
+  tSel.dispatchEvent(new Event("change"));      // also refreshes the searchable box's label
+}
+
+// His team: his stats row, else whichever team's game file has him in this game.
+async function teamOf(playerId, gameId) {
+  const tid = ROWS.get(playerId)?.tid;
+  if (tid != null || !gameId) return tid ?? null;
+  for (const t of TEAMS) {
+    const f = await Games.teamFile(SEASON, t.tid);
+    if (f?.games.some((g) => g.g === gameId && g.players.some((p) => p.id === playerId))) return t.tid;
+  }
+  return null;
 }
 
 function save() {
@@ -196,11 +238,10 @@ async function init() {
   tSel.innerHTML = `<option value="">—</option>` + TEAMS.map((t) => `<option value="${t.tid}">${t.t}</option>`).join("");
   tSel.disabled = false;
 
-  let pending = { player: wantPlayer, game: wantGame };   // deep link, used by the first team pick only
   tSel.addEventListener("change", () => {
     const tid = Number(tSel.value);
-    if (tid) chooseTeam(tid, pending.player, pending.game);
-    pending = {};
+    if (tid) chooseTeam(tid, PENDING.player, PENDING.game);
+    PENDING = {};
   });
   document.getElementById("gc-player").addEventListener("change", async (e) => {
     const file = await Games.teamFile(SEASON, Number(tSel.value));
@@ -219,19 +260,19 @@ async function init() {
   });
   document.getElementById("gc-save").addEventListener("click", save);
 
+  // Back/forward through players picked from the box score.
+  window.addEventListener("popstate", () => {
+    const q = new URLSearchParams(location.search);
+    const id = Number(q.get("id")) || null;
+    if (id) show(id, Number(q.get("game")) || null);
+  });
+
   // Deep link: start on this player's team (stats row first, else whoever's game file names him).
-  let startTid = ROWS.get(wantPlayer)?.tid ?? null;
-  if (wantPlayer && startTid == null && wantGame) {
-    for (const t of TEAMS) {
-      const f = await Games.teamFile(SEASON, t.tid);
-      if (f?.games.some((g) => g.g === wantGame && g.players.some((p) => p.id === wantPlayer))) { startTid = t.tid; break; }
-    }
-  }
-  if (startTid != null) {
+  const startTid = wantPlayer ? await teamOf(wantPlayer, wantGame) : null;
+  if (startTid != null && TEAMS.some((t) => t.tid === startTid)) {
+    PENDING = { player: wantPlayer, game: wantGame };
     tSel.value = startTid;
     tSel.dispatchEvent(new Event("change"));      // also refreshes the searchable box's label
-  } else {
-    pending = {};
   }
   setStatus("");
 }

@@ -91,7 +91,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Bail early if the build produced no changes.
-          git add site/data/ site/_headers
+          git add site/data/ site/_headers site/sitemap.xml
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -108,8 +108,8 @@ jobs:
           for i in 1 2 3 4 5; do
             git fetch origin main
             git reset --soft origin/main
-            git restore --source=origin/main --staged --worktree -- . ':!site/data' ':!site/_headers'
-            git add site/data/ site/_headers
+            git restore --source=origin/main --staged --worktree -- . ':!site/data' ':!site/_headers' ':!site/sitemap.xml'
+            git add site/data/ site/_headers site/sitemap.xml
             if git diff --cached --quiet; then
               echo "Remote already up to date — nothing to push."
               exit 0
