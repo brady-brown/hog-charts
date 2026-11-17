@@ -224,6 +224,8 @@ const SOCIAL_LINKS = [
 const FOOTER_LINKS = [
   { href: "glossary.html", label: "Glossary" },
   ...SOCIAL_LINKS.map(s => ({ href: s.href, label: s.label, external: true })),
+  { href: "https://www.uatrav.com/sports/ua-data-science-students-launch-sports-analytics-application-hog-charts/article_f1772467-e2e6-4edf-adb7-ae42af6d9e4b.html",
+    label: "In the News", external: true },
 ];
 
 function buildSocialNav() {
