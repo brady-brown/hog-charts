@@ -1527,3 +1527,10 @@ print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 # ===========================================================================
 from hoglib import feeds   # cached by build_ingest.py (step 0)
 write_game_logs(feeds.load_player_box(SEASON), SEASON_DATA_DIR)
+
+
+# ===========================================================================
+# sitemap.xml — team + player pages for search engines (reads the JSON above)
+# ===========================================================================
+from hoglib.sitemap import write_sitemap
+write_sitemap(os.path.join(PROJECT_ROOT, "site"))

@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Postseason | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Postseason | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -387,7 +394,7 @@ function matchupHTML(game) {
   const side = (name, id, score, isWin) => `
     <div class="mu-team ${isWin ? "win" : "lose"}">
       <img src="${logoUrl(id)}" alt="" onerror="this.style.opacity=0">
-      <span class="mu-name">${name ?? "TBD"}</span>
+      <span class="mu-name">${name == null ? "TBD" : teamLink(id, name, SEASON)}</span>
       <span class="mu-score">${score ?? ""}</span>
     </div>`;
   const homeWin = game.winner != null && game.winner === game.home;
@@ -470,8 +477,8 @@ function renderAllTournament() {
   const cards = team.map(p => `
     <div class="at-card">
       ${headshot(p)}
-      <div class="at-name">${p.n}</div>
-      <div class="at-team">${p.t ?? ""}</div>
+      <div class="at-name">${playerLink(p.id, p.n, SEASON)}</div>
+      <div class="at-team">${p.t ? teamLink(p.tid, p.t, SEASON) : ""}</div>
       <div class="at-line">${fmtN(p.ppg)} / ${fmtN(p.rpg)} / ${fmtN(p.apg)}</div>
       <div class="at-score">${p.gp} GP</div>
     </div>`).join("");
@@ -479,7 +486,7 @@ function renderAllTournament() {
   const hlCard = (label, p, val, sub) => p ? `
     <div class="hl-card">
       <div class="hl-label">${label}</div>
-      <div class="hl-player">${p.n}</div>
+      <div class="hl-player">${playerLink(p.id, p.n, SEASON)}</div>
       <div class="hl-val">${val}</div>
       <div class="hl-sub">${sub}</div>
     </div>` : "";
@@ -512,8 +519,8 @@ function renderPlayers() {
   document.getElementById("players-body").innerHTML = rows.map(p => `
     <tr>
       <td class="logo-cell"><img src="${playerUrl(p.id)}" alt="" onerror="this.src='${logoUrl(p.tid)}';this.onerror=null"></td>
-      <td class="name-cell">${p.n}</td>
-      <td class="sub-cell">${p.t ?? "—"}</td>
+      <td class="name-cell">${playerLink(p.id, p.n, SEASON)}</td>
+      <td class="sub-cell">${teamLink(p.tid, p.t, SEASON)}</td>
       <td class="num">${p.gp ?? "—"}</td>
       <td class="num">${p.pts ?? "—"}</td>
       <td class="num">${fmtN(p.ppg)}</td>
@@ -535,7 +542,7 @@ function renderTeams() {
     const diff  = (t.pt_diff > 0 ? "+" : "") + t.pt_diff;
     return `<tr>
       <td class="logo-cell"><img src="${logoUrl(teamIdByName[t.team])}" alt="" onerror="this.style.opacity=0"></td>
-      <td class="name-cell">${t.team}</td>
+      <td class="name-cell">${teamLink(teamIdByName[t.team], t.team, SEASON)}</td>
       <td>${t.result ?? "—"}</td>
       <td class="sub-cell">${t.region ?? "—"}</td>
       <td class="num">${t.wins}</td>

@@ -2,6 +2,7 @@
  *
  *   Games.teamFile(season, teamId)   → {t, colors, games:[{g, d, ha, o, oid, ts, os, w, players, totals}]}
  *   Games.openBoxScore({season, teamId, gameId, highlightId, chart})
+ *   Games.renderBoxScore(el, {season, teamId, gameId, highlightId, live, onPlayer})  — inline, no modal
  *   Games.shortDate(d) · Games.opponentLabel(game) · Games.shootLine(made, att)
  *
  * Reads data/{season}/games/teams/{team_id}.json from hoglib/gamelogs.py, which
@@ -11,7 +12,7 @@
  *
  * chart ({kind: "player"|"team", name}) adds that game's makes and misses from
  * data/shots/{team}.json — live season only, so callers pass it only then.
- * Needs common.js (loadJSON, logoUrl, slugify, ensurePlotly) and court.js.
+ * Needs common.js (loadJSON, logoUrl, slugify, ensurePlotly, the *Link/*Href helpers) and court.js.
  */
 (function () {
   "use strict";
@@ -116,22 +117,71 @@
   const v = (x) => x ?? "—";
 
   // ── box score ─────────────────────────────────────────────────────────────
+  // Names link to the player and team pages. A player's row opens his shot chart
+  // for this game (live season) or his page (past seasons); ctx.onPlayer, when
+  // given, takes the row/chart click instead (the game chart page switches in place).
   const BOX_COLS = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "PF", "FG", "3P", "FT"];
   const statCells = (s) => `<td>${v(s.pts)}</td><td>${v(s.reb)}</td><td>${v(s.ast)}</td><td>${v(s.stl)}</td>
     <td>${v(s.blk)}</td><td>${v(s.tov)}</td><td>${v(s.pf)}</td>
     <td>${shootLine(s.fgm, s.fga)}</td><td>${shootLine(s.tpm, s.tpa)}</td><td>${shootLine(s.ftm, s.fta)}</td>`;
 
-  function teamTable(side, highlightId) {
+  function teamTable(side, ctx) {
+    const { season, live, gameId, highlightId } = ctx;
+    const chartCol = live ? 1 : 0;
     const rows = side.game.players.map((p) => p.dnp
-      ? `<tr><td>${p.n}</td><td>${p.pos}</td><td class="gm-dnp" colspan="${BOX_COLS.length}">DNP</td></tr>`
-      : `<tr class="${p.id === highlightId ? "gm-highlight" : ""}"><td>${p.n}</td><td>${p.pos}</td>
-           <td>${v(p.min)}</td>${statCells(p)}</tr>`).join("");
-    return `<div class="gm-section"><div class="gm-hdr">${side.name}</div>
+      ? `<tr><td>${playerLink(p.id, p.n, season)}</td><td>${p.pos}</td><td class="gm-dnp" colspan="${BOX_COLS.length + chartCol}">DNP</td></tr>`
+      : `<tr class="gm-row ${p.id === highlightId ? "gm-highlight" : ""}" data-pid="${p.id}" data-tid="${side.tid}">
+           <td>${playerLink(p.id, p.n, season)}</td><td>${p.pos}</td>
+           <td>${v(p.min)}</td>${statCells(p)}${live ? `<td>${chartLink(gameChartHref(p.id, gameId))}</td>` : ""}</tr>`).join("");
+    const teamChart = live ? ` ${chartLink(teamGameChartHref(side.tid, gameId), "Team shot chart")}` : "";
+    return `<div class="gm-section"><div class="gm-hdr">${teamLink(side.tid, side.name, season)}${teamChart}</div>
       <div class="gm-wrap"><table class="gm-tbl">
-        <tr><th>Player</th><th>Pos</th>${BOX_COLS.map((c) => `<th>${c}</th>`).join("")}</tr>
+        <tr><th>Player</th><th>Pos</th>${BOX_COLS.map((c) => `<th>${c}</th>`).join("")}${live ? "<th></th>" : ""}</tr>
         ${rows}
-        <tr class="gm-totals"><td>Totals</td><td></td><td></td>${statCells(side.game.totals)}</tr>
+        <tr class="gm-totals"><td>Totals</td><td></td><td></td>${statCells(side.game.totals)}${live ? "<td></td>" : ""}</tr>
       </table></div></div>`;
+  }
+
+  // Both teams' lines for one game: the team's own file + the same game in the opponent's.
+  async function loadSides(season, teamId, gameId) {
+    const ownFile = await teamFile(season, teamId);
+    const own = ownFile?.games.find((g) => g.g === gameId);
+    if (!own) return null;
+    const oppFile = await teamFile(season, own.oid);
+    const opp = oppFile?.games.find((g) => g.g === gameId);
+    const sides = [{ name: ownFile.t, tid: teamId, game: own, score: own.ts, won: own.w, ha: own.ha }];
+    if (opp) sides.push({ name: oppFile.t, tid: own.oid, game: opp, score: opp.ts, won: opp.w, ha: opp.ha });
+    else sides.push({ name: own.o, tid: own.oid, game: null, score: own.os, won: !own.w, ha: own.ha === "away" ? "home" : "away" });
+    sides.sort((a, b) => (a.ha === "away" ? -1 : 1) - (b.ha === "away" ? -1 : 1));   // away first
+    return { ownFile, own, sides };
+  }
+
+  function scoreHTML(sides, own, season) {
+    return `<div class="gm-score">${sides.map((s) => `
+        <div class="gm-team-line ${s.won ? "won" : ""}">
+          <img src="${logoUrl(s.tid)}" alt="" onerror="this.style.opacity=0">
+          <span>${teamLink(s.tid, s.name, season)}</span><span class="gm-pts">${s.score}</span></div>`).join("")}</div>
+      <div class="gm-date">${shortDate(own.d)}</div>`;
+  }
+
+  const tablesHTML = (sides, ctx) => sides.filter((s) => s.game).map((s) => teamTable(s, ctx)).join("");
+
+  // Row + chart-icon clicks. Capture phase, so it runs before the icon's own link.
+  function wireRows(el, ctx) {
+    if (el._gmRows) el.removeEventListener("click", el._gmRows, true);
+    el._gmRows = (e) => {
+      if (e.target.closest("a.team-link")) return;              // a name: follow its link
+      const row = e.target.closest("tr.gm-row[data-pid]");
+      if (!row) return;
+      const pid = Number(row.dataset.pid), tid = Number(row.dataset.tid);
+      if (ctx.onPlayer && ctx.live) {
+        e.preventDefault(); e.stopPropagation();
+        ctx.onPlayer(pid, tid, ctx.gameId);
+      } else if (!e.target.closest("a")) {
+        goTo(ctx.live ? gameChartHref(pid, ctx.gameId) : playerHref(pid, ctx.season));
+      }
+    };
+    el.addEventListener("click", el._gmRows, true);
   }
 
   async function renderChart(teamName, gameId, chart) {
@@ -166,28 +216,31 @@
     body.innerHTML = `<div class="gm-status">Loading…</div>`;
     document.getElementById("gm-overlay").classList.add("open");
 
-    const ownFile = await teamFile(season, teamId);
-    const own = ownFile?.games.find((g) => g.g === gameId);
+    const loaded = await loadSides(season, teamId, gameId);
     if (request !== boxRequest) return;
-    if (!own) { body.innerHTML = `<div class="gm-status">Box score not available.</div>`; return; }
-    const oppFile = await teamFile(season, own.oid);
-    const opp = oppFile?.games.find((g) => g.g === gameId);
-    if (request !== boxRequest) return;
+    if (!loaded) { body.innerHTML = `<div class="gm-status">Box score not available.</div>`; return; }
+    const { ownFile, own, sides } = loaded;
+    const ctx = { season, live: !!chart, gameId, highlightId };   // callers pass chart for the live season only
 
-    const sides = [{ name: ownFile.t, tid: teamId, game: own, score: own.ts, won: own.w, ha: own.ha }];
-    if (opp) sides.push({ name: oppFile.t, tid: own.oid, game: opp, score: opp.ts, won: opp.w, ha: opp.ha });
-    sides.sort((a, b) => (a.ha === "away" ? -1 : 1) - (b.ha === "away" ? -1 : 1));   // away first
-
-    body.innerHTML = `<div class="gm-score">${sides.map((s) => `
-        <div class="gm-team-line ${s.won ? "won" : ""}">
-          <img src="${logoUrl(s.tid)}" alt="" onerror="this.style.opacity=0">
-          <span>${s.name}</span><span class="gm-pts">${s.score}</span></div>`).join("")}</div>
-      <div class="gm-date">${shortDate(own.d)}</div>
-      ${chart ? `<div class="gm-section"><div class="gm-hdr"><a class="team-link" href="${chart.kind === "player" && highlightId != null
-          ? `game-chart.html?id=${highlightId}&game=${gameId}`
-          : `team-game-chart.html?team=${teamId}&game=${gameId}`}">${chart.name} <span class="team-link-arrow">→</span></a></div><div id="gm-chart"></div></div>` : ""}
-      ${sides.map((s) => teamTable(s, highlightId)).join("")}`;
+    body.innerHTML = scoreHTML(sides, own, season) +
+      (chart ? `<div class="gm-section"><div class="gm-hdr"><a class="team-link" href="${chart.kind === "player" && highlightId != null
+          ? gameChartHref(highlightId, gameId)
+          : teamGameChartHref(teamId, gameId)}">${escHtml(chart.name)} <span class="team-link-arrow">→</span></a></div><div id="gm-chart"></div></div>` : "") +
+      tablesHTML(sides, ctx);
+    wireRows(body, ctx);
     if (chart) renderChart(ownFile.t, gameId, chart);
+  }
+
+  // The same box score drawn into a page (the game chart pages) instead of the modal.
+  // onPlayer(playerId, teamId, gameId) takes a player's row/chart click.
+  async function renderBoxScore(el, { season, teamId, gameId, highlightId = null, live = false, onPlayer = null }) {
+    const request = (el._gmRequest = (el._gmRequest ?? 0) + 1);
+    const loaded = await loadSides(season, teamId, gameId);
+    if (request !== el._gmRequest) return;
+    if (!loaded) { el.innerHTML = ""; return; }
+    const ctx = { season, live, gameId, highlightId, onPlayer };
+    el.innerHTML = scoreHTML(loaded.sides, loaded.own, season) + tablesHTML(loaded.sides, ctx);
+    wireRows(el, ctx);
   }
 
   function isOpen() {
@@ -202,5 +255,5 @@
     if (window.Plotly && chartEl) Plotly.purge(chartEl);
   }
 
-  window.Games = { teamFile, openBoxScore, closeBoxScore, shortDate, opponentLabel, shootLine };
+  window.Games = { teamFile, openBoxScore, renderBoxScore, closeBoxScore, shortDate, opponentLabel, shootLine };
 })();

@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Predictor | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Predictor | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -282,7 +289,7 @@ function heroHTML(t1, t2, r, s1, s2, sub1, sub2) {
     <div class="hc-teams">
       <div class="hc-team">
         <img src="${logoUrl(t1.team_id)}" alt="${t1.team}" onerror="this.style.opacity=0">
-        <div class="hc-team-name" style="color:${T1}">${t1.team}</div>
+        <div class="hc-team-name" style="color:${T1}">${teamLink(t1.team_id, t1.team, SEASON)}</div>
         <div class="hc-team-sub">${sub1}</div>
       </div>
       <div style="text-align:center">
@@ -295,7 +302,7 @@ function heroHTML(t1, t2, r, s1, s2, sub1, sub2) {
       </div>
       <div class="hc-team">
         <img src="${logoUrl(t2.team_id)}" alt="${t2.team}" onerror="this.style.opacity=0">
-        <div class="hc-team-name" style="color:${T2}">${t2.team}</div>
+        <div class="hc-team-name" style="color:${T2}">${teamLink(t2.team_id, t2.team, SEASON)}</div>
         <div class="hc-team-sub">${sub2}</div>
       </div>
     </div>

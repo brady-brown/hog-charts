@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Team | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Team | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -239,15 +246,17 @@ async function loadGames() {
   const games = [...(file?.games ?? [])].reverse();
   if (!games.length) { status.textContent = "No games yet."; return; }
   status.textContent = "";
-  const { shortDate, opponentLabel, shootLine } = Games;
+  const { shortDate, shootLine } = Games;
+  const live = SEASON === CUR_SEASON;
   const cols = ["FG", "3P", "FT", "REB", "AST", "TOV", "STL", "BLK"];
-  table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
+  table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map(c => `<th>${c}</th>`).join("")}${live ? "<th></th>" : ""}</tr>` +
     games.map(g => { const t = g.totals; return `
       <tr class="gm-row" data-game="${g.g}">
-        <td>${shortDate(g.d)}</td><td>${opponentLabel(g)}</td>
+        <td>${shortDate(g.d)}</td><td>${g.ha === "away" ? "@" : "vs"} ${teamLink(g.oid, g.o, SEASON)}</td>
         <td><span class="${g.w ? "gm-win" : "gm-loss"}">${g.w ? "W" : "L"}</span> ${g.ts}–${g.os}</td>
         <td>${shootLine(t.fgm, t.fga)}</td><td>${shootLine(t.tpm, t.tpa)}</td><td>${shootLine(t.ftm, t.fta)}</td>
         <td>${t.reb ?? "—"}</td><td>${t.ast ?? "—"}</td><td>${t.tov ?? "—"}</td><td>${t.stl ?? "—"}</td><td>${t.blk ?? "—"}</td>
+        ${live ? `<td>${chartLink(teamGameChartHref(TEAM_ID, g.g), "Team shot chart")}</td>` : ""}
       </tr>`; }).join("");
   table.onclick = e => {
     const gameId = e.target.closest("tr.gm-row")?.dataset.game;
@@ -270,7 +279,7 @@ async function loadRoster() {
   table.innerHTML = `<tr><th>Player</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
     ROSTER.map((p, i) => `
       <tr class="gm-row" data-i="${i}">
-        <td class="tp-player"><img src="${playerUrl(p.id)}" alt="" onerror="this.style.visibility='hidden'">${p.jn ? `#${p.jn} ` : ""}<a class="team-link" href="player.html?id=${p.id}&season=${SEASON}" onclick="event.stopPropagation()">${p.n}</a></td>
+        <td class="tp-player"><img src="${playerUrl(p.id)}" alt="" onerror="this.style.visibility='hidden'">${p.jn ? `#${p.jn} ` : ""}${playerLink(p.id, p.n, SEASON)}</td>
         <td>${p.pos ?? "—"}</td><td>${p.exp ?? "—"}</td><td>${p.gp ?? "—"}</td><td>${num(p.mpg)}</td>
         <td>${num(p.ppg)}</td><td>${num(p.rpg)}</td><td>${num(p.apg)}</td>
         <td>${pct(p.fg)}</td><td>${pct(p.fg3)}</td><td>${pct(p.ts)}</td>

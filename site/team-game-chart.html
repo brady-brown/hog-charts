@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Team Game Chart | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Team Game Chart | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -18,6 +25,9 @@
     #gc-canvas[hidden] { display:none; }
     #gc-canvas { display:block; width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
     @media (max-width:520px) { .gc-pickers { grid-template-columns:1fr; } }
+    .gc-links { margin:14px 0 0; font-weight:700; }
+    .gc-links:empty { display:none; }
+    #gc-box { margin-top:22px; }
   </style>
 </head>
 <body>
@@ -48,6 +58,8 @@
 
   <div class="gc-status" id="gc-status">Loading…</div>
   <canvas id="gc-canvas" width="1080" height="1350" hidden></canvas>
+  <div class="gc-links" id="gc-links"></div>
+  <div id="gc-box"></div>
 </div>
 </div>
 
@@ -130,6 +142,10 @@ async function chooseGame(file, gameId) {
   const shots = gi >= 0 ? shotsXY(data.shots, (g) => g === gi) : { mx: [], my: [], hx: [], hy: [] };
   CURRENT = { team, game, record: recordThrough(file, gameId), shots };
   syncUrl();
+  document.title = `${team.t} ${Games.opponentLabel(game)} | Hog Charts`;
+  document.getElementById("gc-links").innerHTML = teamLink(tid, team.t, SEASON);
+  // A player's row opens his own chart for this game.
+  Games.renderBoxScore(document.getElementById("gc-box"), { season: SEASON, teamId: tid, gameId, live: true });
   draw();
 }
 

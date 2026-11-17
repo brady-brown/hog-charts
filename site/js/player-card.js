@@ -225,7 +225,7 @@
     }
     const rows = CAREER_SHARD_CACHE[shardIndex]?.[String(playerId)];
     if (request !== careerRequest || !rows?.length) return;
-    career = { rows: [...rows].sort((a, b) => a.s - b.s), season };
+    career = { rows: [...rows].sort((a, b) => a.s - b.s), season, playerId };
     renderCareer();
   }
 
@@ -237,9 +237,9 @@
     const head = `<tr><th>Season</th><th>School</th>${cols.map(([lbl]) => `<th>${lbl}</th>`).join("")}</tr>`;
     const body = career.rows.map((r) => `
       <tr class="${r.s === career.season ? "current" : ""}">
-        <td>${seasonLabel(r.s)}</td>
-        <td><div class="pc-career-school" title="${r.t ?? ""}">
-          <img src="${logoUrl(r.tid)}" alt="" onerror="this.style.opacity=0"><span>${r.t ?? "—"}</span></div></td>
+        <td>${linkHtml(playerHref(career.playerId, r.s), seasonLabel(r.s))}</td>
+        <td><div class="pc-career-school" title="${escHtml(r.t ?? "")}">
+          <img src="${logoUrl(r.tid)}" alt="" onerror="this.style.opacity=0"><span>${teamLink(r.tid, r.t, r.s)}</span></div></td>
         ${cols.map(([, fmt]) => `<td>${fmt(r)}</td>`).join("")}
       </tr>`).join("");
     document.getElementById("pc-career-tbl").innerHTML = head + body;
@@ -268,7 +268,7 @@
 
   async function loadGames() {
     if (!gamesFor) return;
-    const { playerId, teamId, season } = gamesFor;
+    const { playerId, teamId, season, live } = gamesFor;
     const request = ++gamesRequest;
     const status = document.getElementById("pc-games-status");
     const table = document.getElementById("pc-games-tbl");
@@ -282,16 +282,18 @@
       .reverse();                                   // newest first
     if (!games.length) { status.textContent = "No games yet."; return; }
     status.textContent = "";
-    const { shortDate, opponentLabel, shootLine } = Games;
+    const { shortDate, shootLine } = Games;
     const cols = ["MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG", "3P", "FT"];
-    table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>` +
+    const oppCell = (g) => `${g.ha === "away" ? "@" : "vs"} ${teamLink(g.oid, g.o, season)}`;
+    table.innerHTML = `<tr><th>Date</th><th>Opp</th><th>Result</th>${cols.map((c) => `<th>${c}</th>`).join("")}${live ? "<th></th>" : ""}</tr>` +
       games.map(({ g, line: l }) => `
         <tr class="pc-game" data-game="${g.g}">
-          <td>${shortDate(g.d)}</td><td>${opponentLabel(g)}</td>
+          <td>${shortDate(g.d)}</td><td>${oppCell(g)}</td>
           <td><span class="${g.w ? "pc-win" : "pc-loss"}">${g.w ? "W" : "L"}</span> ${g.ts}–${g.os}</td>
           <td>${l.min ?? "—"}</td><td>${l.pts ?? "—"}</td><td>${l.reb ?? "—"}</td><td>${l.ast ?? "—"}</td>
           <td>${l.stl ?? "—"}</td><td>${l.blk ?? "—"}</td><td>${l.tov ?? "—"}</td>
           <td>${shootLine(l.fgm, l.fga)}</td><td>${shootLine(l.tpm, l.tpa)}</td><td>${shootLine(l.ftm, l.fta)}</td>
+          ${live ? `<td>${chartLink(gameChartHref(playerId, g.g))}</td>` : ""}
         </tr>`).join("");
   }
 

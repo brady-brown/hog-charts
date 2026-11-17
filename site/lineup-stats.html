@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lineup Stats | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Lineup Stats | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
@@ -156,6 +163,21 @@ let sortCol  = "Avg_Poss";
 let sortDir  = "desc";
 let SEASON   = null;
 let curSlug  = null;
+let NAME_IDS = {};     // player name → id for the team on screen (lineups carry names only)
+const TEAM_IDS = {};   // season → {team name → team id}
+
+// Each name in a lineup links to his page: the team's game file holds its roster.
+async function loadNameIds(season, team) {
+  if (!TEAM_IDS[season]) {
+    const stats = await loadJSON(`data/${season}/team-stats-all.json`);
+    TEAM_IDS[season] = Object.fromEntries((stats?.team_stats ?? []).map(r => [r.team, r.team_id]));
+  }
+  const tid = TEAM_IDS[season][team];
+  const file = tid != null ? await loadJSON(`data/${season}/games/teams/${tid}.json`) : null;
+  return Object.fromEntries(Object.entries(file?.roster ?? {}).map(([id, [name]]) => [name, Number(id)]));
+}
+const comboHtml = (combo) => (combo ?? "").split(", ")
+  .map(name => NAME_IDS[name] != null ? playerLink(NAME_IDS[name], name, SEASON) : escHtml(name)).join(", ");
 
 
 async function init() {
@@ -236,7 +258,11 @@ async function loadTeam(team) {
     }
     TEAM_DATA[cacheKey] = data;
   }
+  NAME_IDS = {};
   render();
+  const season = SEASON;
+  const ids = await loadNameIds(season, team);
+  if (curSlug === slug && SEASON === season) { NAME_IDS = ids; render(); }
 }
 
 function setSize(s) {
@@ -291,7 +317,7 @@ function render() {
   const rows = getRows();
   document.getElementById("count-label").textContent = `${rows.length} lineups`;
   document.getElementById("lu-body").innerHTML = rows.map(r => `<tr>
-    <td class="combo" title="${r.Combo}">${r.Combo}</td>
+    <td class="combo" title="${escHtml(r.Combo)}">${comboHtml(r.Combo)}</td>
     <td class="num">${v(r.Avg_Poss, 0)}</td>
     <td class="num">${v(r.Mins, 0)}</td>
     <td class="num ${netClass(r.NetRtg)}">${r.NetRtg != null ? (r.NetRtg > 0 ? "+" : "") + v(r.NetRtg) : "—"}</td>
