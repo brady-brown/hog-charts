@@ -19,7 +19,7 @@ SITE_URL = "https://hogcharts.org"
 
 # Tool pages. Not listed: player/team (added per id below), game-chart pages
 # (need an id), scout-report (redirects to the team page's Scout tab).
-STATIC_PAGES = ["", "prediction.html", "net-ratings.html", "player-stats.html",
+STATIC_PAGES = ["", "games.html", "prediction.html", "net-ratings.html", "player-stats.html",
                 "lineup-stats.html", "lineup-builder.html", "postseason.html",
                 "shot-charts.html", "glossary.html"]
 

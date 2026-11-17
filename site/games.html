@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Games | Hog Charts</title>
+  <meta name="description" content="Free and accessible college basketball analytics">
+  <meta property="og:site_name" content="Hog Charts">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Games | Hog Charts">
+  <meta property="og:description" content="Free and accessible college basketball analytics">
+  <meta property="og:image" content="https://hogcharts.org/img/logo.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <meta name="theme-color" content="#0E1320">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    .gs-wrap { max-width:1180px; margin:0 auto; }
+    .gs-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+    .gs-head h2 { margin:0; }
+    .gs-head .form-group { margin:0; flex:0 1 260px; }
+    .gs-status { color:var(--muted); font-size:.92rem; padding:24px 0; }
+    .gs-status:empty { display:none; }
+
+    /* date strip */
+    .gs-dates { display:flex; align-items:stretch; gap:8px; margin-bottom:18px; }
+    .gs-arrow { flex:none; width:36px; background:var(--card); border:1px solid var(--line); border-radius:10px;
+      color:var(--muted); font-size:1.1rem; cursor:pointer; }
+    .gs-arrow:hover:not(:disabled) { color:var(--ink); }
+    .gs-arrow:disabled { opacity:.3; cursor:default; }
+    .gs-strip { flex:1; display:flex; gap:6px; overflow-x:auto; scroll-behavior:smooth; scrollbar-width:none; }
+    .gs-strip::-webkit-scrollbar { display:none; }
+    .gs-day { flex:none; min-width:64px; padding:7px 10px; background:var(--card); border:1px solid var(--line);
+      border-radius:10px; color:var(--muted); text-align:center; cursor:pointer; line-height:1.2; font:inherit; }
+    .gs-day:hover { color:var(--ink); }
+    .gs-day .dw { display:block; font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+    .gs-day .dd { display:block; font-size:.86rem; font-weight:700; white-space:nowrap; }
+    .gs-day.today { border-color:#3a4660; color:var(--ink); }
+    .gs-day.active { background:var(--t1); border-color:var(--t1); color:#fff; }
+
+    /* scoreboard cards */
+    .gs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(270px, 1fr)); gap:12px; }
+    .gs-grid + .gs-grid { margin-top:12px; }
+    .gs-card { display:block; background:var(--card); border:1px solid var(--line); border-radius:14px;
+      padding:12px 14px 10px; color:var(--ink); text-decoration:none; transition:border-color .12s, transform .12s; }
+    .gs-card:hover { border-color:#3a4660; transform:translateY(-1px); }
+    .gs-row { display:flex; align-items:center; gap:9px; padding:3px 0; color:var(--muted); }
+    .gs-row.won { color:var(--ink); }
+    .gs-row img { width:26px; height:26px; object-fit:contain; flex:none; }
+    .gs-name { font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gs-row.won .gs-name { font-weight:800; }
+    .gs-rk { font-size:.7rem; font-weight:700; color:var(--dim); margin-right:-4px; }
+    .gs-rec { font-size:.72rem; color:var(--dim); white-space:nowrap; }
+    .gs-pts { margin-left:auto; font-size:1.15rem; font-weight:800; font-variant-numeric:tabular-nums; }
+    .gs-row.won .gs-pts::after { content:"◂"; font-size:.7rem; margin-left:4px; color:var(--t1); }
+    .gs-row:not(.won) .gs-pts { padding-right:15px; }
+    .gs-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; padding-top:7px;
+      border-top:1px solid var(--line); font-size:.72rem; color:var(--dim); }
+    .gs-foot .gs-final { font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+    .gs-foot .gs-top { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
+
+    /* upcoming cards: win probability where the score goes, lines in the footer */
+    .gs-card.up .gs-row { color:var(--ink); }
+    .gs-wp { margin-left:auto; font-size:.95rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--muted); }
+    .gs-row.fav .gs-wp { color:var(--ink); }
+    .gs-wpbar { display:flex; height:4px; border-radius:2px; overflow:hidden; background:var(--card2); margin:6px 0 2px; }
+    .gs-wpbar i { display:block; height:100%; }
+    .gs-when { font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gs-lines { display:flex; gap:10px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .gs-line { display:inline-flex; align-items:center; gap:4px; }
+    .gs-line b { color:var(--ink); }
+    .gs-line img { width:14px; height:14px; object-fit:contain; }
+
+    /* game view */
+    .gv-back { display:inline-block; margin-bottom:14px; color:var(--muted); font-weight:700; text-decoration:none; font-size:.9rem; }
+    .gv-back:hover { color:var(--ink); }
+    .gv-score { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;
+      background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 22px; margin-bottom:16px; }
+    .gv-team { display:flex; align-items:center; gap:14px; min-width:0; }
+    .gv-team.home { flex-direction:row-reverse; text-align:right; }
+    .gv-team img { width:58px; height:58px; object-fit:contain; flex:none; }
+    .gv-team .nm { font-weight:800; font-size:1.1rem; line-height:1.2; }
+    .gv-team .nm a { color:inherit; }
+    .gv-team .rc { font-size:.8rem; color:var(--dim); }
+    .gv-team .pt { font-size:2.4rem; font-weight:900; font-variant-numeric:tabular-nums; margin-left:auto; color:var(--muted); }
+    .gv-team.home .pt { margin-left:0; margin-right:auto; }
+    .gv-team.won .pt { color:var(--ink); }
+    .gv-mid { text-align:center; font-size:.75rem; color:var(--dim); line-height:1.4; max-width:220px; }
+    .gv-mid b { display:block; font-size:.8rem; color:var(--ink); text-transform:uppercase; letter-spacing:.08em; }
+
+    .gv-pred { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:16px; }
+    .gv-bar { display:flex; height:30px; border-radius:9px; overflow:hidden; font-size:.85rem; font-weight:800; color:#fff; }
+    .gv-bar > div { display:flex; align-items:center; padding:0 10px; min-width:44px; text-shadow:0 1px 2px rgba(0,0,0,.4); }
+    .gv-bar > div:last-child { justify-content:flex-end; }
+    .gv-verdict { text-align:center; margin:12px 0 4px; font-size:1rem; color:var(--muted); }
+    .gv-verdict b { color:var(--ink); }
+    .gv-chips { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; margin-top:12px; }
+    .gv-chip { background:var(--card2); border-radius:10px; padding:9px 10px; text-align:center; }
+    .gv-chip .n { font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .gv-chip .l { font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); margin-top:2px; }
+    .gv-chip img { width:14px; height:14px; object-fit:contain; vertical-align:-2px; margin-right:3px; }
+    .gv-more { display:block; text-align:right; margin-top:10px; font-weight:700; font-size:.88rem; }
+
+    .gv-charts { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+    .gv-chart { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; min-width:0; }
+    .gv-chart-hd { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .gv-chart-hd img { width:28px; height:28px; object-fit:contain; }
+    .gv-chart-hd .nm { font-weight:800; }
+    .gv-chart-hd .fg { margin-left:auto; font-size:.82rem; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .gv-filter { display:inline-flex; align-items:center; gap:6px; margin:-2px 0 8px; padding:3px 10px; border-radius:999px;
+      background:var(--card2); border:1px solid var(--line); font-size:.78rem; font-weight:700; cursor:pointer; color:var(--ink); }
+    .gv-filter:hover { border-color:#3a4660; }
+    .gv-court { display:block; width:100%; height:auto; background:#0B0E14; border-radius:10px; }
+    .gv-court .ln { fill:none; stroke:#3C4456; stroke-width:.16; }
+    .gv-court .mk { fill:#22C55E; stroke:#fff; stroke-width:.06; opacity:.9; }
+    .gv-court .ms { stroke:#EF4444; stroke-width:.2; stroke-linecap:round; opacity:.85; }
+    .gv-court.season .mk { stroke-width:0; opacity:.55; }
+    .gv-court.season .ms { stroke-width:.13; opacity:.45; }
+    .gv-zones { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px; }
+    .gv-zone { background:var(--card2); border-radius:10px; padding:7px 8px; text-align:center; }
+    .gv-zone .zl { font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); }
+    .gv-zone .zv { font-size:.95rem; font-weight:800; font-variant-numeric:tabular-nums; }
+    .gv-zone .zp { font-size:.72rem; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+    .gv-totals { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin-bottom:16px; }
+    .gv-tot-hd { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; margin-bottom:6px; }
+    .gv-tot-hd img { width:24px; height:24px; object-fit:contain; }
+    .gv-tot-hd .r { justify-self:end; }
+    .gv-trow { display:grid; grid-template-columns:1fr 64px 1fr; align-items:center; gap:10px; padding:5px 0;
+      border-top:1px solid #1a2235; font-variant-numeric:tabular-nums; }
+    .gv-trow .lb { text-align:center; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+    .gv-side { display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); }
+    .gv-side.r { flex-direction:row-reverse; }
+    .gv-side.best { color:var(--ink); font-weight:800; }
+    .gv-side .v { min-width:58px; white-space:nowrap; }
+    .gv-side.r .v { text-align:right; }
+    .gv-sbar { flex:1; height:6px; background:var(--card2); border-radius:3px; display:flex; overflow:hidden; }
+    .gv-side:not(.r) .gv-sbar { justify-content:flex-end; }
+    .gv-sbar i { display:block; height:100%; border-radius:3px; opacity:.45; }
+    .gv-side.best .gv-sbar i { opacity:1; }
+    .gv-sec { height:12px; }
+    .gv-sec:first-of-type { display:none; }
+
+    #gv-box .gm-score, #gv-box .gm-date { display:none; }
+    #gv-box { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:4px 18px 16px; }
+
+    @media (max-width:760px) {
+      .gv-charts { grid-template-columns:1fr; }
+      .gv-score { padding:14px; gap:8px; }
+      .gv-team { flex-direction:column; gap:4px; text-align:center; }
+      .gv-team.home { flex-direction:column; text-align:center; }
+      .gv-team .pt, .gv-team.home .pt { margin:0; font-size:2rem; }
+      .gv-team img { width:44px; height:44px; }
+      .gv-team .nm { font-size:.95rem; }
+      .gv-mid { max-width:120px; }
+      .gv-totals { padding:12px; }
+      .gv-trow { grid-template-columns:1fr 52px 1fr; gap:6px; }
+      .gv-side .v { min-width:46px; font-size:.82rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand"><img src="img/logo.png" alt="Hog Charts logo">Hog Charts</a>
+</nav>
+
+<div class="container">
+<div class="gs-wrap">
+  <div id="gs-list">
+    <div class="gs-head">
+      <h2>Games</h2>
+      <div class="form-group"><label for="gs-conf">Conference</label><select id="gs-conf" disabled></select></div>
+    </div>
+    <div class="gs-dates">
+      <button class="gs-arrow" id="gs-prev" aria-label="Previous day">‹</button>
+      <div class="gs-strip" id="gs-strip"></div>
+      <button class="gs-arrow" id="gs-next" aria-label="Next day">›</button>
+    </div>
+    <div id="gs-cards"></div>
+  </div>
+  <div id="gs-game" hidden></div>
+  <div class="gs-status" id="gs-status">Loading…</div>
+</div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/court.js"></script>
+<script src="js/zone-chart.js"></script>
+<script src="js/predict.js"></script>
+<script src="js/games.js"></script>
+<script>
+// Games: a scoreboard by date. Played games show the final and open to both
+// teams' shot charts, a team-totals comparison and the box score. Upcoming games
+// show the model's win probability and spread next to the posted line, and open
+// to a preview: the prediction, both teams' season shot charts and season stats.
+//
+// URL: ?date=YYYY-MM-DD (scoreboard) or ?game={gameId} (one game).
+// Data (all from build_site.py, live season only — shot coordinates exist for it alone):
+//   games/index.json     finals            (hoglib/gamelogs.write_game_index)
+//   games/upcoming.json  scheduled games   (hoglib/gamelogs.write_upcoming)
+//   games/teams/{id}.json  totals + box scores · data/shots/{slug}.json  shot locations
+//   predictor.json  the model (js/predict.js) · team-stats-all.json  conference, rank, season stats
+
+let SEASON = null;
+let GAMES = [];            // finals: [{g, d, away:{tid, pts, top}, home:{...}}] oldest first
+let UPCOMING = [];         // [{g, d, start, away:{tid}, home:{tid}, neutral, tbd, tv, venue, line}]
+let TEAMS = {};            // tid → {name, short, conf, rank}
+let STATS = new Map();     // tid → team-stats-all row
+let PRED = null;           // {model, byId, lgDef} from predictor.json
+let DATES = [];            // every date with a final or a scheduled game, oldest first
+let RECORD = new Map();    // `${gameId}:${tid}` → "W-L" through that game
+let CURRENT_RECORD = {};   // tid → "W-L" today
+let CONF = "";             // "" = everyone, "top25", or a conference name
+let DATE = null;
+let VIEW = 0;              // bumps on every render so stale async work can bail
+
+const $ = (id) => document.getElementById(id);
+const setStatus = (t) => { $("gs-status").textContent = t; };
+const team = (tid) => TEAMS[tid] ?? { name: String(tid), short: String(tid), conf: "", rank: null };
+const pct = (m, a) => (a ? (100 * m / a).toFixed(1) : "—");
+const shortName = (n) => { const p = n.split(" "); return p.length > 1 ? `${p[0][0]}. ${p.slice(1).join(" ")}` : n; };
+const dayLabel = (d, opts) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", opts);
+const todayET = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+const rankTag = (tid) => { const r = team(tid).rank; return r != null && r <= 25 ? `<span class="gs-rk">${r}</span>` : ""; };
+const LOGO_ICON = `<img src="img/logo.png" alt="Hog Charts">`;
+
+// ── data ──────────────────────────────────────────────────────────────────
+async function load() {
+  const seasons = await loadJSON("data/seasons.json") ?? [];
+  SEASON = seasons[0];
+  const [index, upcoming, stats, predictor] = await Promise.all([
+    loadJSON(`data/${SEASON}/games/index.json`),
+    loadJSON(`data/${SEASON}/games/upcoming.json`),
+    loadJSON(`data/${SEASON}/team-stats-all.json`),
+    loadJSON(`data/${SEASON}/predictor.json`),
+  ]);
+  if (!index?.games?.length && !upcoming?.games?.length) return false;
+  STATS = new Map((stats?.team_stats ?? []).map((t) => [t.team_id, t]));
+  const addTeams = (teams) => {
+    for (const [tid, [name, short, abbr]] of Object.entries(teams ?? {})) {
+      if (abbr && TEAMS[tid]) TEAMS[tid].abbr = abbr;
+      if (TEAMS[tid]) continue;
+      const m = STATS.get(Number(tid));
+      TEAMS[tid] = { name, short: short ?? name, abbr: abbr ?? null, conf: m?.conf ?? "", rank: m?.rank ?? null };
+    }
+  };
+  addTeams(index?.teams);
+  addTeams(upcoming?.teams);
+  if (predictor?.model) {
+    PRED = { model: predictor.model, byId: new Map(predictor.teams.map((t) => [t.team_id, t])),
+             lgDef: leagueDef(predictor.teams) };
+  }
+
+  GAMES = (index?.games ?? []).map(([g, d, at, ap, ht, hp, atop, htop]) =>
+    ({ g, d, away: { tid: at, pts: ap, top: atop }, home: { tid: ht, pts: hp, top: htop } }));
+  const finals = new Set(GAMES.map((g) => g.g));
+  UPCOMING = (upcoming?.games ?? []).filter((r) => !finals.has(r[0])).map(
+    ([g, d, start, at, ht, neutral, tbd, tv, venue, provider, details, homeSpread, ou]) =>
+      ({ g, d, start, away: { tid: at }, home: { tid: ht }, neutral: !!neutral, tbd: !!tbd, tv, venue,
+         line: details ? { provider, details, homeSpread, ou } : null, upcoming: true }));
+
+  const wl = {};
+  for (const gm of GAMES) {
+    for (const [me, op] of [[gm.away, gm.home], [gm.home, gm.away]]) {
+      const r = (wl[me.tid] ??= [0, 0]);
+      r[me.pts > op.pts ? 0 : 1]++;
+      RECORD.set(`${gm.g}:${me.tid}`, `${r[0]}-${r[1]}`);
+    }
+  }
+  for (const [tid, [w, l]] of Object.entries(wl)) CURRENT_RECORD[tid] = `${w}-${l}`;
+  DATES = [...new Set([...GAMES, ...UPCOMING].map((g) => g.d))].sort();
+  return true;
+}
+
+// The model on an upcoming game. t1 = away, t2 = home, so spread > 0 = away favored.
+function predict(gm) {
+  if (!PRED) return null;
+  const a = PRED.byId.get(gm.away.tid), h = PRED.byId.get(gm.home.tid);
+  if (!a || !h) return null;
+  const venue = gm.neutral ? "neutral" : "home2";
+  const r = predictGame(PRED.model, a, h, venue);
+  const { s1, s2 } = projScores(a, h, r.spread, r.expPace, PRED.lgDef);
+  return { ...r, sAway: s1, sHome: s2, venue,
+           fav: r.spread >= 0 ? gm.away.tid : gm.home.tid, favProb: Math.max(r.prob, 1 - r.prob) };
+}
+
+// "FLA -12.8": ESPN's abbreviation, the same shape as the posted line.
+const spreadText = (p) => Math.abs(p.spread) < 0.05 ? "PK"
+  : `${escHtml(team(p.fav).abbr ?? team(p.fav).short)} -${Math.abs(p.spread).toFixed(1)}`;
+
+function startText(gm, opts = { hour: "numeric", minute: "2-digit" }) {
+  if (gm.tbd || !gm.start) return "TBD";
+  return new Date(gm.start).toLocaleTimeString("en-US", opts);
+}
+
+function matchesConf(gm) {
+  if (!CONF) return true;
+  return [gm.away.tid, gm.home.tid].some((tid) => {
+    const t = team(tid);
+    return CONF === "top25" ? t.rank != null && t.rank <= 25 : t.conf === CONF;
+  });
+}
+
+// ── scoreboard ────────────────────────────────────────────────────────────
+function teamCell(tid, record) {
+  return `<img src="${logoUrl(tid)}" alt="" loading="lazy" onerror="this.style.opacity=0">
+    ${rankTag(tid)}<span class="gs-name">${escHtml(team(tid).short)}</span>
+    <span class="gs-rec">${record ?? ""}</span>`;
+}
+
+function finalCard(gm) {
+  const awayWon = gm.away.pts > gm.home.pts;
+  const row = (side, won) => `<div class="gs-row ${won ? "won" : ""}">
+    ${teamCell(side.tid, RECORD.get(`${gm.g}:${side.tid}`))}<span class="gs-pts">${side.pts ?? ""}</span></div>`;
+  const tops = [gm.away.top, gm.home.top].filter(Boolean)
+    .map(([n, p]) => `${escHtml(shortName(n))} ${p}`).join(" · ");
+  return `<a class="gs-card" href="?game=${gm.g}" data-game="${gm.g}">
+    ${row(gm.away, awayWon)}${row(gm.home, !awayWon)}
+    <div class="gs-foot"><span class="gs-final">Final</span><span class="gs-top">${tops}</span></div></a>`;
+}
+
+function upcomingCard(gm) {
+  const p = predict(gm);
+  const row = (side, prob) => `<div class="gs-row ${p && p.fav === side.tid ? "fav" : ""}">
+    ${teamCell(side.tid, CURRENT_RECORD[side.tid] ?? "0-0")}
+    <span class="gs-wp">${p ? Math.round(prob * 100) + "%" : ""}</span></div>`;
+  const when = [startText(gm), gm.tv].filter(Boolean).join(" · ");
+  const ours = p ? `<span class="gs-line" title="Hog Charts">${LOGO_ICON}<b>${spreadText(p)}</b></span>` : "";
+  const market = gm.line ? `<span class="gs-line" title="${escHtml(gm.line.provider ?? "")}">${escHtml(gm.line.details)}</span>` : "";
+  return `<a class="gs-card up" href="?game=${gm.g}" data-game="${gm.g}">
+    ${row(gm.away, p?.prob)}${row(gm.home, p ? 1 - p.prob : null)}
+    ${p ? `<div class="gs-wpbar"><i style="width:${(p.prob * 100).toFixed(1)}%;background:${p.prob >= 0.5 ? "var(--ink)" : "var(--dim)"}"></i><i style="flex:1;background:${p.prob < 0.5 ? "var(--ink)" : "var(--dim)"}"></i></div>` : ""}
+    <div class="gs-foot"><span class="gs-when">${escHtml(when)}</span><span class="gs-lines">${ours}${market}</span></div></a>`;
+}
+
+function renderStrip() {
+  const today = todayET();
+  $("gs-strip").innerHTML = DATES.map((d) => `<button class="gs-day ${d === DATE ? "active" : ""} ${d === today ? "today" : ""}" data-date="${d}">
+      <span class="dw">${dayLabel(d, { weekday: "short" })}</span>
+      <span class="dd">${dayLabel(d, { month: "short", day: "numeric" })}</span></button>`).join("");
+  const i = DATES.indexOf(DATE);
+  $("gs-prev").disabled = i <= 0;
+  $("gs-next").disabled = i >= DATES.length - 1;
+  const active = $("gs-strip").querySelector(".gs-day.active");
+  if (active) {
+    const strip = $("gs-strip");
+    strip.scrollLeft = active.offsetLeft - strip.offsetLeft - strip.clientWidth / 2 + active.clientWidth / 2;
+  }
+}
+
+function renderList() {
+  VIEW++;
+  $("gs-game").hidden = true;
+  $("gs-list").hidden = false;
+  document.title = "Games | Hog Charts";
+  renderStrip();
+  const upcoming = UPCOMING.filter((g) => g.d === DATE && matchesConf(g));
+  const finals = GAMES.filter((g) => g.d === DATE && matchesConf(g));
+  $("gs-cards").innerHTML =
+    (upcoming.length ? `<div class="gs-grid">${upcoming.map(upcomingCard).join("")}</div>` : "") +
+    (finals.length ? `<div class="gs-grid">${finals.map(finalCard).join("")}</div>` : "");
+  setStatus(upcoming.length || finals.length ? "" : "No games.");
+}
+
+// ── shared game-view pieces ───────────────────────────────────────────────
+// Team color for bars: the primary, or the alternate when the primary is too
+// dark to see on the dark cards.
+function barColor(colors, fallback) {
+  const lum = (hex) => {
+    if (!hex) return 0;
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const pick = (colors ?? []).find((c) => lum(c) > 0.18 && lum(c) < 0.95);
+  return pick ? `#${pick}` : fallback;
+}
+
+// Two bar colors that can be told apart: when both teams' picks are close
+// (Arkansas and Indiana are both red), the home side switches to its alternate,
+// or to the site blue.
+function teamColors(awayColors, homeColors) {
+  const away = barColor(awayColors, "#3B82F6");
+  const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const far = (a, b) => Math.hypot(...rgb(a).map((v, i) => v - rgb(b)[i])) > 110;
+  const options = [barColor(homeColors, "#F0445A"),
+                   ...(homeColors ?? []).filter(Boolean).map((c) => barColor([c], null)).filter(Boolean),
+                   "#3B82F6", "#F0445A", "#9AA4B2"];
+  return [away, options.find((c) => far(away, c)) ?? "#9AA4B2"];
+}
+
+// Court outline as SVG: the same geometry as court.js, flipped so y runs down.
+const SX = (x) => (x - X_RANGE[0]).toFixed(2);
+const SY = (y) => (Y_RANGE[1] - y).toFixed(2);
+const COURT_LINES = courtTraces().map((t) =>
+  `<polyline class="ln" points="${t.x.map((x, i) => `${SX(x)},${SY(t.y[i])}`).join(" ")}"/>`).join("");
+
+function courtSVG(shots, players, keep, cls = "") {
+  const W = X_RANGE[1] - X_RANGE[0], H = Y_RANGE[1] - Y_RANGE[0];
+  const misses = [], makes = [];
+  const dot = cls === "season" ? 0.35 : 0.55;      // a season's worth of shots needs smaller marks
+  if (shots) {
+    for (let i = 0; i < shots.length; i += 5) {
+      if (!keep(shots[i], shots[i + 4])) continue;
+      const x = shots[i + 1] / 10, y = shots[i + 2] / 10;
+      if (y > Y_RANGE[1]) continue;                     // heaves beyond half court
+      const who = escHtml(players[shots[i + 4]] ?? "");
+      if (shots[i + 3]) {
+        makes.push(`<circle class="mk" cx="${SX(x)}" cy="${SY(y)}" r="${dot}"><title>${who}</title></circle>`);
+      } else {
+        const s = dot * 0.76, cx = x - X_RANGE[0], cy = Y_RANGE[1] - y;
+        misses.push(`<path class="ms" d="M${(cx - s).toFixed(2)} ${(cy - s).toFixed(2)}L${(cx + s).toFixed(2)} ${(cy + s).toFixed(2)}M${(cx + s).toFixed(2)} ${(cy - s).toFixed(2)}L${(cx - s).toFixed(2)} ${(cy + s).toFixed(2)}"><title>${who}</title></path>`);
+      }
+    }
+  }
+  return `<svg class="gv-court ${cls}" viewBox="0 0 ${W} ${H}" role="img">${COURT_LINES}${misses.join("")}${makes.join("")}</svg>`;
+}
+
+function zonesHTML(shots, keep) {
+  const z = [[0, 0], [0, 0], [0, 0]];          // rim, mid, three: [made, att]
+  if (shots) for (const [zi, m, a] of ZoneChart.computeZones(shots, keep)) {
+    const b = zi === 0 ? 0 : zi <= 8 ? 1 : 2;
+    z[b][0] += m; z[b][1] += a;
+  }
+  return `<div class="gv-zones">${[["Rim", z[0]], ["Mid", z[1]], ["3PT", z[2]]].map(([label, [m, a]]) =>
+    `<div class="gv-zone"><div class="zl">${label}</div><div class="zv">${m}-${a}</div>
+     <div class="zp">${a ? pct(m, a) + "%" : "—"}</div></div>`).join("")}</div>`;
+}
+
+// One team's chart card. state: {tid, shots, gameId (null = whole season), player, fg}
+function chartCard(state) {
+  const t = team(state.tid);
+  const season = state.gameId == null;
+  const gi = season ? null : state.shots?.games?.findIndex((g) => g.id === state.gameId) ?? -1;
+  const pi = state.player != null ? state.shots?.players.indexOf(state.player) ?? -1 : null;
+  const keep = (g, p) => (season || g === gi) && (pi == null || p === pi);
+  const hasShots = !!state.shots && (season || gi >= 0);
+  const filter = state.player != null
+    ? `<button class="gv-filter" data-clear="${state.tid}">${escHtml(state.player)} ✕</button>` : "";
+  const chart = !season && hasShots ? chartLink(teamGameChartHref(state.tid, state.gameId), "Team shot chart") : "";
+  return `<div class="gv-chart">
+    <div class="gv-chart-hd"><img src="${logoUrl(state.tid)}" alt="" onerror="this.style.opacity=0">
+      <span class="nm">${teamLink(state.tid, t.short, SEASON)}</span>${chart}
+      <span class="fg">${state.fg ?? ""}</span></div>
+    ${filter}
+    ${courtSVG(hasShots ? state.shots.shots : null, state.shots?.players ?? [], keep, season ? "season" : "")}
+    ${zonesHTML(hasShots ? state.shots.shots : null, keep)}
+  </div>`;
+}
+
+// Side-by-side comparison. rows: [label, value(A, H), display(A, H), higherIsBetter] or [null] for a gap.
+function compareHTML(awayTid, homeTid, A, H, rows, colors) {
+  const side = (cls, disp, share, best, color) =>
+    `<div class="gv-side ${cls} ${best ? "best" : ""}"><span class="v">${disp}</span>
+       <span class="gv-sbar"><i style="width:${(100 * share).toFixed(1)}%;background:${color}"></i></span></div>`;
+  const body = rows.map(([label, val, disp, hi]) => {
+    if (!label) return `<div class="gv-sec"></div>`;
+    const va = val(A, H), vh = val(H, A);
+    const ok = Number.isFinite(va) && Number.isFinite(vh);
+    const sum = ok ? Math.abs(va) + Math.abs(vh) : 0;
+    const sa = hi == null || !sum ? 0 : Math.abs(va) / sum, sh = hi == null || !sum ? 0 : Math.abs(vh) / sum;
+    const aBest = ok && hi != null && va !== vh && (hi ? va > vh : va < vh);
+    const hBest = ok && hi != null && va !== vh && !aBest;
+    return `<div class="gv-trow">${side("", ok ? disp(A, H) : "—", sa, aBest, colors[0])}
+      <div class="lb">${label}</div>${side("r", ok ? disp(H, A) : "—", sh, hBest, colors[1])}</div>`;
+  }).join("");
+  return `<div class="gv-totals">
+    <div class="gv-tot-hd"><img src="${logoUrl(awayTid)}" alt="" onerror="this.style.opacity=0"><span></span>
+      <img class="r" src="${logoUrl(homeTid)}" alt="" onerror="this.style.opacity=0"></div>${body}</div>`;
+}
+
+// Possessions: FGA − ORB + TOV + 0.475·FTA, averaged over both teams.
+const possOf = (t) => t.fga - t.orb + t.tov + 0.475 * t.fta;
+
+function gameTotalsHTML(state, colors) {
+  const A = state[0].game?.totals, H = state[1].game?.totals;
+  if (!A || !H) return "";
+  const poss = (possOf(A) + possOf(H)) / 2;
+  const f1 = (x) => x.toFixed(1);
+  const drb = (t) => t.reb - t.orb;
+  return compareHTML(state[0].tid, state[1].tid, A, H, [
+    ["FG", (t) => t.fgm / t.fga, (t) => `${t.fgm}-${t.fga}`, true],
+    ["FG%", (t) => t.fgm / t.fga, (t) => pct(t.fgm, t.fga), true],
+    ["3P", (t) => t.tpm / t.tpa, (t) => `${t.tpm}-${t.tpa}`, true],
+    ["3P%", (t) => t.tpm / t.tpa, (t) => pct(t.tpm, t.tpa), true],
+    ["FT", (t) => t.ftm / t.fta, (t) => `${t.ftm}-${t.fta}`, true],
+    ["FT%", (t) => t.ftm / t.fta, (t) => pct(t.ftm, t.fta), true],
+    ["eFG%", (t) => (t.fgm + 0.5 * t.tpm) / t.fga, (t) => pct(t.fgm + 0.5 * t.tpm, t.fga), true],
+    [null],
+    ["REB", (t) => t.reb, (t) => t.reb, true],
+    ["ORB", (t) => t.orb, (t) => t.orb, true],
+    ["AST", (t) => t.ast, (t) => t.ast, true],
+    ["STL", (t) => t.stl, (t) => t.stl, true],
+    ["BLK", (t) => t.blk, (t) => t.blk, true],
+    ["TOV", (t) => t.tov, (t) => t.tov, false],
+    ["PF", (t) => t.pf, (t) => t.pf, false],
+    [null],
+    ["Poss", () => poss, () => f1(poss), null],
+    ["ORtg", (t) => 100 * t.pts / poss, (t) => f1(100 * t.pts / poss), true],
+    ["TOV%", (t) => t.tov / poss, (t) => f1(100 * t.tov / poss), false],
+    ["ORB%", (t, o) => t.orb / (t.orb + drb(o)), (t, o) => pct(t.orb, t.orb + drb(o)), true],
+    ["FTr", (t) => t.fta / t.fga, (t) => (t.fta / t.fga).toFixed(2), true],
+  ], colors);
+}
+
+// Season numbers from team-stats-all.json (the Team Stats page's default scope).
+function seasonCompareHTML(awayTid, homeTid, colors) {
+  const A = STATS.get(awayTid), H = STATS.get(homeTid);
+  if (!A || !H) return "";
+  const num = (k, d = 1) => [(t) => t[k], (t) => t[k] == null ? "—" : Number(t[k]).toFixed(d)];
+  const pc = (k) => [(t) => t[k], (t) => t[k] == null ? "—" : (100 * t[k]).toFixed(1)];
+  return compareHTML(awayTid, homeTid, A, H, [
+    ["RK", (t) => t.rank, (t) => t.rank ?? "—", false],
+    ["Net", ...num("net_eff"), true],
+    ["Off", ...num("off_eff"), true],
+    ["Def", ...num("def_eff"), false],
+    ["Pace", ...num("pace"), null],
+    ["SOS", ...num("sos"), true],
+    [null],
+    ["eFG%", ...pc("efg"), true],
+    ["3P%", ...pc("fg3"), true],
+    ["3PAr", ...pc("par3"), null],
+    ["FTr", ...num("ftr", 2), true],
+    ["TOV%", ...num("tovp"), false],
+    ["ORB%", ...num("orbp"), true],
+    [null],
+    ["D eFG%", ...pc("opp_efg"), false],
+    ["D TOV%", ...num("opp_tovp"), true],
+    ["D FTr", ...num("opp_ftr", 2), false],
+  ], colors);
+}
+
+async function loadSidesData(gm) {
+  const sides = [gm.away, gm.home];
+  const [files, shots] = await Promise.all([
+    Promise.all(sides.map((s) => Games.teamFile(SEASON, s.tid))),
+    Promise.all(sides.map((s) => loadJSON(`data/shots/${slugify(team(s.tid).name)}.json`))),
+  ]);
+  return { sides, files, shots, colors: teamColors(files[0]?.colors, files[1]?.colors) };
+}
+
+function openView(gm, title) {
+  const view = ++VIEW;
+  DATE = gm.d;
+  $("gs-list").hidden = true;
+  const el = $("gs-game");
+  el.hidden = false;
+  el.innerHTML = "";
+  setStatus("Loading…");
+  window.scrollTo(0, 0);
+  document.title = `${title} | Hog Charts`;
+  return { view, el };
+}
+
+const backLink = (d) => `<a class="gv-back" href="?date=${d}" data-date="${d}">‹ ${dayLabel(d, { weekday: "short", month: "short", day: "numeric" })}</a>`;
+
+// ── one played game ───────────────────────────────────────────────────────
+function finalScoreHTML(gm) {
+  const awayWon = gm.away.pts > gm.home.pts;
+  const block = (side, cls, won) => `<div class="gv-team ${cls} ${won ? "won" : ""}">
+      <img src="${logoUrl(side.tid)}" alt="" onerror="this.style.opacity=0">
+      <div><div class="nm">${rankTag(side.tid)} ${teamLink(side.tid, team(side.tid).short, SEASON)}</div>
+        <div class="rc">${RECORD.get(`${gm.g}:${side.tid}`) ?? ""}</div></div>
+      <div class="pt">${side.pts}</div></div>`;
+  return `<div class="gv-score">${block(gm.away, "away", awayWon)}
+    <div class="gv-mid"><b>Final</b>${dayLabel(gm.d, { month: "short", day: "numeric" })}</div>
+    ${block(gm.home, "home", !awayWon)}</div>`;
+}
+
+async function renderFinal(gm) {
+  const gameId = gm.g;
+  const { view, el } = openView(gm, `${team(gm.away.tid).short} at ${team(gm.home.tid).short}`);
+  const { sides, files, shots, colors } = await loadSidesData(gm);
+  if (view !== VIEW) return;
+  setStatus("");
+  const state = sides.map((s, i) => {
+    const game = files[i]?.games.find((g) => g.g === gameId) ?? null;
+    const tot = game?.totals;
+    return { tid: s.tid, game, shots: shots[i], gameId, player: null,
+             fg: tot ? `FG ${tot.fgm}-${tot.fga} · 3P ${tot.tpm}-${tot.tpa}` : "" };
+  });
+
+  const drawCharts = () => { $("gv-charts").innerHTML = state.map(chartCard).join(""); };
+  el.innerHTML = `${backLink(gm.d)}${finalScoreHTML(gm)}
+    <div class="gv-charts" id="gv-charts"></div>
+    ${gameTotalsHTML(state, colors)}
+    <div id="gv-box"></div>`;
+  drawCharts();
+
+  // A player's row in the box score narrows his team's chart to him; again clears it.
+  $("gv-charts").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-clear]");
+    if (!btn) return;
+    state.find((s) => s.tid === Number(btn.dataset.clear)).player = null;
+    drawCharts();
+  });
+  Games.renderBoxScore($("gv-box"), {
+    season: SEASON, teamId: gm.away.tid, gameId, live: true,
+    onPlayer: (pid, tid) => {
+      const s = state.find((x) => x.tid === tid);
+      const name = s?.game?.players.find((p) => p.id === pid)?.n;
+      if (!s || !name) return;
+      s.player = s.player === name ? null : name;
+      drawCharts();
+      $("gv-charts").scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+  });
+}
+
+// ── one upcoming game ─────────────────────────────────────────────────────
+function upcomingScoreHTML(gm, p) {
+  const block = (side, cls, prob) => `<div class="gv-team ${cls} ${p && p.fav === side.tid ? "won" : ""}">
+      <img src="${logoUrl(side.tid)}" alt="" onerror="this.style.opacity=0">
+      <div><div class="nm">${rankTag(side.tid)} ${teamLink(side.tid, team(side.tid).short, SEASON)}</div>
+        <div class="rc">${CURRENT_RECORD[side.tid] ?? "0-0"}</div></div>
+      <div class="pt">${p ? Math.round(prob * 100) + "%" : ""}</div></div>`;
+  const mid = [
+    `<b>${escHtml(startText(gm))}</b>`,
+    escHtml(dayLabel(gm.d, { weekday: "short", month: "short", day: "numeric" })),
+    gm.tv ? escHtml(gm.tv) : "",
+    gm.venue ? escHtml(gm.venue) : "",
+  ].filter(Boolean).join("<br>");
+  return `<div class="gv-score">${block(gm.away, "away", p?.prob)}
+    <div class="gv-mid">${mid}</div>${block(gm.home, "home", p ? 1 - p.prob : null)}</div>`;
+}
+
+function predictionHTML(gm, p, colors) {
+  if (!p) return "";
+  const w1 = Math.max(6, Math.round(p.prob * 100)), w2 = 100 - w1;
+  const favShort = escHtml(team(p.fav).short);
+  const chip = (n, l) => `<div class="gv-chip"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const chips = [
+    chip(`${p.sAway}&ndash;${p.sHome}`, "Projected"),
+    chip(p.sAway + p.sHome, "Proj. total"),
+    chip(p.expPace.toFixed(0), "Pace / poss"),
+    chip(`${LOGO_ICON}${spreadText(p)}`, "Spread"),
+  ];
+  if (gm.line) {
+    chips.push(chip(escHtml(gm.line.details), escHtml(gm.line.provider ?? "")));
+    if (gm.line.ou != null) chips.push(chip(gm.line.ou, "O/U"));
+  }
+  const venue = p.venue === "neutral" ? "neutral" : "home2";
+  return `<div class="gv-pred">
+    <div class="gv-bar"><div style="width:${w1}%;background:${colors[0]}">${w1}%</div>
+      <div style="width:${w2}%;background:${colors[1]}">${w2}%</div></div>
+    <div class="gv-verdict"><b>${favShort}</b> by <b>${Math.abs(p.spread).toFixed(1)}</b>
+      &nbsp;·&nbsp; ${Math.round(p.favProb * 100)}% to win</div>
+    <div class="gv-chips">${chips.join("")}</div>
+    <a class="gv-more team-link" href="prediction.html?t1=${gm.away.tid}&t2=${gm.home.tid}&venue=${venue}">Predictor <span class="team-link-arrow">→</span></a>
+  </div>`;
+}
+
+async function renderUpcoming(gm) {
+  const { view, el } = openView(gm, `${team(gm.away.tid).short} at ${team(gm.home.tid).short}`);
+  const p = predict(gm);
+  const { sides, shots, colors } = await loadSidesData(gm);
+  if (view !== VIEW) return;
+  setStatus("");
+  const state = sides.map((s, i) => {
+    const st = STATS.get(s.tid);
+    return { tid: s.tid, shots: shots[i], gameId: null, player: null,
+             fg: st?.fg != null ? `FG ${(100 * st.fg).toFixed(1)}% · 3P ${(100 * st.fg3).toFixed(1)}%` : "" };
+  });
+  el.innerHTML = `${backLink(gm.d)}${upcomingScoreHTML(gm, p)}${predictionHTML(gm, p, colors)}
+    <div class="gv-charts">${state.map(chartCard).join("")}</div>
+    ${seasonCompareHTML(gm.away.tid, gm.home.tid, colors)}`;
+}
+
+// ── routing ───────────────────────────────────────────────────────────────
+function defaultDate() {
+  const today = todayET();
+  if (DATES.includes(today)) return today;
+  const next = UPCOMING.find((g) => g.d >= today);
+  return next ? next.d : DATES[DATES.length - 1];
+}
+
+function route() {
+  const p = new URLSearchParams(location.search);
+  const gameId = Number(p.get("game"));
+  if (gameId) {
+    const final = GAMES.find((g) => g.g === gameId);
+    const up = final ? null : UPCOMING.find((g) => g.g === gameId);
+    if (final) { renderFinal(final); return; }
+    if (up) { renderUpcoming(up); return; }
+  }
+  const d = p.get("date");
+  DATE = DATES.includes(d) ? d : (DATE ?? defaultDate());
+  renderList();
+}
+
+function go(search) {
+  history.pushState(null, "", search);
+  route();
+}
+
+async function init() {
+  if (!(await load())) { setStatus("No games yet."); return; }
+
+  const confs = [...new Set(Object.values(TEAMS).map((t) => t.conf).filter(Boolean))].sort();
+  const sel = $("gs-conf");
+  sel.innerHTML = `<option value="">All</option><option value="top25">Top 25</option>` +
+    confs.map((c) => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join("");
+  sel.disabled = false;
+  sel.addEventListener("change", () => { CONF = sel.value; renderList(); });
+
+  $("gs-strip").addEventListener("click", (e) => {
+    const b = e.target.closest(".gs-day");
+    if (b) go(`?date=${b.dataset.date}`);
+  });
+  const step = (n) => {
+    const i = DATES.indexOf(DATE) + n;
+    if (i >= 0 && i < DATES.length) go(`?date=${DATES[i]}`);
+  };
+  $("gs-prev").addEventListener("click", () => step(-1));
+  $("gs-next").addEventListener("click", () => step(1));
+
+  // Cards and the back link are real links (open in a new tab works); plain clicks stay in-page.
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const cardEl = e.target.closest("a.gs-card");
+    const back = e.target.closest("a.gv-back");
+    if (cardEl) { e.preventDefault(); go(`?game=${cardEl.dataset.game}`); }
+    else if (back) { e.preventDefault(); go(`?date=${back.dataset.date}`); }
+  });
+  window.addEventListener("popstate", route);
+  route();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

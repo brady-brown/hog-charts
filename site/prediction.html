@@ -129,6 +129,7 @@
 </div>
 
 <script src="js/common.js"></script>
+<script src="js/predict.js"></script>
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────────
 let MODEL  = null;
@@ -158,15 +159,22 @@ async function initFromData() {
   MODEL  = model;
   TEAMS  = teams;
   BYNAME = new Map(teams.map(t => [t.team, t]));
-  LG_DEF = teams.reduce((s, t) => s + t.def_eff, 0) / teams.length;
+  LG_DEF = leagueDef(teams);
 
   TEAM_NAMES = teams.map(t => t.team).sort();
   const c1 = makeCombo("team1", syncVenueLabels);
   const c2 = makeCombo("team2", syncVenueLabels);
-  c1.setSelected(defaultTeam("Duke Blue Devils"));
-  c2.setSelected(defaultTeam("Arkansas Razorbacks"));
+  // Deep link (the Games page): ?t1={team_id}&t2={team_id}&venue=home1|home2|neutral
+  const params = new URLSearchParams(location.search);
+  const byId = (id) => teams.find(t => t.team_id === Number(id))?.team;
+  const link1 = byId(params.get("t1")), link2 = byId(params.get("t2"));
+  c1.setSelected(link1 ?? defaultTeam("Duke Blue Devils"));
+  c2.setSelected(link2 ?? defaultTeam("Arkansas Razorbacks"));
+  const venueInput = document.querySelector(`input[name="venue"][value="${params.get("venue")}"]`);
+  if (venueInput) venueInput.checked = true;
   syncVenueLabels();
   document.getElementById("predict-btn").disabled = false;
+  if (link1 && link2) document.getElementById("predict-btn").click();
 
   const acc = meta?.backtest?.accuracy;
   const yr  = meta?.backtest_year;
@@ -239,41 +247,7 @@ function syncVenueLabels() {
   document.getElementById("lbl-home2").textContent = n2 ? `${n2} home` : "Team 2 home";
 }
 
-// ── Prediction logic (mirrors model_runtime.py predict_game) ─────────────────
-function predictGame(t1, t2, venue) {
-  const neutral  = venue === "neutral";
-  const team1Home = venue === "home1";
-  const lgAdv    = MODEL.league_home_adv;
-
-  let homeCourt = 0;
-  if (!neutral) {
-    homeCourt = team1Home
-      ? (t1.home_adv ?? lgAdv)
-      : -(t2.home_adv ?? lgAdv);
-  }
-
-  const netDiff    = t1.net_eff  - t2.net_eff;
-  const expPace    = (t1.pace    + t2.pace) / 2;
-  const paceFactor = expPace / MODEL.league_avg_pace;
-  const tempoAdj   = netDiff * paceFactor;
-  const formDiff   = t1.form - t2.form;
-
-  const [c0, c1, c2] = MODEL.coef;
-  const spread = MODEL.intercept + c0 * tempoAdj + c1 * homeCourt + c2 * formDiff;
-  const prob   = interp(spread, MODEL.iso_x, MODEL.iso_y);
-
-  return { spread, prob, homeCourt, expPace, paceFactor, tempoAdj, formDiff,
-           coef: MODEL.coef, intercept: MODEL.intercept };
-}
-
-// Mirrors pages/1_Prediction.py proj_scores()
-function projScores(t1, t2, spread, expPace) {
-  const pp1   = t1.off_eff + (t2.def_eff - LG_DEF);
-  const pp2   = t2.off_eff + (t1.def_eff - LG_DEF);
-  const total = (pp1 + pp2) / 100 * expPace;
-  return { s1: Math.round((total + spread) / 2),
-           s2: Math.round((total - spread) / 2) };
-}
+// predictGame / projScores live in js/predict.js (shared with the Games page).
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 const T1 = "var(--t1)";
@@ -410,8 +384,8 @@ document.getElementById("predict-btn").addEventListener("click", () => {
   const t2 = BYNAME.get(name2);
   if (!t1 || !t2) { alert("Team data not found."); return; }
 
-  const r = predictGame(t1, t2, venue);
-  const { s1, s2 } = projScores(t1, t2, r.spread, r.expPace);
+  const r = predictGame(MODEL, t1, t2, venue);
+  const { s1, s2 } = projScores(t1, t2, r.spread, r.expPace, LG_DEF);
 
   const neutral   = venue === "neutral";
   const team1Home = venue === "home1";

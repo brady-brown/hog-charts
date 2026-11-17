@@ -121,6 +121,10 @@ SCHEDULE_SCHEMA = {
     "away_display_name": _STR, "away_abbreviation": _STR, "away_logo": _STR,
     "away_conference_id": _INT, "away_score": _INT, "away_winner": _BOOL,
     "away_current_rank": _INT,
+    # Not in the sportsdataverse schema; carried for the Games page. The line is
+    # whatever ESPN shows on the scoreboard (usually posted the day of the game).
+    "broadcast": _STR, "odds_provider": _STR, "odds_details": _STR,
+    "odds_home_spread": _DBL, "odds_over_under": _DBL,
 }
 
 SCHEMAS = {
@@ -265,6 +269,22 @@ def normalize_event(event):
                                          if isinstance(competitor.get("curatedRank"), dict)
                                          else competitor.get("rank")),
         })
+
+    networks = [name for b in competition.get("broadcasts") or [] for name in b.get("names") or []]
+    odds = (competition.get("odds") or [None])[0] or {}
+    spread = _float(odds.get("spread"))
+    if spread is not None:
+        # Home-relative, negative = home favored, whatever sign ESPN sent.
+        home_favored = (odds.get("homeTeamOdds") or {}).get("favorite")
+        if home_favored is not None:
+            spread = -abs(spread) if home_favored else abs(spread)
+    row.update({
+        "broadcast": " / ".join(dict.fromkeys(networks)) or None,
+        "odds_provider": (odds.get("provider") or {}).get("name"),
+        "odds_details": odds.get("details"),
+        "odds_home_spread": spread,
+        "odds_over_under": _float(odds.get("overUnder")),
+    })
     return row
 
 

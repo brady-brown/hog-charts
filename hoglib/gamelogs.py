@@ -101,3 +101,125 @@ def write_game_logs(player_box, season_dir):
         games_written += len(games)
     print(f"  games/teams/{{team_id}}.json  {box['team_id'].nunique():,} teams, "
           f"{games_written // 2:,} games")
+    write_game_index(season_dir)
+
+
+def write_game_index(season_dir):
+    """season_dir/games/index.json — one row per game, for the Games scoreboard.
+
+    Built from the team files just written (so it also works on a frozen past
+    season without its box scores). Each game appears once, away team first:
+      games: [[game_id, date, away_id, away_pts, home_id, home_pts, away_top, home_top]]
+      teams: {team_id: [name, short]}   short = school only ("Duke"), from the
+                                         opponents' "o" fields; falls back to name
+    *_top is that team's leading scorer as [name, pts], or null when the team has
+    no file (non-D-I opponents). Opponents without a file are named from the
+    other team's "o" field.
+    """
+    teams_dir = os.path.join(season_dir, "games", "teams")
+    names, short, by_game = {}, {}, {}
+    for filename in sorted(os.listdir(teams_dir)):
+        with open(os.path.join(teams_dir, filename)) as team_file:
+            data = json.load(team_file)
+        team_id = int(filename.split(".")[0])
+        names[team_id] = data["t"]
+        cols = data["cols"]
+        pts_at = cols.index("pts") + 2            # player line = [id, starter, *cols]
+        for g in data["games"]:
+            if g["oid"] is not None and g["o"]:
+                short.setdefault(int(g["oid"]), g["o"])
+            top = max(g["p"], key=lambda line: line[pts_at] or 0, default=None)
+            side = {"tid": team_id, "pts": g["ts"],
+                    "top": [data["roster"][str(top[0])][0], top[pts_at]] if top and top[pts_at] else None}
+            entry = by_game.setdefault(g["g"], {"d": g["d"]})
+            entry[g["ha"]] = side
+            # Placeholder for the other side, replaced if the opponent has a file.
+            other = "home" if g["ha"] == "away" else "away"
+            if g["oid"] is not None:
+                entry.setdefault(other, {"tid": int(g["oid"]), "pts": g["os"], "top": None, "name": g["o"]})
+    rows = []
+    for game_id, e in by_game.items():
+        away, home = e.get("away"), e.get("home")
+        if not away or not home:
+            continue
+        for side in (away, home):
+            if side["tid"] not in names and side.get("name"):
+                names[side["tid"]] = side["name"]
+        rows.append([game_id, e["d"], away["tid"], away["pts"], home["tid"], home["pts"], away["top"], home["top"]])
+    rows.sort(key=lambda r: (r[1], r[0]))
+    with open(os.path.join(season_dir, "games", "index.json"), "w") as index_file:
+        index_file.write(json.dumps(sanitize_for_json({"teams": {str(k): [v, short.get(k, v)] for k, v in names.items()},
+                                                      "games": rows}),
+                                    separators=(",", ":"), allow_nan=False))
+    print(f"  games/index.json  {len(rows):,} games")
+
+
+def _text(value):
+    return None if value is None or pd.isna(value) or str(value) == "" else str(value)
+
+
+def write_upcoming(schedule, season_dir, today=None, max_days=21):
+    """season_dir/games/upcoming.json — games not yet played, for the Games page.
+
+    Covers every D-I team's next game: all scheduled games from today (Eastern)
+    through the latest date any D-I team plays next, capped at max_days out. Games
+    already in games/index.json (finals) are left out.
+      games: [[game_id, date, start_iso, away_id, home_id, neutral, tbd,
+               broadcast, venue, line_provider, line_details, home_spread, over_under]]
+      teams: {team_id: [name, short, abbreviation]}
+    The line columns are ESPN's scoreboard line (null until a book posts one).
+    """
+    import datetime as dt
+    from zoneinfo import ZoneInfo
+
+    today = today or dt.datetime.now(ZoneInfo("America/New_York")).date()
+    games_dir = os.path.join(season_dir, "games")
+    os.makedirs(games_dir, exist_ok=True)
+    finals = set()
+    index_path = os.path.join(games_dir, "index.json")
+    if os.path.exists(index_path):
+        with open(index_path) as index_file:
+            finals = {row[0] for row in json.load(index_file)["games"]}
+
+    # Only D-I teams (ESPN gives them a conference id; small colleges have none)
+    # count toward "everyone's next game", or one NAIA team's December date
+    # would stretch the window.
+    division_one = set()
+    for side in ("away", "home"):
+        has_conf = schedule[f"{side}_conference_id"].notna()
+        division_one |= set(schedule.loc[has_conf, f"{side}_id"].dropna().astype("int64"))
+
+    s = schedule.copy()
+    s["day"] = pd.to_datetime(s["game_date"].astype("string"), errors="coerce").dt.date
+    s = s[(s["status_type_state"].astype("string") == "pre") & s["home_id"].notna() & s["away_id"].notna()
+          & s["day"].notna() & (s["day"] >= today)
+          & (s["day"] <= today + dt.timedelta(days=max_days))]
+    s = s[~s["game_id"].astype("int64").isin(finals)]
+
+    rows, teams = [], {}
+    if len(s):
+        long = pd.concat([s[["away_id", "day"]].rename(columns={"away_id": "tid"}),
+                          s[["home_id", "day"]].rename(columns={"home_id": "tid"})])
+        long = long[long["tid"].isin(division_one)]
+        last_day = long.groupby("tid")["day"].min().max()       # the latest "next game"
+        s = s[s["day"] <= last_day].sort_values(["game_date_time", "game_id"])
+        for _, g in s.iterrows():
+            start = _text(g["game_date_time"])
+            venue = ", ".join(x for x in (_text(g["venue_full_name"]), _text(g["venue_address_city"]),
+                                          _text(g["venue_address_state"])) if x)
+            for side in ("away", "home"):
+                teams.setdefault(str(int(g[f"{side}_id"])),
+                                 [_text(g[f"{side}_display_name"]), _text(g[f"{side}_location"]),
+                                  _text(g[f"{side}_abbreviation"])])
+            rows.append([
+                int(g["game_id"]), g["day"].isoformat(), start.replace(" ", "T") if start else None,
+                int(g["away_id"]), int(g["home_id"]), int(bool(g["neutral_site"])) if pd.notna(g["neutral_site"]) else 0,
+                int((_text(g["status_type_detail"]) or "").upper() == "TBD"),
+                _text(g.get("broadcast")), venue or None,
+                _text(g.get("odds_provider")), _text(g.get("odds_details")),
+                _number(g.get("odds_home_spread")), _number(g.get("odds_over_under")),
+            ])
+    with open(os.path.join(games_dir, "upcoming.json"), "w") as out:
+        out.write(json.dumps(sanitize_for_json({"built": today.isoformat(), "teams": teams, "games": rows}),
+                             separators=(",", ":"), allow_nan=False))
+    print(f"  games/upcoming.json  {len(rows):,} games")
