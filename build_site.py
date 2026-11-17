@@ -1528,6 +1528,9 @@ print("\n  Done. Serve site/ with: python -m http.server 8000 --directory site")
 from hoglib import feeds   # cached by build_ingest.py (step 0)
 write_game_logs(feeds.load_player_box(SEASON), SEASON_DATA_DIR)
 write_upcoming(feeds.load_schedule(SEASON), SEASON_DATA_DIR)
+# Model vs. market log (cumulative; reads predictor.json + upcoming.json above).
+from hoglib.lines import write_line_log
+write_line_log(SEASON_DATA_DIR, feeds.load_lines(SEASON))
 
 
 # ===========================================================================

@@ -56,6 +56,16 @@ def load_team_box(season):   return _load("team_box", season)
 def load_schedule(season):   return _load("schedule", season)
 
 
+def load_lines(season):
+    """Opening/closing lines per finished game (live season, ESPN ingest only).
+    None when the cache has none — there is no download fallback for this feed."""
+    path = cache_path(season, "lines")
+    if not os.path.exists(path):
+        return None
+    import pandas as pd
+    return pd.read_parquet(path)
+
+
 def _numpy_dtypes(df):
     """The cache comes back with nullable dtypes (pd.NA); predictor.py does plain
     numeric comparisons and needs the NaN-based frames polars' .to_pandas() gives."""
@@ -77,6 +87,8 @@ def write_cache_espn(season):
     os.makedirs(raw_dir(season), exist_ok=True)
     for feed in FEEDS:
         shutil.copy(ingest.feed_path(season, feed), cache_path(season, feed))
+    if os.path.exists(ingest.feed_path(season, "lines")):
+        shutil.copy(ingest.feed_path(season, "lines"), cache_path(season, "lines"))
     return ingest.read_manifest(season)["rows"]
 
 

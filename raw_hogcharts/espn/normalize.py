@@ -127,7 +127,17 @@ SCHEDULE_SCHEMA = {
     "odds_home_spread": _DBL, "odds_over_under": _DBL,
 }
 
+# One row per finished game: the book's opening and closing line, from the
+# summary's "pickcenter". Not part of the sportsdataverse feeds; Hog Charts only.
+LINES_SCHEMA = {
+    "game_id": _INT, "provider": _STR,
+    "open_home_spread": _DBL, "close_home_spread": _DBL,
+    "open_total": _DBL, "close_total": _DBL,
+    "close_home_ml": _INT, "close_away_ml": _INT,
+}
+
 SCHEMAS = {
+    "lines": LINES_SCHEMA,
     "pbp": PBP_SCHEMA,
     "player_box": PLAYER_BOX_SCHEMA,
     "team_box": TEAM_BOX_SCHEMA,
@@ -565,11 +575,63 @@ def normalize_team_box(payload, context=None):
     return rows
 
 
+def _line_number(text):
+    """'-22.5' / 'o161.5' / 'u161.5' / '+2200' / 'EVEN' → float, or None."""
+    if text is None:
+        return None
+    text = str(text).strip().lower().lstrip("ou")
+    if text in ("even", "ev", "pk", "pick"):
+        return 0.0 if text.startswith("p") else 100.0
+    return _float(text)
+
+
+def normalize_lines(payload, context=None):
+    """The summary's pickcenter → [one lines row], or [] when no book is listed.
+
+    ESPN keeps the opening and closing numbers on finished games (pointSpread /
+    total / moneyline, each with "open" and "close"). Spreads are home-relative,
+    negative = home favored, as on the schedule's odds_home_spread.
+    """
+    context = context or _game_context(payload)
+    books = sorted(payload.get("pickcenter") or [],
+                   key=lambda b: (b.get("provider") or {}).get("priority") or 99)
+    if not books:
+        return []
+    book = books[0]
+    spread = book.get("pointSpread") or {}
+    total = book.get("total") or {}
+    moneyline = book.get("moneyline") or {}
+
+    def point(side, when, block):
+        return _line_number(((block.get(side) or {}).get(when) or {}).get("line"))
+
+    def odds(side, when):
+        value = _line_number(((moneyline.get(side) or {}).get(when) or {}).get("odds"))
+        return None if value is None else int(value)
+
+    close_spread = point("home", "close", spread)
+    if close_spread is None and book.get("spread") is not None:
+        # Older payloads carry only the current number; sign it from the favorite.
+        value = abs(_float(book.get("spread")) or 0)
+        close_spread = -value if (book.get("homeTeamOdds") or {}).get("favorite") else value
+    return [{
+        "game_id": context.get("game_id"),
+        "provider": (book.get("provider") or {}).get("name"),
+        "open_home_spread": point("home", "open", spread),
+        "close_home_spread": close_spread,
+        "open_total": point("over", "open", total),
+        "close_total": point("over", "close", total) if total else _float(book.get("overUnder")),
+        "close_home_ml": odds("home", "close"),
+        "close_away_ml": odds("away", "close"),
+    }]
+
+
 def normalize_summary(payload):
-    """One summary payload → {'pbp': [...], 'player_box': [...], 'team_box': [...]}."""
+    """One summary payload → {'pbp', 'player_box', 'team_box', 'lines'}: lists of rows."""
     context = _game_context(payload)
     return {
         "pbp": normalize_plays(payload, context),
         "player_box": normalize_player_box(payload, context),
         "team_box": normalize_team_box(payload, context),
+        "lines": normalize_lines(payload, context),
     }

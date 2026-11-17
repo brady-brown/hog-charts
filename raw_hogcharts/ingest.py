@@ -37,6 +37,10 @@ if __package__ in (None, ""):        # allow `python raw_hogcharts/ingest.py`
 from .espn import client, normalize
 
 FEEDS = ("pbp", "player_box", "team_box", "schedule")
+# What one summary fetch yields. "lines" (the book's open/close) is Hog Charts'
+# own addition; it isn't in FEEDS because the sportsdataverse archives have no
+# such feed to validate or fall back to.
+SUMMARY_FEEDS = ("pbp", "player_box", "team_box", "lines")
 
 # Generous bounds on a season: first exhibitions in late October through the
 # title game in early April. Scanning empty days is one cheap call each.
@@ -152,7 +156,7 @@ def _fetch_round(game_ids, workers, label):
     if bar is not None:
         bar.close()
 
-    collected = {feed: [] for feed in ("pbp", "player_box", "team_box")}
+    collected = {feed: [] for feed in SUMMARY_FEEDS}
     missing = []
     for game_id, normalized in zip(game_ids, payloads):
         if not normalized:
@@ -172,7 +176,7 @@ def fetch_games(game_ids, workers=8, label="summaries", sweeps=2):
     concurrency before it's called missing — during the 2021-2025 backfill that
     was the difference between 32 dropped games and none.
     """
-    collected = {feed: [] for feed in ("pbp", "player_box", "team_box")}
+    collected = {feed: [] for feed in SUMMARY_FEEDS}
     remaining = list(game_ids)
 
     for sweep in range(sweeps + 1):
@@ -274,7 +278,7 @@ def repair_season(season, workers=4):
     print(f"[{season}] repairing {len(missing)} game(s) at {workers} workers")
     frames, still_missing = fetch_games(missing, workers=workers,
                                         label=f"repair {season}", sweeps=3)
-    for feed in ("pbp", "player_box", "team_box"):
+    for feed in SUMMARY_FEEDS:
         rows = merge_and_write(season, feed, frames.get(feed))
         print(f"[{season}] {feed:<11} {rows:>9,} rows")
 
@@ -324,7 +328,7 @@ def ingest_season(season, full=False, workers=8, force=False, dates=None):
             print(f"[{season}] {len(missing)} game(s) had no summary payload")
 
     counts = {}
-    for feed in ("pbp", "player_box", "team_box"):
+    for feed in SUMMARY_FEEDS:
         counts[feed] = merge_and_write(season, feed, frames.get(feed))
     counts["schedule"] = merge_and_write(season, "schedule", schedule)
 
