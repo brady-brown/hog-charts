@@ -55,6 +55,15 @@ CALIBRATION_YEARS    = list(range(2021, _season))
 # only on the seasons before it.
 BACKTEST_YEAR        = _season - 1
 BACKTEST_CALIBRATION_YEARS = list(range(2021, BACKTEST_YEAR))
+
+# Prediction ratings are solved on 3P%-regressed scores (predictor.regress_three_point_shooting):
+# own 3P% shrunk with 600 attempts of league average, opponents' 3P% with 1,500.
+# On the 2021-26 line study (31,864 games) this took power-conference games from
+# 47.6% to 50.6% against the closing line and the overall miss from 9.12 to 9.08.
+# Predictions only: teams.parquet / model.json / net_ratings.parquet come from this
+# predictor, but the Team Stats page's Net/Off/Def are solved separately on actual
+# scores in build_player_stats.py. None = actual scores.
+PREDICTION_THREE_PT_REGRESSION = (600, 1500)
 # Teams with fewer than this many games are excluded from the ratings table.
 MIN_GAMES_TO_QUALIFY = 5
 
@@ -207,6 +216,7 @@ def main():
     print("=" * 60)
 
     trained_predictor = TempoPredictor()
+    trained_predictor.THREE_PT_REGRESSION = PREDICTION_THREE_PT_REGRESSION
 
     if not RATINGS_ONLY:
         trained_predictor.train(calibration_year=CALIBRATION_YEARS)
@@ -217,6 +227,7 @@ def main():
     if not RATINGS_ONLY and BACKTEST_CALIBRATION_YEARS:
         print(f"\nBacktesting on {BACKTEST_YEAR} (held out, trained on {BACKTEST_CALIBRATION_YEARS})...")
         backtest_predictor = TempoPredictor()
+        backtest_predictor.THREE_PT_REGRESSION = PREDICTION_THREE_PT_REGRESSION
         backtest_predictor.train(calibration_year=BACKTEST_CALIBRATION_YEARS)
         validation_results, _, _ = backtest_predictor.validate_walk_forward(BACKTEST_YEAR)
         backtest_metrics = {metric_name: float(metric_val)

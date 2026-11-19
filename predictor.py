@@ -112,6 +112,42 @@ def calculate_efficiency(team_game_df):
     return combined_stats
 
 
+def regress_three_point_shooting(team_game_df, k_off=600, k_def=1500):
+    """Re-score every game as if each team shot its *expected* 3P%.
+
+    Three-point percentage is noisy, and opponents' 3P% against a defense is
+    mostly luck; sharp lines regress both and raw efficiency doesn't. On the
+    2021-26 line study the model lost to the closing line 43% of the time in
+    power-conference games when it leaned toward the team with the luckier 3P%
+    numbers. Here, over the games passed in (only games already played):
+
+      own rate   = (3PM + k_off * lg) / (3PA + k_off)      shooting is partly skill
+      allowed    = (opp 3PM + k_def * lg) / (opp 3PA + k_def)   almost all luck
+      expected   = lg + (own - lg) + (opponent's allowed - lg)
+      team_score = team_score - 3 * 3PM + 3 * 3PA * expected
+
+    and opponent_team_score is the opponent row's adjusted score. Only the two
+    score columns change, so efficiency/adjustment code downstream is untouched.
+    """
+    df = team_game_df.copy()
+    made = pd.to_numeric(df['three_point_field_goals_made'], errors='coerce').fillna(0)
+    att = pd.to_numeric(df['three_point_field_goals_attempted'], errors='coerce').fillna(0)
+    league = made.sum() / max(att.sum(), 1)
+    shots = pd.DataFrame({'team_id': df['team_id'], 'opp': df['opponent_team_id'], 'm': made, 'a': att})
+    own = shots.groupby('team_id')[['m', 'a']].sum()
+    own_rate = (own['m'] + k_off * league) / (own['a'] + k_off)
+    allowed = shots.groupby('opp')[['m', 'a']].sum()
+    allowed_rate = (allowed['m'] + k_def * league) / (allowed['a'] + k_def)
+    expected = (league + (df['team_id'].map(own_rate).fillna(league) - league)
+                + (df['opponent_team_id'].map(allowed_rate).fillna(league) - league))
+    df['team_score'] = df['team_score'] + 3 * (att * expected - made)
+    adjusted = df[['game_id', 'team_id', 'team_score']].rename(
+        columns={'team_id': 'opponent_team_id', 'team_score': '_opp_adj'})
+    df = df.merge(adjusted, on=['game_id', 'opponent_team_id'], how='left')
+    df['opponent_team_score'] = df['_opp_adj'].fillna(df['opponent_team_score'])
+    return df.drop(columns='_opp_adj')
+
+
 def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iterations=10,
                                   opponent_prior=None, fade_games=None):
     """Iteratively adjust efficiency ratings for opponent quality.
@@ -509,6 +545,17 @@ class TempoPredictor(IsotonicPredictor):
 
     _conference_game_id_cache = {}  # season → set(conference game_ids), class-level
 
+    # (k_off, k_def) rates teams on 3P%-regressed scores (regress_three_point_shooting);
+    # None = actual scores. The class default stays None so studies get a plain
+    # baseline; build_artifacts.py turns it on for the site's predictions.
+    THREE_PT_REGRESSION = None
+
+    def _rating_input(self, game_df):
+        """The game rows efficiency ratings are solved from."""
+        if self.THREE_PT_REGRESSION is None:
+            return game_df
+        return regress_three_point_shooting(game_df, *self.THREE_PT_REGRESSION)
+
     def __init__(self):
         super().__init__()
         self.current_pace       = {}    # {team_id: avg_possessions_per_game}
@@ -654,23 +701,30 @@ class TempoPredictor(IsotonicPredictor):
             return -home_adv_dict.get(team2_id, league_avg_home_adv)
         return 0.0
 
-    def _walk_forward_frame(self, season, prior_season):
-        """Produce a training DataFrame for one season via monthly walk-forward.
+    def _walk_forward_frame(self, season, prior_season, refit='month'):
+        """Produce a training DataFrame for one season via walk-forward.
 
-        Returns a DataFrame with one row per game containing the three model
+        Returns a DataFrame with one row per game side containing the three model
         features (tempo_adj, home_court, form_diff) plus the actual margin and
         win indicator.
+
+        refit='month' (training default): ratings re-solved at the start of each
+        month from every earlier game. refit='day': re-solved before every game
+        date, the way the live site rates teams — slower (~130 solves a season),
+        used by line_study.py to compare point-in-time predictions with the book.
         """
         season_game_df = feeds.load_team_box_numpy(season)
-        season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period('M')
+        season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period(
+            'M' if refit == 'month' else 'D')   # the refit period ("month" kept as the name)
         season_game_df = season_game_df.sort_values('game_date')
         chronological_months = sorted(season_game_df['month'].unique())
 
         conference_game_id_set = self._conference_game_ids(season)
 
         prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
+        prior_rating_df         = self._rating_input(prior_season_game_df)
         prior_season_efficiency = calculate_adjusted_efficiency(
-            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+            prior_rating_df, calculate_efficiency(prior_rating_df)
         )
         prior_season_pace       = self._compute_team_pace(prior_season_game_df)
         league_avg_pace         = self._compute_league_avg_pace(prior_season_game_df)
@@ -693,8 +747,9 @@ class TempoPredictor(IsotonicPredictor):
             games_before = season_game_df[season_game_df['month'].isin(chronological_months[:month_index])]
 
             if len(games_before) > 0:
+                rating_df = self._rating_input(games_before)
                 current_raw_efficiency = calculate_adjusted_efficiency(
-                    games_before, calculate_efficiency(games_before)
+                    rating_df, calculate_efficiency(rating_df)
                 )
                 games_played_per_team = games_before.groupby('team_id').size()
                 blended_efficiency = blend_efficiency_ratings(
@@ -759,6 +814,9 @@ class TempoPredictor(IsotonicPredictor):
                                   / 100 * expected_pace
 
                 training_rows.append({
+                    'game_id':     game_row['game_id'],
+                    'team_id':     team1_id,
+                    'opponent_team_id': team2_id,
                     'game_date':   game_row['game_date'],
                     'tempo_adj':   tempo_adj,
                     'net_diff':    net_efficiency_diff,
@@ -853,11 +911,13 @@ class TempoPredictor(IsotonicPredictor):
             ]
         prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
 
+        prior_rating_df   = self._rating_input(prior_season_game_df)
+        current_rating_df = self._rating_input(current_season_game_df)
         prior_season_efficiency = calculate_adjusted_efficiency(
-            prior_season_game_df, calculate_efficiency(prior_season_game_df)
+            prior_rating_df, calculate_efficiency(prior_rating_df)
         )
         current_raw_efficiency  = calculate_adjusted_efficiency(
-            current_season_game_df, calculate_efficiency(current_season_game_df)
+            current_rating_df, calculate_efficiency(current_rating_df)
         )
         game_counts_per_team = current_season_game_df.groupby('team_id').size()
         blended_efficiency   = blend_efficiency_ratings(
