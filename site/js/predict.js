@@ -3,7 +3,8 @@
  *   predictGame(model, t1, t2, venue)  venue: "home1" | "home2" | "neutral"
  *       → {spread, prob, homeCourt, expPace, paceFactor, tempoAdj, formDiff, coef, intercept}
  *       spread > 0 = t1 favored by that many points; prob = t1's win probability.
- *   projScores(t1, t2, spread, expPace, lgDef) → {s1, s2}
+ *   projScores(t1, t2, spread, expPace, lgDef, model) → {s1, s2}
+ *       model (optional) applies the fitted total correction (total_intercept/total_coef).
  *   leagueDef(teams) → the league-average def_eff projScores needs.
  *
  * model and teams come from data/{season}/predictor.json (build_site.py).
@@ -35,11 +36,13 @@ function predictGame(model, t1, t2, venue) {
            coef: model.coef, intercept: model.intercept };
 }
 
-// Mirrors pages/1_Prediction.py proj_scores()
-function projScores(t1, t2, spread, expPace, lgDef) {
+// The raw total runs low against finals (it isn't fit to scores the way the
+// spread is), so predictor.py fits actual = total_intercept + total_coef × raw.
+function projScores(t1, t2, spread, expPace, lgDef, model) {
   const pp1   = t1.off_eff + (t2.def_eff - lgDef);
   const pp2   = t2.off_eff + (t1.def_eff - lgDef);
-  const total = (pp1 + pp2) / 100 * expPace;
+  const raw   = (pp1 + pp2) / 100 * expPace;
+  const total = model?.total_coef != null ? model.total_intercept + model.total_coef * raw : raw;
   return { s1: Math.round((total + spread) / 2),
            s2: Math.round((total - spread) / 2) };
 }

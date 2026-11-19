@@ -281,7 +281,7 @@ function predict(gm) {
   if (!a || !h) return null;
   const venue = gm.neutral ? "neutral" : "home2";
   const r = predictGame(PRED.model, a, h, venue);
-  const { s1, s2 } = projScores(a, h, r.spread, r.expPace, PRED.lgDef);
+  const { s1, s2 } = projScores(a, h, r.spread, r.expPace, PRED.lgDef, PRED.model);
   return { ...r, sAway: s1, sHome: s2, venue,
            fav: r.spread >= 0 ? gm.away.tid : gm.home.tid, favProb: Math.max(r.prob, 1 - r.prob) };
 }

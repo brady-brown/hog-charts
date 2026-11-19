@@ -516,6 +516,7 @@ class TempoPredictor(IsotonicPredictor):
         self.home_adv           = {}    # {team_id: estimated_home_court_pts}
         self._league_avg_pace   = 70.0  # fallback if no data
         self._league_home_adv   = 3.0   # fallback home-court advantage
+        self.total_regression_model = None   # LinearRegression: raw projected total → actual total
 
     @classmethod
     def _conference_game_ids(cls, season):
@@ -720,6 +721,9 @@ class TempoPredictor(IsotonicPredictor):
                     return float(_prior.get(team_id, _league))
 
             efficiency_lookup = blended_efficiency.set_index('team_id')
+            # Same league-average defense the site uses for projected scores
+            # (js/predict.js leagueDef: the mean def_eff over rated teams).
+            league_def_eff = float(efficiency_lookup['def_eff'].mean())
 
             for _, game_row in month_games.iterrows():
                 if game_row['game_date'] != current_date:
@@ -748,6 +752,12 @@ class TempoPredictor(IsotonicPredictor):
                 actual_margin         = game_row['team_score'] - game_row['opponent_team_score']
                 model_expected_margin = net_efficiency_diff * pace_factor + home_court_pts
 
+                # Raw projected total, exactly as js/predict.js projScores builds it.
+                team1_eff, team2_eff = efficiency_lookup.loc[team1_id], efficiency_lookup.loc[team2_id]
+                projected_total = ((team1_eff['off_eff'] + team2_eff['def_eff'] - league_def_eff)
+                                   + (team2_eff['off_eff'] + team1_eff['def_eff'] - league_def_eff)) \
+                                  / 100 * expected_pace
+
                 training_rows.append({
                     'game_date':   game_row['game_date'],
                     'tempo_adj':   tempo_adj,
@@ -758,6 +768,11 @@ class TempoPredictor(IsotonicPredictor):
                     'form_diff':   team1_form - team2_form,
                     'margin':      actual_margin,
                     'won':         int(game_row['team_winner']),
+                    'proj_total':  projected_total,
+                    'total':       game_row['team_score'] + game_row['opponent_team_score'],
+                    # First walk-forward month: ratings are last season's alone,
+                    # which the live model never is (it blends in current games).
+                    'prior_only':  len(games_before) == 0,
                 })
                 pending_log_entries.append((team1_id, {
                     'margin': float(actual_margin),
@@ -793,6 +808,15 @@ class TempoPredictor(IsotonicPredictor):
             self.spread_regression_model.predict(training_frame[self.SPREAD_FEATURES]),
             training_frame['won'].values
         )
+        # Projected totals ran ~6 pts low against finals in the live log (Nov 2026):
+        # the raw formula is never fit to actual scores the way the spread is.
+        # Prior-only rows are left out: their projections are far staler than any
+        # live one, and including them flattens the fit (slope 0.63 vs 0.84; held-out
+        # 2026 Dec-Apr MAE 14.26 vs 14.12, live log 13.55 either way vs 14.67 raw).
+        totals_frame = training_frame[~training_frame['prior_only']].dropna(subset=['proj_total', 'total'])
+        self.total_regression_model = LinearRegression().fit(totals_frame[['proj_total']], totals_frame['total'])
+        print(f"   total: actual = {self.total_regression_model.intercept_:+.2f} "
+              f"+ {self.total_regression_model.coef_[0]:.4f} * projected")
         print(f"OK TempoPredictor trained in {time.time() - start:.1f}s ({len(training_frame)} games)")
 
     def validate_walk_forward(self, test_season, prior_season=None):
@@ -812,6 +836,9 @@ class TempoPredictor(IsotonicPredictor):
             'auc':         roc_auc_score(actual_outcomes, predicted_win_probs),
             'spread_mae':  np.mean(np.abs(predicted_spreads - actual_margins)),
             'spread_rmse': np.sqrt(np.mean((predicted_spreads - actual_margins) ** 2)),
+            'total_mae_raw': np.mean(np.abs(validation_frame['proj_total'] - validation_frame['total'])),
+            'total_mae':   np.mean(np.abs(self.total_regression_model.predict(validation_frame[['proj_total']])
+                                          - validation_frame['total'])),
         }, predicted_win_probs, actual_outcomes
 
     def _build_ratings(self, current_season, prior_season=None, as_of_date=None):

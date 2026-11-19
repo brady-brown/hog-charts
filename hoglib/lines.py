@@ -28,7 +28,12 @@ from hoglib.io import sanitize_for_json
 COLS = ["g", "d", "away", "home", "neutral",
         "model_spread", "model_prob", "model_total", "model_at",
         "provider", "open_spread", "close_spread", "open_total", "close_total",
-        "away_pts", "home_pts"]
+        "away_pts", "home_pts",
+        # Added 2026-11-19. model_total stays the RAW projection so early rows
+        # compare like for like; model_total_cal is what the site shows (the
+        # fitted correction). capture_* is the scoreboard line when the model
+        # was captured — the number you could actually have bet.
+        "model_total_cal", "capture_spread", "capture_total"]
 
 EASTERN = ZoneInfo("America/New_York")
 
@@ -46,7 +51,8 @@ def _num(value, digits=2):
 def predict(model, away, home, neutral, league_def):
     """The model on one game — must match site/js/predict.js (t1 = away, t2 = home).
 
-    Returns (home_spread, home_win_prob, projected_total); home_spread < 0 = home favored.
+    Returns (home_spread, home_win_prob, raw_total, corrected_total); home_spread < 0 =
+    home favored. corrected_total is None until model.json carries the total fit.
     """
     league_adv = model["league_home_adv"]
     home_adv = home.get("home_adv")
@@ -63,9 +69,11 @@ def predict(model, away, home, neutral, league_def):
     pp_away = away["off_eff"] + (home["def_eff"] - league_def)
     pp_home = home["off_eff"] + (away["def_eff"] - league_def)
     total = (pp_away + pp_home) / 100 * exp_pace
+    corrected = (model["total_intercept"] + model["total_coef"] * total
+                 if model.get("total_coef") is not None else None)
     # Betting convention: the home line is minus the home margin, i.e. the away
     # margin. Ark +2.5 at IU means IU is expected to win by 2.5 → home line −2.5.
-    return away_margin, 1 - away_prob, total
+    return away_margin, 1 - away_prob, total, corrected
 
 
 def _load(path, default):
@@ -92,17 +100,20 @@ def write_line_log(season_dir, lines_frame, now=None):
         teams = {t["team_id"]: t for t in predictor["teams"]}
         league_def = float(np.mean([t["def_eff"] for t in predictor["teams"]]))
         needed = ("net_eff", "off_eff", "def_eff", "pace", "form")
-        for g, day, start, away_id, home_id, neutral, *_ in upcoming["games"]:
+        for g, day, start, away_id, home_id, neutral, _tbd, _tv, _venue, _provider, _details, \
+                line_spread, line_total in upcoming["games"]:
             if start and dt.datetime.fromisoformat(start) <= now:
                 continue                         # already tipped: keep the frozen numbers
             away, home = teams.get(away_id), teams.get(home_id)
             if not away or not home or any(t.get(k) is None for t in (away, home) for k in needed):
                 continue
-            spread, prob, total = predict(model, away, home, bool(neutral), league_def)
+            spread, prob, total, total_cal = predict(model, away, home, bool(neutral), league_def)
             row = log.setdefault(g, {c: None for c in COLS})
             row.update({"g": g, "d": day, "away": away_id, "home": home_id, "neutral": int(bool(neutral)),
                         "model_spread": _num(spread), "model_prob": _num(prob, 4),
-                        "model_total": _num(total, 1), "model_at": now.isoformat(timespec="minutes")})
+                        "model_total": _num(total, 1), "model_total_cal": _num(total_cal, 1),
+                        "model_at": now.isoformat(timespec="minutes"),
+                        "capture_spread": _num(line_spread, 1), "capture_total": _num(line_total, 1)})
             captured += 1
 
     # 2. The book's open/close, once the game is final.

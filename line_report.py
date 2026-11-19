@@ -40,6 +40,10 @@ def load():
     with open(path) as handle:
         data = json.load(handle)
     df = pd.DataFrame(data["games"], columns=data["cols"])
+    for col in ("model_total_cal", "capture_spread", "capture_total"):
+        if col not in df:
+            df[col] = np.nan
+    df = df.astype({c: float for c in ("model_total_cal", "capture_spread", "capture_total")})
 
     stats_path = os.path.join(ROOT, "site", "data", str(SEASON), "team-stats-all.json")
     conf = {}
@@ -91,13 +95,17 @@ def report(df, label=""):
     print(f"  Model vs close        r = {np.corrcoef(df['model_spread'], df['close_spread'])[0, 1]:.3f}"
           f"   mean gap {(df['model_spread'] - df['close_spread']).abs().mean():.2f} pts")
 
+    has_capture = df["capture_spread"].notna()
     section(f"Against the spread{label} — betting the model's side when it disagrees by ≥ N")
-    print("    N    vs close W-L-P        win%     vs open W-L-P         win%")
+    print("    N    vs close W-L-P      win%    vs open W-L-P       win%    at capture W-L-P    win%")
     for t in THRESHOLDS:
-        wc, lc, pc = ats(df, "close_spread", t)
-        wo, lo, po = ats(df[has_open], "open_spread", t)
-        print(f"  {t:>3}    {f'{wc}-{lc}-{pc}':<14}     {pct(wc, lc)}     {f'{wo}-{lo}-{po}':<14}     {pct(wo, lo)}")
-    print(f"  (break-even at -110: {100 * BREAKEVEN:.1f}%)")
+        cells = []
+        for subset, col in ((df, "close_spread"), (df[has_open], "open_spread"), (df[has_capture], "capture_spread")):
+            w, l, p = ats(subset, col, t)
+            cells.append(f"{f'{w}-{l}-{p}':<14}  {pct(w, l)}")
+        print(f"  {t:>3}    " + "    ".join(cells))
+    print(f"  (break-even at -110: {100 * BREAKEVEN:.1f}%. \"at capture\" = the line posted when the model's"
+          f" numbers were frozen, the one you could have bet; {int(has_capture.sum()):,} games)")
 
     moved = df[has_open & (df["open_spread"] != df["model_spread"])]
     if len(moved):
@@ -109,17 +117,21 @@ def report(df, label=""):
               f"{100 * toward[changed].mean():.1f}% of the time")
 
 
-def totals(df):
-    t = df.dropna(subset=["model_total", "close_total"])
+def totals(df, col="model_total", label="raw projection"):
+    """col: model_total (the raw formula, every row) or model_total_cal (the fitted
+    correction the site shows, logged from 2026-11-19 on)."""
+    t = df.dropna(subset=[col, "close_total"])
     if t.empty:
         return
     actual = t["home_pts"] + t["away_pts"]
-    section(f"Totals — {len(t):,} games")
-    print(f"  MAE vs final total    model {(t['model_total'] - actual).abs().mean():5.2f}"
+    section(f"Totals, {label} — {len(t):,} games")
+    print(f"  MAE vs final total    model {(t[col] - actual).abs().mean():5.2f}"
           f"   closing line {(t['close_total'] - actual).abs().mean():5.2f}")
+    print(f"  Bias (model − final)  model {(t[col] - actual).mean():+5.2f}"
+          f"   closing line {(t['close_total'] - actual).mean():+5.2f}")
     print("    N    W-L-P            win%   (model's side of the over/under)")
     for n in THRESHOLDS:
-        edge = t["model_total"] - t["close_total"]
+        edge = t[col] - t["close_total"]
         picks = t[edge.abs() >= max(n, 0.5)]
         over = edge[picks.index] > 0
         diff = actual[picks.index] - picks["close_total"]
@@ -143,6 +155,7 @@ def main():
         if len(group) >= 20:
             report(group, f" · {tier}")
     totals(graded)
+    totals(graded, "model_total_cal", "corrected (what the site shows)")
 
 
 if __name__ == "__main__":

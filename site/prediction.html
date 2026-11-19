@@ -385,7 +385,7 @@ document.getElementById("predict-btn").addEventListener("click", () => {
   if (!t1 || !t2) { alert("Team data not found."); return; }
 
   const r = predictGame(MODEL, t1, t2, venue);
-  const { s1, s2 } = projScores(t1, t2, r.spread, r.expPace, LG_DEF);
+  const { s1, s2 } = projScores(t1, t2, r.spread, r.expPace, LG_DEF, MODEL);
 
   const neutral   = venue === "neutral";
   const team1Home = venue === "home1";

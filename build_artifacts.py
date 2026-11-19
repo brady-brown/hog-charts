@@ -187,6 +187,9 @@ def build_model_json(trained_predictor, backtest_metrics):
         # Isotonic regression lookup: np.interp(spread, iso_x, iso_y) → P(win)
         "iso_x":             [float(x) for x in trained_predictor.calibrator.X_thresholds_],
         "iso_y":             [float(y) for y in trained_predictor.calibrator.y_thresholds_],
+        # Projected total correction: total = total_intercept + total_coef * raw projection
+        "total_intercept":   float(trained_predictor.total_regression_model.intercept_),
+        "total_coef":        float(trained_predictor.total_regression_model.coef_[0]),
         "backtest_year":     BACKTEST_YEAR,
         "backtest_calibration_years": BACKTEST_CALIBRATION_YEARS,
         "backtest":          backtest_metrics,
