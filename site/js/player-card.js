@@ -176,16 +176,14 @@
     document.getElementById("pc-overlay").addEventListener("click", (e) => {
       if (e.target === document.getElementById("pc-overlay")) close();
     });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });   // games.js closes its box score first
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
     document.getElementById("pc-tabs").addEventListener("click", (e) => {
       if (e.target.dataset?.tab) showTab(e.target.dataset.tab);
     });
     document.getElementById("pc-games-tbl").addEventListener("click", (e) => {
       const gameId = e.target.closest("tr.pc-game")?.dataset.game;
-      if (gameId && gamesFor) Games.openBoxScore({
-        season: gamesFor.season, teamId: gamesFor.teamId, gameId: Number(gameId), highlightId: Number(gamesFor.playerId),
-        chart: gamesFor.live ? { kind: "player", name: gamesFor.name } : null,   // shot locations: live season only
-      });
+      // The game's page on the Games tab, with his team's chart narrowed to him.
+      if (gameId && gamesFor) goTo(gameHref(Number(gameId), gamesFor.season, gamesFor.playerId));
     });
     document.getElementById("pc-career-switch").addEventListener("click", (e) => {
       const view = e.target.dataset?.view;
@@ -468,7 +466,6 @@
   function close() {
     const overlay = document.getElementById("pc-overlay");
     if (!overlay || inline) return;      // the player page's card never closes
-    window.Games?.closeBoxScore();
     overlay.classList.remove("open");
     document.body.style.overflow = "";
     const z = document.getElementById("pc-chart-zone");

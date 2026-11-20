@@ -103,6 +103,9 @@ const playerHref    = (id, season, tab) => `player.html?${qs({ id, season, tab }
 const teamHref      = (id, season, tab) => `team.html?${qs({ id, season, tab })}`;
 const gameChartHref = (id, game) => `game-chart.html?${qs({ id, game })}`;            // live season only
 const teamGameChartHref = (team, game) => `team-game-chart.html?${qs({ team, game })}`; // live season only
+// A game's page on the Games tab (every season). player narrows the chart to him
+// and highlights his box-score row. Every game list on the site opens this.
+const gameHref = (game, season, player) => `games.html?${qs({ game, season, player })}`;
 
 function escHtml(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

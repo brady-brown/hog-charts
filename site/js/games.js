@@ -1,32 +1,25 @@
-/* games.js — shared game data + box-score modal for the player and team cards.
+/* games.js — shared game data + the box score.
  *
  *   Games.teamFile(season, teamId)   → {t, colors, games:[{g, d, ha, o, oid, ts, os, w, players, totals}]}
- *   Games.openBoxScore({season, teamId, gameId, highlightId, chart})
- *   Games.renderBoxScore(el, {season, teamId, gameId, highlightId, live, onPlayer})  — inline, no modal
+ *   Games.renderBoxScore(el, {season, teamId, gameId, highlightId, live, onPlayer})  — drawn into el
  *   Games.shortDate(d) · Games.opponentLabel(game) · Games.shootLine(made, att)
+ *
+ * Every game list on the site (team page, team card, player card) links to the
+ * game's page on the Games tab (common.js gameHref); the box score lives there
+ * and on the game chart pages. The old pop-up box score was retired 2026-11-20
+ * so a game looks the same wherever it's opened.
  *
  * Reads data/{season}/games/teams/{team_id}.json from hoglib/gamelogs.py, which
  * stores names once per file and each line as an array in "cols" order; teamFile
  * hands back plain objects. A box score is the team's game plus the same game in
  * the opponent's file.
  *
- * chart ({kind: "player"|"team", name}) adds that game's makes and misses from
- * data/shots/{team}.json — live season only, so callers pass it only then.
- * Needs common.js (loadJSON, logoUrl, slugify, ensurePlotly, the *Link/*Href helpers) and court.js.
+ * Needs common.js (loadJSON, logoUrl, goTo, the *Link/*Href helpers).
  */
 (function () {
   "use strict";
 
   const CSS = `
-  .gm-overlay { display:none; position:fixed; inset:0; z-index:210; background:rgba(0,0,0,.6);
-    align-items:center; justify-content:center; }
-  .gm-overlay.open { display:flex; }
-  .gm-modal { background:var(--card); border:1px solid var(--line); border-radius:20px;
-    width:min(860px,95vw); max-height:90vh; overflow-y:auto; position:relative; padding:24px 28px; }
-  .gm-close { position:absolute; top:14px; right:16px; background:var(--card2); border:1px solid var(--line);
-    border-radius:50%; width:32px; height:32px; font-size:1.1rem; line-height:32px; text-align:center;
-    cursor:pointer; color:var(--muted); z-index:10; }
-  .gm-close:hover { color:var(--ink); }
   .gm-status { color:var(--muted); font-size:.85rem; }
   .gm-score { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; padding-right:40px; }
   .gm-team-line { display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:700; color:var(--muted); }
@@ -50,36 +43,12 @@
   .gm-tbl td.gm-dnp { color:var(--muted); text-align:left; }
   .gm-win { color:#16A34A; font-weight:700; }
   .gm-loss { color:#DC2626; font-weight:700; }
-  #gm-chart .js-plotly-plot { border-radius:10px; overflow:hidden; }
   `;
 
-  const HTML = `
-  <div class="gm-overlay" id="gm-overlay">
-    <div class="gm-modal">
-      <div class="gm-close" id="gm-close">✕</div>
-      <div id="gm-body"></div>
-    </div>
-  </div>`;
-
-  // Styles go in at load: the cards' game logs use the table classes before any box score opens.
+  // Styles go in at load: the cards' game logs use the table classes too.
   const style = document.createElement("style");
   style.textContent = CSS;
   document.head.appendChild(style);
-
-  function injectOnce() {
-    if (document.getElementById("gm-overlay")) return;
-    const holder = document.createElement("div");
-    holder.innerHTML = HTML;
-    document.body.appendChild(holder.firstElementChild);
-    document.getElementById("gm-close").addEventListener("click", closeBoxScore);
-    document.getElementById("gm-overlay").addEventListener("click", (e) => {
-      if (e.target === document.getElementById("gm-overlay")) closeBoxScore();
-    });
-    // Capture phase so Escape closes the box score before the card underneath.
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && isOpen()) { e.stopImmediatePropagation(); closeBoxScore(); }
-    }, true);
-  }
 
   // ── data ──────────────────────────────────────────────────────────────────
   const FILE_CACHE = {};
@@ -184,54 +153,7 @@
     el.addEventListener("click", el._gmRows, true);
   }
 
-  async function renderChart(teamName, gameId, chart) {
-    const el = document.getElementById("gm-chart");
-    if (!el) return;
-    const shots = await loadJSON(`data/shots/${slugify(teamName)}.json`);
-    const gameIndex = shots?.games?.findIndex((g) => g.id === gameId) ?? -1;
-    if (gameIndex < 0) { el.closest(".gm-section").remove(); return; }
-    const playerIndex = chart.kind === "player" ? shots.players.indexOf(chart.name) : null;
-    const { mx, my, hx, hy } = shotsXY(shots.shots, (g, pi) =>
-      g === gameIndex && (playerIndex === null || pi === playerIndex));
-    if (!mx.length && !hx.length) { el.closest(".gm-section").remove(); return; }
-    const marker = (color, symbol) => ({ color, size: 9, symbol, line: { color: "white", width: 0.6 }, opacity: 0.85 });
-    ensurePlotly().then((Plotly) => Plotly.react(el, [
-      ...courtTraces(),
-      { type: "scatter", x: hx, y: hy, mode: "markers", name: `Miss (${hx.length})`, marker: marker("#EF4444", "x"), hoverinfo: "skip" },
-      { type: "scatter", x: mx, y: my, mode: "markers", name: `Make (${mx.length})`, marker: marker("#22C55E", "circle"), hoverinfo: "skip" },
-    ], {
-      paper_bgcolor: "#0B0E14", plot_bgcolor: "#0B0E14", height: 400,
-      margin: { l: 10, r: 10, t: 10, b: 10 }, dragmode: false, showlegend: true,
-      legend: { orientation: "h", x: 0.5, xanchor: "center", y: 0.02, bgcolor: "rgba(17,21,31,0.7)", font: { color: "#E6E9EF" } },
-      xaxis: { range: X_RANGE, visible: false, scaleanchor: "y", scaleratio: 1, constrain: "domain" },
-      yaxis: { range: Y_RANGE, visible: false, constrain: "domain" },
-    }, { displaylogo: false, staticPlot: true })).catch(() => {});
-  }
-
-  let boxRequest = 0;
-  async function openBoxScore({ season, teamId, gameId, highlightId = null, chart = null }) {
-    injectOnce();
-    const request = ++boxRequest;
-    const body = document.getElementById("gm-body");
-    body.innerHTML = `<div class="gm-status">Loading…</div>`;
-    document.getElementById("gm-overlay").classList.add("open");
-
-    const loaded = await loadSides(season, teamId, gameId);
-    if (request !== boxRequest) return;
-    if (!loaded) { body.innerHTML = `<div class="gm-status">Box score not available.</div>`; return; }
-    const { ownFile, own, sides } = loaded;
-    const ctx = { season, live: !!chart, gameId, highlightId };   // callers pass chart for the live season only
-
-    body.innerHTML = scoreHTML(sides, own, season) +
-      (chart ? `<div class="gm-section"><div class="gm-hdr"><a class="team-link" href="${chart.kind === "player" && highlightId != null
-          ? gameChartHref(highlightId, gameId)
-          : teamGameChartHref(teamId, gameId)}">${escHtml(chart.name)} <span class="team-link-arrow">→</span></a></div><div id="gm-chart"></div></div>` : "") +
-      tablesHTML(sides, ctx);
-    wireRows(body, ctx);
-    if (chart) renderChart(ownFile.t, gameId, chart);
-  }
-
-  // The same box score drawn into a page (the game chart pages) instead of the modal.
+  // The box score drawn into a page (the Games tab, the game chart pages).
   // onPlayer(playerId, teamId, gameId) takes a player's row/chart click.
   async function renderBoxScore(el, { season, teamId, gameId, highlightId = null, live = false, onPlayer = null }) {
     const request = (el._gmRequest = (el._gmRequest ?? 0) + 1);
@@ -243,17 +165,5 @@
     wireRows(el, ctx);
   }
 
-  function isOpen() {
-    return document.getElementById("gm-overlay")?.classList.contains("open");
-  }
-
-  function closeBoxScore() {
-    const overlay = document.getElementById("gm-overlay");
-    if (!overlay) return;
-    overlay.classList.remove("open");
-    const chartEl = document.getElementById("gm-chart");
-    if (window.Plotly && chartEl) Plotly.purge(chartEl);
-  }
-
-  window.Games = { teamFile, openBoxScore, renderBoxScore, closeBoxScore, shortDate, opponentLabel, shootLine };
+  window.Games = { teamFile, renderBoxScore, shortDate, opponentLabel, shootLine };
 })();

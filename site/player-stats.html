@@ -740,12 +740,19 @@ const PCT_EXCLUDE = new Set(["gp"]);
 let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 
 // Percentiles are computed against players with a real sample only: at least
-// PCT_MIN_GP games AND PCT_MIN_MPG minutes per game. Players below that don't
+// pctMinGp games AND PCT_MIN_MPG minutes per game. Players below that don't
 // enter the pool, and their own percentiles are blurred out (they'd be noise).
+// The games floor is PCT_MIN_GP once the season is underway; early on it scales
+// to three games behind the leader (hoglib.season.scaled_min_games), or nobody
+// qualifies and every percentile is blurred (Nov 2026: leader at 8 games).
 const PCT_MIN_GP = 10, PCT_MIN_MPG = 10;
-const pctQualified = p => (p.gp ?? 0) >= PCT_MIN_GP && (p.mpg ?? 0) >= PCT_MIN_MPG;
+const PCT_MIN_GP_BY_SCOPE = {};   // scope -> games floor used for that scope's pool
+const pctMinGp = () => PCT_MIN_GP_BY_SCOPE[curScope] ?? PCT_MIN_GP;
+const pctQualified = p => (p.gp ?? 0) >= pctMinGp() && (p.mpg ?? 0) >= PCT_MIN_MPG;
 
 function buildPctSorted(scope) {
+  const mostGp = (PS[scope] || []).reduce((most, p) => Math.max(most, p.gp || 0), 0);
+  PCT_MIN_GP_BY_SCOPE[scope] = mostGp ? Math.min(PCT_MIN_GP, Math.max(1, mostGp - 3)) : PCT_MIN_GP;
   const keys = new Set();
   // Table columns (for display mode) plus every filterable stat (for %ile thresholds).
   Object.values(COL_GROUPS).forEach(g => g.forEach(c => { if (!PCT_EXCLUDE.has(c.key)) keys.add(c.key); }));
@@ -786,7 +793,7 @@ function rowHTML(p, idx) {
       const { bg, fg } = pctColor(pr);
       // Below the sample threshold → blur the percentile (kept out of the pool).
       if (!pctQualified(p))
-        return `<td class="num ps-pct-blur" title="Not enough games/minutes for a reliable percentile (min ${PCT_MIN_GP} GP & ${PCT_MIN_MPG} MPG)" style="color:${fg};font-weight:700">${Math.round(pr)}</td>`;
+        return `<td class="num ps-pct-blur" title="Not enough games/minutes for a reliable percentile (min ${pctMinGp()} GP & ${PCT_MIN_MPG} MPG)" style="color:${fg};font-weight:700">${Math.round(pr)}</td>`;
       return `<td class="num" style="background:${bg};color:${fg};font-weight:700">${Math.round(pr)}</td>`;
     }
     const signed = c.key === "on_off";

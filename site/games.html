@@ -19,6 +19,7 @@
     .gs-wrap { max-width:1180px; margin:0 auto; }
     .gs-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
     .gs-head h2 { margin:0; }
+    .gs-season { font-size:.95rem; font-weight:700; color:var(--muted); margin-left:6px; }
     .gs-head .form-group { margin:0; flex:0 1 260px; }
     .gs-status { color:var(--muted); font-size:.92rem; padding:24px 0; }
     .gs-status:empty { display:none; }
@@ -170,7 +171,7 @@
 <div class="gs-wrap">
   <div id="gs-list">
     <div class="gs-head">
-      <h2>Games</h2>
+      <h2>Games <span class="gs-season" id="gs-season"></span></h2>
       <div class="form-group"><label for="gs-conf">Conference</label><select id="gs-conf" disabled></select></div>
     </div>
     <div class="gs-dates">
@@ -196,7 +197,11 @@
 // show the model's win probability and spread next to the posted line, and open
 // to a preview: the prediction, both teams' season shot charts and season stats.
 //
-// URL: ?date=YYYY-MM-DD (scoreboard) or ?game={gameId} (one game).
+// URL: ?date=YYYY-MM-DD (scoreboard) or ?game={gameId} (one game), plus optional
+// &season= (a past season: finals, totals and box scores — shot charts and
+// upcoming games are live-season only) and &player={id} (open a game with that
+// player's team chart narrowed to him and his box-score row highlighted; the
+// player card and team pages link here via common.js gameHref).
 // Data (all from build_site.py, live season only — shot coordinates exist for it alone):
 //   games/index.json     finals            (hoglib/gamelogs.write_game_index)
 //   games/upcoming.json  scheduled games   (hoglib/gamelogs.write_upcoming)
@@ -204,6 +209,7 @@
 //   predictor.json  the model (js/predict.js) · team-stats-all.json  conference, rank, season stats
 
 let SEASON = null;
+let LIVE = true;           // SEASON is the current season (shots + upcoming exist)
 let GAMES = [];            // finals: [{g, d, away:{tid, pts, top}, home:{...}}] oldest first
 let UPCOMING = [];         // [{g, d, start, away:{tid}, home:{tid}, neutral, tbd, tv, venue, line}]
 let TEAMS = {};            // tid → {name, short, conf, rank}
@@ -225,16 +231,20 @@ const dayLabel = (d, opts) => new Date(`${d}T12:00:00`).toLocaleDateString("en-U
 const todayET = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 const rankTag = (tid) => { const r = team(tid).rank; return r != null && r <= 25 ? `<span class="gs-rk">${r}</span>` : ""; };
 const LOGO_ICON = `<img src="img/logo.png" alt="Hog Charts">`;
+// This page's own URLs; a past season rides along on every one.
+const pageUrl = (o) => `?${qs({ ...o, season: LIVE ? null : SEASON })}`;
 
 // ── data ──────────────────────────────────────────────────────────────────
 async function load() {
   const seasons = await loadJSON("data/seasons.json") ?? [];
-  SEASON = seasons[0];
+  const asked = Number(new URLSearchParams(location.search).get("season"));
+  SEASON = seasons.includes(asked) ? asked : seasons[0];
+  LIVE = SEASON === seasons[0];
   const [index, upcoming, stats, predictor] = await Promise.all([
     loadJSON(`data/${SEASON}/games/index.json`),
-    loadJSON(`data/${SEASON}/games/upcoming.json`),
+    LIVE ? loadJSON(`data/${SEASON}/games/upcoming.json`) : null,
     loadJSON(`data/${SEASON}/team-stats-all.json`),
-    loadJSON(`data/${SEASON}/predictor.json`),
+    LIVE ? loadJSON(`data/${SEASON}/predictor.json`) : null,
   ]);
   if (!index?.games?.length && !upcoming?.games?.length) return false;
   STATS = new Map((stats?.team_stats ?? []).map((t) => [t.team_id, t]));
@@ -316,7 +326,7 @@ function finalCard(gm) {
     ${teamCell(side.tid, RECORD.get(`${gm.g}:${side.tid}`))}<span class="gs-pts">${side.pts ?? ""}</span></div>`;
   const tops = [gm.away.top, gm.home.top].filter(Boolean)
     .map(([n, p]) => `${escHtml(shortName(n))} ${p}`).join(" · ");
-  return `<a class="gs-card" href="?game=${gm.g}" data-game="${gm.g}">
+  return `<a class="gs-card" href="${pageUrl({ game: gm.g })}" data-game="${gm.g}">
     ${row(gm.away, awayWon)}${row(gm.home, !awayWon)}
     <div class="gs-foot"><span class="gs-final">Final</span><span class="gs-top">${tops}</span></div></a>`;
 }
@@ -329,7 +339,7 @@ function upcomingCard(gm) {
   const when = [startText(gm), gm.tv].filter(Boolean).join(" · ");
   const ours = p ? `<span class="gs-line" title="Hog Charts">${LOGO_ICON}<b>${spreadText(p)}</b></span>` : "";
   const market = gm.line ? `<span class="gs-line" title="${escHtml(gm.line.provider ?? "")}">${escHtml(gm.line.details)}</span>` : "";
-  return `<a class="gs-card up" href="?game=${gm.g}" data-game="${gm.g}">
+  return `<a class="gs-card up" href="${pageUrl({ game: gm.g })}" data-game="${gm.g}">
     ${row(gm.away, p?.prob)}${row(gm.home, p ? 1 - p.prob : null)}
     ${p ? `<div class="gs-wpbar"><i style="width:${(p.prob * 100).toFixed(1)}%;background:${p.prob >= 0.5 ? "var(--ink)" : "var(--dim)"}"></i><i style="flex:1;background:${p.prob < 0.5 ? "var(--ink)" : "var(--dim)"}"></i></div>` : ""}
     <div class="gs-foot"><span class="gs-when">${escHtml(when)}</span><span class="gs-lines">${ours}${market}</span></div></a>`;
@@ -535,7 +545,7 @@ async function loadSidesData(gm) {
   const sides = [gm.away, gm.home];
   const [files, shots] = await Promise.all([
     Promise.all(sides.map((s) => Games.teamFile(SEASON, s.tid))),
-    Promise.all(sides.map((s) => loadJSON(`data/shots/${slugify(team(s.tid).name)}.json`))),
+    Promise.all(sides.map((s) => LIVE ? loadJSON(`data/shots/${slugify(team(s.tid).name)}.json`) : null)),
   ]);
   return { sides, files, shots, colors: teamColors(files[0]?.colors, files[1]?.colors) };
 }
@@ -553,7 +563,7 @@ function openView(gm, title) {
   return { view, el };
 }
 
-const backLink = (d) => `<a class="gv-back" href="?date=${d}" data-date="${d}">‹ ${dayLabel(d, { weekday: "short", month: "short", day: "numeric" })}</a>`;
+const backLink = (d) => `<a class="gv-back" href="${pageUrl({ date: d })}" data-date="${d}">‹ ${dayLabel(d, { weekday: "short", month: "short", day: "numeric" })}</a>`;
 
 // ── one played game ───────────────────────────────────────────────────────
 function finalScoreHTML(gm) {
@@ -581,22 +591,31 @@ async function renderFinal(gm) {
              fg: tot ? `FG ${tot.fgm}-${tot.fga} · 3P ${tot.tpm}-${tot.tpa}` : "" };
   });
 
-  const drawCharts = () => { $("gv-charts").innerHTML = state.map(chartCard).join(""); };
+  // Arriving from a player card (&player=): his team's chart narrowed to him.
+  const linkedPlayer = Number(new URLSearchParams(location.search).get("player")) || null;
+  if (linkedPlayer) {
+    for (const s of state) {
+      const name = s.game?.players.find((p) => p.id === linkedPlayer)?.n;
+      if (name) s.player = name;
+    }
+  }
+
+  const drawCharts = () => { if (LIVE) $("gv-charts").innerHTML = state.map(chartCard).join(""); };
   el.innerHTML = `${backLink(gm.d)}${finalScoreHTML(gm)}
-    <div class="gv-charts" id="gv-charts"></div>
+    ${LIVE ? `<div class="gv-charts" id="gv-charts"></div>` : ""}
     ${gameTotalsHTML(state, colors)}
     <div id="gv-box"></div>`;
   drawCharts();
 
   // A player's row in the box score narrows his team's chart to him; again clears it.
-  $("gv-charts").addEventListener("click", (e) => {
+  $("gv-charts")?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-clear]");
     if (!btn) return;
     state.find((s) => s.tid === Number(btn.dataset.clear)).player = null;
     drawCharts();
   });
   Games.renderBoxScore($("gv-box"), {
-    season: SEASON, teamId: gm.away.tid, gameId, live: true,
+    season: SEASON, teamId: gm.away.tid, gameId, live: LIVE, highlightId: linkedPlayer,
     onPlayer: (pid, tid) => {
       const s = state.find((x) => x.tid === tid);
       const name = s?.game?.players.find((p) => p.id === pid)?.n;
@@ -696,6 +715,7 @@ function go(search) {
 
 async function init() {
   if (!(await load())) { setStatus("No games yet."); return; }
+  if (!LIVE) $("gs-season").textContent = seasonLabel(SEASON);
 
   const confs = [...new Set(Object.values(TEAMS).map((t) => t.conf).filter(Boolean))].sort();
   const sel = $("gs-conf");
@@ -706,11 +726,11 @@ async function init() {
 
   $("gs-strip").addEventListener("click", (e) => {
     const b = e.target.closest(".gs-day");
-    if (b) go(`?date=${b.dataset.date}`);
+    if (b) go(pageUrl({ date: b.dataset.date }));
   });
   const step = (n) => {
     const i = DATES.indexOf(DATE) + n;
-    if (i >= 0 && i < DATES.length) go(`?date=${DATES[i]}`);
+    if (i >= 0 && i < DATES.length) go(pageUrl({ date: DATES[i] }));
   };
   $("gs-prev").addEventListener("click", () => step(-1));
   $("gs-next").addEventListener("click", () => step(1));
@@ -720,8 +740,8 @@ async function init() {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const cardEl = e.target.closest("a.gs-card");
     const back = e.target.closest("a.gv-back");
-    if (cardEl) { e.preventDefault(); go(`?game=${cardEl.dataset.game}`); }
-    else if (back) { e.preventDefault(); go(`?date=${back.dataset.date}`); }
+    if (cardEl) { e.preventDefault(); go(pageUrl({ game: cardEl.dataset.game })); }
+    else if (back) { e.preventDefault(); go(pageUrl({ date: back.dataset.date })); }
   });
   window.addEventListener("popstate", route);
   route();

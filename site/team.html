@@ -258,10 +258,10 @@ async function loadGames() {
         <td>${t.reb ?? "—"}</td><td>${t.ast ?? "—"}</td><td>${t.tov ?? "—"}</td><td>${t.stl ?? "—"}</td><td>${t.blk ?? "—"}</td>
         ${live ? `<td>${chartLink(teamGameChartHref(TEAM_ID, g.g), "Team shot chart")}</td>` : ""}
       </tr>`; }).join("");
+  // A game opens its page on the Games tab — the same view everywhere on the site.
   table.onclick = e => {
     const gameId = e.target.closest("tr.gm-row")?.dataset.game;
-    if (gameId) Games.openBoxScore({ season: SEASON, teamId: TEAM_ID, gameId: Number(gameId),
-      chart: SEASON === CUR_SEASON ? { kind: "team", name: TEAM.team } : null });
+    if (gameId) goTo(gameHref(Number(gameId), SEASON));
   };
 }
 
