@@ -1531,6 +1531,9 @@ write_upcoming(feeds.load_schedule(SEASON), SEASON_DATA_DIR)
 # Model vs. market log (cumulative; reads predictor.json + upcoming.json above).
 from hoglib.lines import write_line_log
 write_line_log(SEASON_DATA_DIR, feeds.load_lines(SEASON))
+# Home page daily cards (reads the game files, lines and team stats above).
+from hoglib.home import write_home
+write_home(SEASON_DATA_DIR, feeds.load_lines(SEASON))
 
 
 # ===========================================================================

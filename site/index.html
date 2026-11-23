@@ -15,6 +15,66 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta name="theme-color" content="#0E1320">
   <link rel="apple-touch-icon" href="img/logo.png">
+  <style>
+    /* Daily cards (data/{season}/home.json, hoglib/home.py) */
+    .home-hero.compact { display:flex; align-items:center; gap:14px; text-align:left; padding:6px 0 18px; }
+    .home-hero.compact .home-logo { width:52px; height:52px; margin:0; }
+    .home-hero.compact .wordmark { font-size:1.6rem; }
+    .home-hero.compact .tagline { font-size:.92rem; margin:0; }
+    /* statline full height on the left, the two game cards stacked on the right */
+    .hm-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:14px; margin-bottom:8px; }
+    .hm-grid > .hm-card:first-child { grid-row:span 2; }
+    .hm-grid:empty { display:none; }
+    .hm-card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;
+      display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .hm-hd { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+    .hm-lbl { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--t1); }
+    .hm-date { font-size:.75rem; color:var(--dim); white-space:nowrap; }
+    .hm-matchup { font-size:.82rem; color:var(--muted); font-weight:600; }
+    .hm-matchup a { color:inherit; }
+    /* statline */
+    .hm-who { display:flex; align-items:center; gap:12px; min-width:0; }
+    .hm-shot { width:64px; height:64px; border-radius:50%; object-fit:cover; background:var(--card2); flex:none; }
+    .hm-name { font-size:1.15rem; font-weight:900; line-height:1.15; }
+    .hm-name a { color:var(--ink); }
+    .hm-team { display:flex; align-items:center; gap:6px; font-size:.85rem; color:var(--muted); margin-top:2px; }
+    .hm-team img { width:18px; height:18px; object-fit:contain; }
+    .hm-team a { color:inherit; }
+    .hm-big { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+    .hm-big div { background:var(--card2); border-radius:10px; padding:8px 4px; text-align:center; }
+    .hm-big b { display:block; font-size:1.45rem; font-weight:900; line-height:1.1; font-variant-numeric:tabular-nums; }
+    .hm-big span { font-size:.64rem; font-weight:800; letter-spacing:.06em; color:var(--dim); }
+    .hm-sub { display:flex; justify-content:space-between; gap:10px; font-size:.8rem; color:var(--muted);
+      font-variant-numeric:tabular-nums; flex-wrap:wrap; }
+    .hm-runners { border-top:1px solid var(--line); padding-top:8px; display:flex; flex-direction:column; }
+    .hm-run { display:grid; grid-template-columns:18px 1fr auto; gap:8px; align-items:center; padding:4px 0;
+      font-size:.82rem; color:var(--muted); cursor:pointer; font-variant-numeric:tabular-nums; }
+    .hm-run:hover { color:var(--ink); }
+    .hm-run .r { color:var(--dim); font-weight:700; }
+    .hm-run .n { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-run .n a { color:var(--ink); font-weight:700; }
+    /* games */
+    .hm-game { display:flex; flex-direction:column; gap:6px; cursor:pointer; }
+    .hm-row { display:flex; align-items:center; gap:10px; color:var(--muted); }
+    .hm-row.on { color:var(--ink); }
+    .hm-row img { width:30px; height:30px; object-fit:contain; flex:none; }
+    .hm-row .nm { font-weight:800; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-row .nm a { color:inherit; }
+    .hm-row .rk { font-size:.72rem; font-weight:700; color:var(--dim); }
+    .hm-row .rc { font-size:.75rem; color:var(--dim); white-space:nowrap; }
+    .hm-row .tag { font-size:.72rem; font-weight:800; color:var(--dim); white-space:nowrap; }
+    .hm-row .v { margin-left:auto; font-size:1.35rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .hm-chips { display:grid; grid-template-columns:repeat(auto-fit, minmax(90px, 1fr)); gap:6px; margin-top:auto; }
+    .hm-chip { background:var(--card2); border-radius:10px; padding:8px 6px; text-align:center; }
+    .hm-chip b { display:block; font-size:1rem; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .hm-chip b img { width:13px; height:13px; vertical-align:-1px; margin-right:3px; }
+    .hm-chip span { font-size:.62rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); }
+    .hm-chip.hot b { color:var(--t1); }
+    .hm-when { font-size:.8rem; color:var(--muted); }
+    .hm-top { font-size:.75rem; color:var(--dim); margin:-4px 0 2px 40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    @media (max-width:760px) { .hm-grid { grid-template-columns:1fr; } .hm-grid > .hm-card:first-child { grid-row:auto; }
+      .hm-big b { font-size:1.2rem; } }
+  </style>
 </head>
 <body>
 
@@ -27,67 +87,14 @@
 
 <div class="container">
 
-  <div class="home-hero">
+  <div class="home-hero compact">
     <img src="img/logo.png" alt="Hog Charts" class="home-logo">
-    <div class="wordmark">Hog Charts</div>
-    <div class="tagline">Free and accessible college basketball analytics</div>
+    <div><div class="wordmark">Hog Charts</div>
+    <div class="tagline">Free and accessible college basketball analytics</div></div>
   </div>
 
-  <!-- Primary features -->
-  <div class="feature-grid">
-    <a class="feature-card" href="team.html?tab=scout">
-      <div class="fc-title">Scout</div>
-      <div class="fc-desc">Find actionable ways to win and players to target: who to box out, who to leave open from three, and even more information about your opponent and their players.</div>
-      <div class="fc-link">Open Scout &rarr;</div>
-    </a>
-
-    <a class="feature-card" href="prediction.html">
-      <div class="fc-title">Game Predictor</div>
-      <div class="fc-desc">
-        Predict any matchup based on efficiency, tempo, recent form, and home court.
-        Spread, win probability, and factor breakdown included.
-      </div>
-      <div class="fc-link">Open the Predictor &rarr;</div>
-    </a>
-
-    <a class="feature-card" href="net-ratings.html">
-      <div class="fc-title">Team Stats</div>
-      <div class="fc-desc">
-        Box, shooting and four-factor stats for every Division&nbsp;I team,
-        plus opponent-adjusted net ratings, pace and strength of schedule.
-        Click a team for shot zones and density.
-      </div>
-      <div class="fc-link">Browse Team Stats &rarr;</div>
-    </a>
-
-    <a class="feature-card" href="player-stats.html">
-      <div class="fc-title">Player Stats</div>
-      <div class="fc-desc">
-        Box score and advanced metrics for every Division&nbsp;I player. Filter, sort, and
-        open a full card for any player.
-      </div>
-      <div class="fc-link">Explore Player Stats &rarr;</div>
-    </a>
-  </div>
-
-  <!-- Secondary features -->
-  <div style="color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin:8px 0 10px">
-    More tools
-  </div>
-  <div class="more-row">
-    <a class="more-card" href="lineup-stats.html">
-      <strong>Lineup Stats</strong>
-      <span>1–5 man unit data per 100 possessions.</span>
-    </a>
-    <a class="more-card" href="lineup-builder.html">
-      <strong>Lineup Builder</strong>
-      <span>Any on/off combination, with no minimum possessions.</span>
-    </a>
-    <a class="more-card" href="postseason.html">
-      <strong>Postseason</strong>
-      <span>NCAA tournament bracket and tournament-only leaders.</span>
-    </a>
-  </div>
+  <!-- Daily cards: player, upset, today's best game (filled from home.json) -->
+  <div class="hm-grid" id="hm-grid"></div>
 
   <hr>
   <p class="caption">Built by Brady Brown &amp; Wyatt Thompson. Follow <a href="https://www.instagram.com/hogcharts/" target="_blank" rel="noopener">@hogcharts</a> on Instagram.</p>
@@ -95,5 +102,107 @@
 </div>
 
 <script src="js/common.js"></script>
+<script src="js/predict.js"></script>
+<script>
+// Home: three daily cards, one per scope —
+//   player : the biggest statline of the last completed day (PTS+REB+AST+STL+BLK)
+//   game   : that day's biggest upset against the closing line
+//   game   : today's game between the two best teams by average Net
+// Built nightly by hoglib/home.py into data/{season}/home.json. Every player,
+// team and game is a link (player/team pages, the game's page on the Games tab).
+(async function () {
+  const grid = document.getElementById("hm-grid");
+  const seasons = await loadJSON("data/seasons.json") ?? [];
+  const season = seasons[0];
+  const [home, predictor] = await Promise.all([
+    loadJSON(`data/${season}/home.json`), loadJSON(`data/${season}/predictor.json`)]);
+  if (!home) return;
+  const T = (tid) => home.teams?.[tid] ?? { short: String(tid), name: String(tid) };
+  const rk = (tid) => { const r = T(tid).rank; return r != null && r <= 25 ? `<span class="rk">${r}</span>` : ""; };
+  const day = (d, o = { weekday: "short", month: "short", day: "numeric" }) =>
+    d ? new Date(`${d}T12:00:00`).toLocaleDateString("en-US", o) : "";
+  const tl = (tid) => teamLink(tid, T(tid).short, season);
+  const hdr = (label, date) => `<div class="hm-hd"><span class="hm-lbl">${label}</span><span class="hm-date">${date}</span></div>`;
+  const cards = [];
+
+  // ── statline ──
+  const top = home.statlines?.[0];
+  if (top) {
+    const res = `${top.w ? "W" : "L"} ${top.ts}–${top.os}`;
+    const shoot = (m, a) => (a ? `${m}-${a}` : "—");
+    cards.push(`<div class="hm-card">
+      ${hdr("Top statline", day(home.day))}
+      <div class="hm-who">
+        <img class="hm-shot" src="${playerUrl(top.pid)}" alt="" onerror="this.style.visibility='hidden'">
+        <div><div class="hm-name">${playerLink(top.pid, top.name, season)}</div>
+          <div class="hm-team"><img src="${logoUrl(top.tid)}" alt="" onerror="this.style.opacity=0">${tl(top.tid)}</div></div>
+      </div>
+      <div class="hm-big">${["pts", "reb", "ast", "stl", "blk"].map((k) =>
+        `<div><b>${top[k]}</b><span>${k.toUpperCase()}</span></div>`).join("")}</div>
+      <div class="hm-sub">
+        <span>FG ${shoot(top.fgm, top.fga)} · 3P ${shoot(top.tpm, top.tpa)} · FT ${shoot(top.ftm, top.fta)} · ${top.min ?? "—"} MIN</span></div>
+      <div class="hm-matchup"><a href="${gameHref(top.g, season, top.pid)}">${escHtml(T(top.tid).short)} ${top.ha === "away" ? "@" : "vs"} ${escHtml(top.opp)} · ${res} →</a></div>
+      ${home.statlines.length > 1 ? `<div class="hm-runners">${home.statlines.slice(1).map((r, i) => `
+        <div class="hm-run" data-href="${gameHref(r.g, season, r.pid)}">
+          <span class="r">${i + 2}</span>
+          <span class="n">${playerLink(r.pid, r.name, season)} · ${escHtml(T(r.tid).abbr ?? T(r.tid).short)}</span>
+          <span>${r.pts}-${r.reb}-${r.ast}-${r.stl}-${r.blk}</span></div>`).join("")}</div>` : ""}
+    </div>`);
+  }
+
+  // ── upset ──
+  const u = home.upset;
+  if (u) {
+    const row = (tid, pts, topLine) => `<div class="hm-row ${pts === Math.max(u.away_pts, u.home_pts) ? "on" : ""}">
+      <img src="${logoUrl(tid)}" alt="" onerror="this.style.opacity=0">${rk(tid)}
+      <span class="nm">${tl(tid)}</span><span class="rc">${T(tid).record}</span>
+      ${tid === u.dog ? `<span class="tag">+${u.spread}</span>` : ""}<span class="v">${pts}</span></div>
+      ${topLine ? `<div class="hm-top">${escHtml(topLine[0])} ${topLine[1]}</div>` : ""}`;
+    cards.push(`<div class="hm-card">
+      ${hdr("Biggest upset", day(home.day))}
+      <div class="hm-game" data-href="${gameHref(u.g, season)}">
+        ${row(u.away, u.away_pts, u.away_top)}${row(u.home, u.home_pts, u.home_top)}</div>
+      <div class="hm-chips">
+        <div class="hm-chip"><b>${escHtml(T(u.fav).abbr ?? T(u.fav).short)} -${u.spread}</b><span>${escHtml(u.provider ?? "")}</span></div>
+        <div class="hm-chip hot"><b>+${u.beat_by}</b><span>vs spread</span></div></div>
+      <div class="hm-matchup"><a href="${gameHref(u.g, season)}">${escHtml(T(u.away).short)} @ ${escHtml(T(u.home).short)} · Final →</a></div>
+    </div>`);
+  }
+
+  // ── today's best game ──
+  const b = home.best_game;
+  if (b) {
+    const A = predictor?.teams?.find((t) => t.team_id === b.away), H = predictor?.teams?.find((t) => t.team_id === b.home);
+    const p = A && H ? predictGame(predictor.model, A, H, b.neutral ? "neutral" : "home2") : null;
+    const fav = p ? (p.spread >= 0 ? b.away : b.home) : null;
+    const row = (tid, prob, net) => `<div class="hm-row ${fav === tid ? "on" : ""}">
+      <img src="${logoUrl(tid)}" alt="" onerror="this.style.opacity=0">${rk(tid)}
+      <span class="nm">${tl(tid)}</span><span class="rc">${T(tid).record}</span>
+      <span class="tag">${net >= 0 ? "+" : ""}${net.toFixed(1)}</span>
+      <span class="v">${p ? Math.round(prob * 100) + "%" : ""}</span></div>`;
+    const when = [b.start ? new Date(b.start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "TBD", b.tv]
+      .filter(Boolean).join(" · ");
+    const spread = p ? `${escHtml(T(fav).abbr ?? T(fav).short)} -${Math.abs(p.spread).toFixed(1)}` : "";
+    cards.push(`<div class="hm-card">
+      ${hdr("Game of the day", day(home.today))}
+      <div class="hm-game" data-href="${gameHref(b.g, season)}">
+        ${row(b.away, p?.prob, b.away_net)}${row(b.home, p ? 1 - p.prob : null, b.home_net)}</div>
+      <div class="hm-when">${escHtml(when)}${b.venue ? ` · ${escHtml(b.venue)}` : ""}</div>
+      <div class="hm-chips">
+        ${p ? `<div class="hm-chip"><b><img src="img/logo.png" alt="Hog Charts">${spread}</b><span>Spread</span></div>` : ""}
+        ${b.line ? `<div class="hm-chip"><b>${escHtml(b.line)}</b><span>${escHtml(b.provider ?? "")}</span></div>` : ""}</div>
+      <div class="hm-matchup"><a href="${gameHref(b.g, season)}">${escHtml(T(b.away).short)} ${b.neutral ? "vs" : "@"} ${escHtml(T(b.home).short)} →</a></div>
+    </div>`);
+  }
+
+  grid.innerHTML = cards.join("");
+  // Rows and game blocks open their game; links inside them keep their own target.
+  grid.addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    const el = e.target.closest("[data-href]");
+    if (el) goTo(el.dataset.href);
+  });
+})();
+</script>
 </body>
 </html>
