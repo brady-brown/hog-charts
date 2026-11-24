@@ -137,7 +137,7 @@ def build(refresh=False, three_point=None, prior_games=None, returning=None, fas
     if returning and returning.get("mode") == "projection":
         tag += "_proj" + ("shift" if returning.get("shift_only") else "") + ("tr" if returning.get("transfers") else "")
         tag += ("cap" if returning.get("transfer_cap") else "") + ("hist" if returning.get("history") else "") \
-             + ("elite" if returning.get("elite") else "")
+             + ("elite" if returning.get("elite") else "") + ("fr" if returning.get("freshmen") else "")
     elif returning:
         tag += f"_ret{returning['floor']:g}" + ("k" if returning.get("scale_k") else "")
     if fast:
@@ -150,6 +150,7 @@ def build(refresh=False, three_point=None, prior_games=None, returning=None, fas
         predictor._projection_rows = dict(TempoPredictor._projection_rows)
         predictor._roster_cache = dict(TempoPredictor._roster_cache)
         predictor._ratings_cache = dict(TempoPredictor._ratings_cache)
+        predictor._freshman_cache = dict(TempoPredictor._freshman_cache)
         frames = cached_frames(predictor, refresh, tag, jobs=min(len(SEASONS) * 2, (os.cpu_count() or 2) - 1))
         monthly, daily = frames["month"], frames["day"]
     else:
@@ -239,6 +240,7 @@ def main():
     parser.add_argument("--neutral-fix", action="store_true", help="relabel neutral-site games from the schedule")
     parser.add_argument("--home-adv-fix", action="store_true", help="league home edge over teams with home AND away games")
     parser.add_argument("--history", action="store_true", help="add the rating from two seasons back")
+    parser.add_argument("--freshmen", action="store_true", help="add newcomers' ESPN recruiting ranks")
     parser.add_argument("--elite", action="store_true", help="add an above-average-program term")
     args = parser.parse_args()
     returning = ({"floor": args.returning_floor, "scale_k": args.returning_scale_k}
@@ -247,7 +249,7 @@ def main():
         returning = {"mode": "projection", "shift_only": args.returning_projection == "shift",
                      "transfers": args.returning_projection == "transfers",
                      "transfer_cap": 1.0 if args.transfer_cap else None,
-                     "history": args.history, "elite": args.elite}
+                     "history": args.history, "elite": args.elite, "freshmen": args.freshmen}
     df = build(refresh=args.refresh, three_point=tuple(args.three_point) if args.three_point else None,
                prior_games=args.prior_games, returning=returning, fast=args.fast,
                neutral_fix=args.neutral_fix, home_adv_fix=args.home_adv_fix)

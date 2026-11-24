@@ -316,6 +316,56 @@ def returning_minutes_share(season):
     return (back / total.replace(0, np.nan)).dropna().clip(0, 1).to_dict()
 
 
+def _name_key(name):
+    """Lowercase, letters only, no Jr./Sr./II-IV — for matching recruits to box-score names."""
+    import re
+    s = re.sub(r"[^a-z ]", "", str(name).lower().replace("-", " ").replace(".", ""))
+    return " ".join(w for w in s.split() if w not in ("jr", "sr", "ii", "iii", "iv"))
+
+
+FRESHMAN_FEATURES = ('fr_top', 'fr_n')
+
+
+def freshman_recruit_features(season, detail=False):
+    """team_id → the recruiting rank of this season's newcomers (no D-I minutes last season).
+
+    recruits.csv (raw_hogcharts/recruiting.py, ESPN's recruiting classes). A newcomer
+    is matched to a recruit by college athlete id, else by name + the school he
+    signed with (classes season-1 and season-2, for a prep/gap year).
+      fr_top  Σ (101 - rank) / 100 over ESPN 100 newcomers  (#1 = 1.00, #100 = 0.01)
+      fr_n    number of ranked recruits among the newcomers
+    """
+    import os
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recruits.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=['team_id', *FRESHMAN_FEATURES])
+    rec = pd.read_csv(path)
+    rec = rec[rec['class'] <= season - 1]
+    now, before = _player_minutes(season), _player_minutes(season - 1)
+    new = now[(now['min'] > 0) & ~now['athlete_id'].isin(set(before['athlete_id']))].copy()
+    names = feeds.load_player_box(season).dropna(subset=['athlete_id']).drop_duplicates('athlete_id')
+    names = pd.Series(names['athlete_display_name'].values, index=names['athlete_id'].astype('int64'))
+    new['key'] = new['athlete_id'].map(names).map(_name_key)
+
+    by_id = rec.dropna(subset=['athlete_id']).drop_duplicates('athlete_id')
+    rank_by_id = pd.Series(by_id['rank'].values, index=by_id['athlete_id'].astype('int64'))
+    recent = rec[rec['class'] >= season - 2].dropna(subset=['team_id']).copy()
+    recent['key'] = recent['name'].map(_name_key)
+    recent = recent.drop_duplicates(['key', 'team_id'])
+    rank_by_name = {(k, int(t)): r for k, t, r in zip(recent['key'], recent['team_id'], recent['rank'])}
+
+    new['rank'] = new['athlete_id'].map(rank_by_id).astype(float)
+    new['how'] = np.where(new['rank'].notna(), 'id', None)
+    miss = new['rank'].isna()
+    new.loc[miss, 'rank'] = [rank_by_name.get((k, int(t)), np.nan) for k, t in zip(new.loc[miss, 'key'], new.loc[miss, 'team_id'])]
+    new.loc[miss & new['rank'].notna(), 'how'] = 'name'
+    if detail:
+        return new
+    new['top'] = ((101 - new['rank']).clip(lower=0) / 100).where(new['rank'] <= 100, 0.0).fillna(0.0)
+    out = new.groupby('team_id').agg(fr_top=('top', 'sum'), fr_n=('rank', 'count')).reset_index()
+    return out
+
+
 ROSTER_FEATURES = ('tin', 'o_in', 'd_in', 'o_ret', 'd_ret', 'o_left', 'd_left')
 
 
@@ -690,6 +740,7 @@ class TempoPredictor(IsotonicPredictor):
     SOLVE_CACHE_DIR = None      # set by line_study.py --fast
     _roster_cache = {}
     _ratings_cache = {}
+    _freshman_cache = {}
     _projection_rows = {}
 
     def _season_ratings(self, season):
@@ -720,6 +771,8 @@ class TempoPredictor(IsotonicPredictor):
                       frame[f'{side}_ret_c'].values, frame[f'{side}_left_c'].values]
         if self.RETURNING_PRIOR.get('history'):
             terms += [frame[col + '_dev2'].values]
+        if self.RETURNING_PRIOR.get('freshmen'):
+            terms += [frame[c + '_c'].values for c in FRESHMAN_FEATURES]
         if self.RETURNING_PRIOR.get('elite'):
             # good programs regress less than a straight line says: last season's
             # Net above average (positive part), for both sides
@@ -736,6 +789,14 @@ class TempoPredictor(IsotonicPredictor):
             out['ret'] = out['ret'].where(has)
             for c in ROSTER_FEATURES:
                 out[c + '_c'] = (out[c] - out.loc[has, c].mean()).fillna(0.0)
+        if self.RETURNING_PRIOR and self.RETURNING_PRIOR.get('freshmen'):
+            if season not in self._freshman_cache:
+                TempoPredictor._freshman_cache[season] = freshman_recruit_features(season)
+            out = out.merge(self._freshman_cache[season], on='team_id', how='left')
+            has = out['ret'].notna()
+            for c in FRESHMAN_FEATURES:
+                out[c] = out[c].fillna(0.0)
+                out[c + '_c'] = (out[c] - out.loc[has, c].mean()).where(has, 0.0)
         if self.RETURNING_PRIOR and self.RETURNING_PRIOR.get('history'):
             # Program history: the rating two seasons back (stand-in for recruiting).
             two_back = self._season_ratings_cached(season - 2)
@@ -772,7 +833,7 @@ class TempoPredictor(IsotonicPredictor):
                 continue
             ck = (self.THREE_PT_REGRESSION, bool(self.RETURNING_PRIOR.get('transfers')),
                   self.RETURNING_PRIOR.get('transfer_cap'), bool(self.RETURNING_PRIOR.get('history')),
-                  bool(self.RETURNING_PRIOR.get('elite')), s)
+                  bool(self.RETURNING_PRIOR.get('elite')), bool(self.RETURNING_PRIOR.get('freshmen')), s)
             if ck not in self._projection_rows:
                 prev, cur = self._season_ratings_cached(s - 1), self._season_ratings_cached(s)
                 frame = self._dev_frame(prev, self._returning(s), prev.set_index('team_id')['n'], season=s)

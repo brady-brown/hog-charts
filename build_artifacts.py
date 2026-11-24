@@ -72,10 +72,13 @@ PREDICTION_THREE_PT_REGRESSION = (600, 1500)
 # roster, best first), the rating two seasons back, and an above-average-program
 # term. 2021-26 line study: miss 9.06 -> 9.00 (Nov 9.87 -> 9.69), 51.7% vs close,
 # 58.8% vs openers at 5+ (from 55.8%); last season's top-25 teams that returned
-# <30% of minutes went from +0.74 pts overrated to 0. Freshmen are invisible to it.
+# <30% of minutes went from +0.74 pts overrated to 0.
+# freshmen: newcomers' ESPN recruiting ranks (recruits.csv, refreshed once a year with
+# `python -m raw_hogcharts.recruiting {class}`). Teams with the biggest freshman
+# classes went from 2.7 pts underrated in Nov-Dec to 1.3; 51.9% vs close overall.
 # Predictions only, like the 3P% setting. None = last season's rating as-is.
 PREDICTION_RETURNING_PRIOR = {"mode": "projection", "transfers": True, "transfer_cap": 1.0,
-                              "history": True, "elite": True}
+                              "history": True, "elite": True, "freshmen": True}
 # Teams with fewer than this many games are excluded from the ratings table.
 MIN_GAMES_TO_QUALIFY = 5
 
