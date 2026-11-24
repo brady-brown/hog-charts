@@ -64,6 +64,18 @@ BACKTEST_CALIBRATION_YEARS = list(range(2021, BACKTEST_YEAR))
 # predictor, but the Team Stats page's Net/Off/Def are solved separately on actual
 # scores in build_player_stats.py. None = actual scores.
 PREDICTION_THREE_PT_REGRESSION = (600, 1500)
+
+# Last season's rating, before it's blended in (k/(n+k), k=7), is replaced by a
+# roster projection fit on the other seasons (TempoPredictor._prior_adjustment):
+# last season's Off/Def plus returning minutes, incoming transfers' and departures'
+# last-season minutes x O/D RAPM (mbb_rapm_*.csv; incoming minutes capped at one
+# roster, best first), the rating two seasons back, and an above-average-program
+# term. 2021-26 line study: miss 9.06 -> 9.00 (Nov 9.87 -> 9.69), 51.7% vs close,
+# 58.8% vs openers at 5+ (from 55.8%); last season's top-25 teams that returned
+# <30% of minutes went from +0.74 pts overrated to 0. Freshmen are invisible to it.
+# Predictions only, like the 3P% setting. None = last season's rating as-is.
+PREDICTION_RETURNING_PRIOR = {"mode": "projection", "transfers": True, "transfer_cap": 1.0,
+                              "history": True, "elite": True}
 # Teams with fewer than this many games are excluded from the ratings table.
 MIN_GAMES_TO_QUALIFY = 5
 
@@ -217,6 +229,7 @@ def main():
 
     trained_predictor = TempoPredictor()
     trained_predictor.THREE_PT_REGRESSION = PREDICTION_THREE_PT_REGRESSION
+    trained_predictor.RETURNING_PRIOR = PREDICTION_RETURNING_PRIOR
 
     if not RATINGS_ONLY:
         trained_predictor.train(calibration_year=CALIBRATION_YEARS)
@@ -228,6 +241,7 @@ def main():
         print(f"\nBacktesting on {BACKTEST_YEAR} (held out, trained on {BACKTEST_CALIBRATION_YEARS})...")
         backtest_predictor = TempoPredictor()
         backtest_predictor.THREE_PT_REGRESSION = PREDICTION_THREE_PT_REGRESSION
+        backtest_predictor.RETURNING_PRIOR = PREDICTION_RETURNING_PRIOR
         backtest_predictor.train(calibration_year=BACKTEST_CALIBRATION_YEARS)
         validation_results, _, _ = backtest_predictor.validate_walk_forward(BACKTEST_YEAR)
         backtest_metrics = {metric_name: float(metric_val)

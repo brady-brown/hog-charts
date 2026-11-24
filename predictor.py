@@ -237,7 +237,8 @@ def calculate_adjusted_efficiency(team_game_df, raw_efficiency_ratings, iteratio
     return current_ratings
 
 
-def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency, game_counts_df):
+def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency, game_counts_df,
+                             prior_games=None):
     """Bayesian blend of current-season and prior-season efficiency ratings.
 
     A team with many games this season leans on this year's data; a team with
@@ -250,6 +251,8 @@ def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency,
     current_season_efficiency : DataFrame   season + team_id + off_eff + def_eff
     prior_season_efficiency   : DataFrame   Same structure for the previous season.
     game_counts_df            : DataFrame   Columns: team_id, n (games played this season).
+    prior_games               : float | dict | None   k in n/(n+k): a number, a per-team
+                                dict (team_id → k), or None for GAME_WEIGHT_CONSTANT.
 
     Returns
     -------
@@ -263,7 +266,13 @@ def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency,
     blended[['off_eff_prior', 'def_eff_prior']] = (
         blended[['off_eff_prior', 'def_eff_prior']].fillna(100)  # assume average if no prior data
     )
-    game_weight_fraction = blended['n'] / (blended['n'] + GAME_WEIGHT_CONSTANT)
+    if prior_games is None:
+        k = GAME_WEIGHT_CONSTANT
+    elif isinstance(prior_games, dict):
+        k = blended['team_id'].map(prior_games).fillna(GAME_WEIGHT_CONSTANT)
+    else:
+        k = prior_games
+    game_weight_fraction = blended['n'] / (blended['n'] + k)
     blended['blended_off_eff'] = (blended['off_eff']       * game_weight_fraction
                                    + blended['off_eff_prior'] * (1 - game_weight_fraction))
     blended['blended_def_eff'] = (blended['def_eff']       * game_weight_fraction
@@ -272,6 +281,102 @@ def blend_efficiency_ratings(current_season_efficiency, prior_season_efficiency,
     return blended[['team_id', 'blended_off_eff', 'blended_def_eff', 'net_eff']].rename(
         columns={'blended_off_eff': 'off_eff', 'blended_def_eff': 'def_eff'}
     )
+
+
+_PLAYER_MINUTES = {}
+
+
+def _player_minutes(season):
+    """(team_id, athlete_id) → minutes for a season. Memoized: past seasons download
+    from sportsdataverse on every load, and the returning/roster features read each
+    season several times."""
+    if season not in _PLAYER_MINUTES:
+        box = feeds.load_player_box(season)
+        box = box[box['athlete_id'].notna()].copy()
+        box['min'] = pd.to_numeric(box['minutes'], errors='coerce').fillna(0)
+        box['athlete_id'] = box['athlete_id'].astype('int64')
+        box['team_id'] = box['team_id'].astype('int64')
+        _PLAYER_MINUTES[season] = box.groupby(['team_id', 'athlete_id'])['min'].sum().reset_index()
+    return _PLAYER_MINUTES[season].copy()
+
+
+def returning_minutes_share(season):
+    """team_id → share of last season's minutes played by players on this season's roster.
+
+    "Roster" = everyone who logs minutes for the team this season — the stand-in
+    for the preseason roster, which ESPN doesn't keep historically (a player who
+    never suits up is missed). Only minutes for the SAME team count, so transfers
+    out lower the share and transfers in don't raise it.
+    """
+    now, before = _player_minutes(season), _player_minutes(season - 1)
+    roster = set(zip(now.loc[now['min'] > 0, 'team_id'], now.loc[now['min'] > 0, 'athlete_id']))
+    before['back'] = [(t, a) in roster for t, a in zip(before['team_id'], before['athlete_id'])]
+    total = before.groupby('team_id')['min'].sum()
+    back = before[before['back']].groupby('team_id')['min'].sum().reindex(total.index, fill_value=0)
+    return (back / total.replace(0, np.nan)).dropna().clip(0, 1).to_dict()
+
+
+ROSTER_FEATURES = ('tin', 'o_in', 'd_in', 'o_ret', 'd_ret', 'o_left', 'd_left')
+
+
+def roster_production_features(season, cap=None):
+    """team_id → last-season production of this season's roster, incl. transfers in.
+
+    All as shares of the team's own last-season minutes (T):
+      tin            minutes incoming D-I transfers played last season (elsewhere) / T
+      o_in,  d_in    Σ those minutes × the player's last-season O/D RAPM (box prior) / T
+      o_ret, d_ret   same for players back from this team
+      o_left,d_left  same for last season's players who are gone
+    RAPM: mbb_rapm_{yyyy}{yy}.csv for last season (plain RAPM where the box-prior
+    columns don't exist, i.e. 2020). Players without a RAPM row count as 0.
+    cap: incoming minutes are kept, best player first (O+D RAPM), only until
+    returners + transfers fill `cap` × T — a team can only play so many minutes.
+    """
+    import os
+    root = os.path.dirname(os.path.abspath(__file__))
+
+    last = season - 1
+    path = os.path.join(root, f"mbb_rapm_{last - 1}{str(last)[2:]}.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=['team_id', *ROSTER_FEATURES])
+    rapm = pd.read_csv(path)
+    o_col, d_col = ('o_rapm_bp', 'd_rapm_bp') if 'o_rapm_bp' in rapm else ('o_rapm', 'd_rapm')
+    rapm = rapm.groupby('athlete_id').agg(o=(o_col, 'mean'), d=(d_col, 'mean')).reset_index()
+
+    now, before = _player_minutes(season), _player_minutes(last)
+    before = before.merge(rapm, on='athlete_id', how='left').fillna({'o': 0.0, 'd': 0.0})
+    before['mo'], before['md'] = before['min'] * before['o'], before['min'] * before['d']
+    team_minutes = before.groupby('team_id')['min'].sum()
+    roster = now.loc[now['min'] > 0, ['team_id', 'athlete_id']]
+    on_roster = set(zip(roster['team_id'], roster['athlete_id']))
+
+    # A player's last season, summed over every team he played for.
+    career = before.groupby('athlete_id')[['min', 'mo', 'md']].sum()
+    last_teams = before.groupby('athlete_id')['team_id'].agg(set)
+    roster = roster.join(career, on='athlete_id').fillna({'min': 0.0, 'mo': 0.0, 'md': 0.0})
+    came_back = [t in last_teams.get(a, ()) for t, a in zip(roster['team_id'], roster['athlete_id'])]
+    incoming = roster[(roster['min'] > 0) & ~np.array(came_back)]
+    returning = before[[(t, a) in on_roster for t, a in zip(before['team_id'], before['athlete_id'])]]
+    if cap is not None:
+        room = (cap * team_minutes - returning.groupby('team_id')['min'].sum()
+                .reindex(team_minutes.index, fill_value=0)).clip(lower=0)
+        incoming = incoming.assign(value=(incoming['mo'] + incoming['md']) / incoming['min'].clip(lower=1))
+        incoming = incoming.sort_values('value', ascending=False)
+        used = incoming.groupby('team_id')['min'].cumsum() - incoming['min']
+        keep = (incoming['team_id'].map(room).fillna(0) - used).clip(lower=0)
+        frac = (keep / incoming['min']).clip(upper=1)
+        incoming = incoming.assign(min=incoming['min'] * frac, mo=incoming['mo'] * frac, md=incoming['md'] * frac)
+    departed = before[[(t, a) not in on_roster for t, a in zip(before['team_id'], before['athlete_id'])]]
+
+    out = pd.DataFrame(index=team_minutes[team_minutes > 0].index)
+    total = out.index.map(team_minutes)
+    for prefix, frame in (('in', incoming), ('ret', returning), ('left', departed)):
+        sums = frame.groupby('team_id')[['min', 'mo', 'md']].sum().reindex(out.index, fill_value=0)
+        if prefix == 'in':
+            out['tin'] = sums['min'].values / total
+        out[f'o_{prefix}'] = sums['mo'].values / total
+        out[f'd_{prefix}'] = sums['md'].values / total
+    return out.reset_index().rename(columns={'index': 'team_id'})
 
 
 # ==============================================================================
@@ -541,6 +646,22 @@ class TempoPredictor(IsotonicPredictor):
     FORM_MODE         = 'residual'   # use opponent-adjusted form; tuned default
     CONF_GATE_GAMES   = 5       # conference games needed before gate/window form turns on
     HOME_ADV_SHRINK   = 30      # Bayesian shrink constant for home-court estimates
+    # ESPN's team box labels neutral-site games home/away (only the schedule's
+    # neutral_site knows). NEUTRAL_FIX relabels them 'neutral' so training and
+    # home-court estimates stop treating them as home games. HOME_ADV_FIX takes the
+    # league-average home edge over teams with both home and away games — non-D-I
+    # teams that only play road games otherwise drag it to ~15 points.
+    NEUTRAL_FIX  = False
+    HOME_ADV_FIX = False
+
+    def _load_box(self, season):
+        df = feeds.load_team_box_numpy(season)
+        if self.NEUTRAL_FIX:
+            sched = feeds.load_schedule(season).dropna(subset=['game_id'])
+            neutral = set(sched.loc[sched['neutral_site'].astype(bool), 'game_id'].astype('int64'))
+            df = df.copy()
+            df.loc[df['game_id'].astype('int64').isin(neutral), 'team_home_away'] = 'neutral'
+        return df
     HOME_ADV_MIN_GP   = 20      # minimum games to appear in leaderboard
 
     _conference_game_id_cache = {}  # season → set(conference game_ids), class-level
@@ -549,6 +670,164 @@ class TempoPredictor(IsotonicPredictor):
     # None = actual scores. The class default stays None so studies get a plain
     # baseline; build_artifacts.py turns it on for the site's predictions.
     THREE_PT_REGRESSION = None
+
+    # Last season's weight in the rating blend, w_prior = k / (n + k).
+    # PRIOR_GAMES = k (7 = production). RETURNING_PRIOR (experimental, None = off):
+    #   {"floor": f, "scale_k": bool} — last season's rating is pulled toward the
+    #   league mean by roster turnover: kept share g = f + (1 - f) * returning
+    #   minutes share; with scale_k, k is also multiplied by g (fewer "games" of
+    #   prior for a turned-over roster).
+    PRIOR_GAMES = GAME_WEIGHT_CONSTANT
+    RETURNING_PRIOR = None
+    _returning_cache = {}
+
+    #   {"mode": "projection", "shift_only": bool} — last season's rating is
+    #   replaced by a projection fit on OTHER seasons (no leakage):
+    #     this_dev = b*last_dev + c*last_dev*dret + e*dret   (Off and Def separately)
+    #   dret = returning minutes share minus that season's average. shift_only
+    #   fixes b=1, c=0 (only the up/down shift by returning share).
+    PROJECTION_SEASONS = range(2021, 2027)
+    SOLVE_CACHE_DIR = None      # set by line_study.py --fast
+    _roster_cache = {}
+    _ratings_cache = {}
+    _projection_rows = {}
+
+    def _season_ratings(self, season):
+        df = self._rating_input(feeds.load_team_box_numpy(season))
+        ratings = calculate_adjusted_efficiency(df, calculate_efficiency(df))
+        ratings['n'] = ratings['team_id'].map(df.groupby('team_id').size())
+        return ratings
+
+    def _returning(self, season):
+        if season not in self._returning_cache:
+            TempoPredictor._returning_cache[season] = returning_minutes_share(season)
+        return self._returning_cache[season]
+
+    def _roster(self, season):
+        cap = self.RETURNING_PRIOR.get('transfer_cap')
+        key = (season, cap)
+        if key not in self._roster_cache:
+            TempoPredictor._roster_cache[key] = roster_production_features(season, cap=cap)
+        return self._roster_cache[key]
+
+    def _projection_terms(self, frame, col):
+        """Columns of the projection's design matrix for one side (after the intercept)."""
+        dev, dret = frame[col + '_dev'].values, frame['dret'].values
+        terms = [dev, dev * dret, dret]
+        if self.RETURNING_PRIOR.get('transfers'):
+            side = col[0]                                # 'o' / 'd'
+            terms += [frame['tin_c'].values, frame[f'{side}_in_c'].values,
+                      frame[f'{side}_ret_c'].values, frame[f'{side}_left_c'].values]
+        if self.RETURNING_PRIOR.get('history'):
+            terms += [frame[col + '_dev2'].values]
+        if self.RETURNING_PRIOR.get('elite'):
+            # good programs regress less than a straight line says: last season's
+            # Net above average (positive part), for both sides
+            net = frame['off_eff_dev'].values - frame['def_eff_dev'].values
+            terms += [np.clip(net, 0, None)]
+        return np.column_stack(terms)
+
+    def _dev_frame(self, prior, share, games, season=None):
+        out = self._dev_frame_base(prior, share, games)
+        if self.RETURNING_PRIOR and self.RETURNING_PRIOR.get('transfers'):
+            roster = self._roster(season)
+            out = out.merge(roster, on='team_id', how='left')
+            has = out['ret'].notna() & out['tin'].notna()
+            out['ret'] = out['ret'].where(has)
+            for c in ROSTER_FEATURES:
+                out[c + '_c'] = (out[c] - out.loc[has, c].mean()).fillna(0.0)
+        if self.RETURNING_PRIOR and self.RETURNING_PRIOR.get('history'):
+            # Program history: the rating two seasons back (stand-in for recruiting).
+            two_back = self._season_ratings_cached(season - 2)
+            d1 = two_back[two_back['n'] >= 15]
+            for col in ('off_eff', 'def_eff'):
+                dev2 = out['team_id'].map(d1.set_index('team_id')[col] - d1[col].median())
+                out[col + '_dev2'] = dev2.fillna(0.0)
+        return out
+
+    def _season_ratings_cached(self, season):
+        key = (self.THREE_PT_REGRESSION, season)
+        if key not in self._ratings_cache:
+            TempoPredictor._ratings_cache[key] = self._season_ratings(season)
+        return self._ratings_cache[key]
+
+    @staticmethod
+    def _dev_frame_base(prior, share, games):
+        # D-I only (15+ games last season, roster data): non-D-I opponents carry
+        # extreme ratings that would drag the center. Others keep their rating.
+        out = prior[['team_id']].copy()
+        out['ret'] = out['team_id'].map(share).where(out['team_id'].map(games).fillna(0) >= 15)
+        has = out['ret'].notna()
+        out['dret'] = (out['ret'] - out.loc[has, 'ret'].mean()).fillna(0.0)
+        for col in ('off_eff', 'def_eff'):
+            center = prior.loc[has, col].median()
+            out[col + '_mean'] = center
+            out[col + '_dev'] = prior[col] - center
+        return out
+
+    def _projection_coefs(self, exclude):
+        rows = []
+        for s in self.PROJECTION_SEASONS:
+            if s == exclude:
+                continue
+            ck = (self.THREE_PT_REGRESSION, bool(self.RETURNING_PRIOR.get('transfers')),
+                  self.RETURNING_PRIOR.get('transfer_cap'), bool(self.RETURNING_PRIOR.get('history')),
+                  bool(self.RETURNING_PRIOR.get('elite')), s)
+            if ck not in self._projection_rows:
+                prev, cur = self._season_ratings_cached(s - 1), self._season_ratings_cached(s)
+                frame = self._dev_frame(prev, self._returning(s), prev.set_index('team_id')['n'], season=s)
+                frame = frame.merge(cur[['team_id', 'off_eff', 'def_eff', 'n']], on='team_id')
+                frame = frame[(frame['n'] >= 15) & frame['ret'].notna()]
+                for col in ('off_eff', 'def_eff'):
+                    frame[col + '_cur'] = frame[col] - frame[col].median()
+                TempoPredictor._projection_rows[ck] = frame
+            rows.append(self._projection_rows[ck])
+        data = pd.concat(rows)
+        coefs = {}
+        for col in ('off_eff', 'def_eff'):
+            dev, y = data[col + '_dev'].values, data[col + '_cur'].values
+            one = np.ones(len(data))
+            if self.RETURNING_PRIOR.get('shift_only'):
+                a, e = np.linalg.lstsq(np.c_[one, data['dret'].values], y - dev, rcond=None)[0]
+                coefs[col] = (a, 1.0, 0.0, e)
+            else:
+                X = np.c_[one, self._projection_terms(data, col)]
+                coefs[col] = tuple(np.linalg.lstsq(X, y, rcond=None)[0])
+        return coefs
+
+    def _prior_adjustment(self, prior_efficiency, season):
+        """(adjusted prior ratings, per-team k) for blending into `season`."""
+        if not self.RETURNING_PRIOR:
+            return prior_efficiency, self.PRIOR_GAMES
+        if self.RETURNING_PRIOR.get('mode') == 'projection':
+            coefs = self._projection_coefs(exclude=season)
+            games = feeds.load_team_box_numpy(season - 1).groupby('team_id').size()
+            frame = self._dev_frame(prior_efficiency, self._returning(season), games, season=season)
+            adjusted = prior_efficiency.copy()
+            has = frame['ret'].notna().values               # no roster data → unchanged
+            for col in ('off_eff', 'def_eff'):
+                beta = np.asarray(coefs[col])
+                proj = (frame[col + '_mean'].values + beta[0]
+                        + self._projection_terms(frame, col) @ beta[1:])
+                adjusted[col] = np.where(has, proj, prior_efficiency[col].values)
+            adjusted['net_eff'] = adjusted['off_eff'] - adjusted['def_eff']
+            print(f"    [{season}] projection coefs (a, b, c, e, …): "
+                  + "  ".join(f"{k[:3]} {tuple(round(float(v), 3) for v in coefs[k])}" for k in coefs))
+            return adjusted, self.PRIOR_GAMES
+        share = self._returning(season)
+        floor = self.RETURNING_PRIOR.get("floor", 0.0)
+        keep = prior_efficiency['team_id'].map(share).fillna(share and np.mean(list(share.values())) or 1.0)
+        keep = floor + (1 - floor) * keep
+        adjusted = prior_efficiency.copy()
+        for col in ('off_eff', 'def_eff'):
+            mean = adjusted[col].mean()
+            adjusted[col] = mean + (adjusted[col] - mean) * keep
+        adjusted['net_eff'] = adjusted['off_eff'] - adjusted['def_eff']
+        if self.RETURNING_PRIOR.get("scale_k"):
+            k = dict(zip(adjusted['team_id'], self.PRIOR_GAMES * keep))
+        else:
+            k = self.PRIOR_GAMES
+        return adjusted, k
 
     def _rating_input(self, game_df):
         """The game rows efficiency ratings are solved from."""
@@ -661,7 +940,7 @@ class TempoPredictor(IsotonicPredictor):
         return {team_id: self._compute_form_value(log) for team_id, log in team_game_logs.items()}
 
     @classmethod
-    def _compute_home_adv(cls, team_game_df, shrink=None):
+    def _compute_home_adv(cls, team_game_df, shrink=None, fix=False):
         """Estimate per-team home-court advantage in points, shrunk toward the league mean.
 
         raw_adv = (avg home margin - avg away margin) / 2
@@ -682,7 +961,12 @@ class TempoPredictor(IsotonicPredictor):
                       .agg(away_mean='mean', n_away='count'))
         merged_home_away = home_stats.join(away_stats, how='outer').fillna(0)
         merged_home_away['raw_home_adv'] = (merged_home_away['home_mean'] - merged_home_away['away_mean']) / 2
-        league_avg_home_adv = float(merged_home_away['raw_home_adv'].mean())
+        if fix:
+            both = (merged_home_away['n_home'] > 0) & (merged_home_away['n_away'] > 0)
+            league_avg_home_adv = float(merged_home_away.loc[both, 'raw_home_adv'].mean())
+            merged_home_away.loc[~both, 'raw_home_adv'] = league_avg_home_adv
+        else:
+            league_avg_home_adv = float(merged_home_away['raw_home_adv'].mean())
         total_games = merged_home_away['n_home'] + merged_home_away['n_away']
         shrink_weight = total_games / (total_games + shrink)
         merged_home_away['shrunk_home_adv'] = (merged_home_away['raw_home_adv'] * shrink_weight
@@ -713,7 +997,7 @@ class TempoPredictor(IsotonicPredictor):
         date, the way the live site rates teams — slower (~130 solves a season),
         used by line_study.py to compare point-in-time predictions with the book.
         """
-        season_game_df = feeds.load_team_box_numpy(season)
+        season_game_df = self._load_box(season)
         season_game_df['month'] = pd.to_datetime(season_game_df['game_date']).dt.to_period(
             'M' if refit == 'month' else 'D')   # the refit period ("month" kept as the name)
         season_game_df = season_game_df.sort_values('game_date')
@@ -721,14 +1005,30 @@ class TempoPredictor(IsotonicPredictor):
 
         conference_game_id_set = self._conference_game_ids(season)
 
-        prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
+        prior_season_game_df    = self._load_box(prior_season)
         prior_rating_df         = self._rating_input(prior_season_game_df)
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_rating_df, calculate_efficiency(prior_rating_df)
         )
+        prior_season_efficiency, prior_k = self._prior_adjustment(prior_season_efficiency, season)
         prior_season_pace       = self._compute_team_pace(prior_season_game_df)
         league_avg_pace         = self._compute_league_avg_pace(prior_season_game_df)
-        prior_home_adv_dict, league_home_adv = self._compute_home_adv(prior_season_game_df)
+        prior_home_adv_dict, league_home_adv = self._compute_home_adv(prior_season_game_df, fix=self.HOME_ADV_FIX)
+
+        # Optional on-disk cache of the in-season solves (SOLVE_CACHE_DIR): they
+        # depend only on this season's games and the 3P setting, never on the
+        # prior, so prior-weight experiments can replay them instead of re-solving.
+        solve_cache, solve_cache_path, solve_cache_dirty = {}, None, False
+        if self.SOLVE_CACHE_DIR:
+            import os, pickle
+            os.makedirs(self.SOLVE_CACHE_DIR, exist_ok=True)
+            three = self.THREE_PT_REGRESSION
+            solve_cache_path = os.path.join(
+                self.SOLVE_CACHE_DIR,
+                f"solves_{season}_{refit}_{'none' if not three else f'{three[0]}-{three[1]}'}.pkl")
+            if os.path.exists(solve_cache_path):
+                with open(solve_cache_path, 'rb') as handle:
+                    solve_cache = pickle.load(handle)
 
         team_form_logs = {}    # {team_id: list of game log entries}
         training_rows  = []
@@ -747,14 +1047,18 @@ class TempoPredictor(IsotonicPredictor):
             games_before = season_game_df[season_game_df['month'].isin(chronological_months[:month_index])]
 
             if len(games_before) > 0:
-                rating_df = self._rating_input(games_before)
-                current_raw_efficiency = calculate_adjusted_efficiency(
-                    rating_df, calculate_efficiency(rating_df)
-                )
+                if month_index in solve_cache:
+                    current_raw_efficiency = solve_cache[month_index]
+                else:
+                    rating_df = self._rating_input(games_before)
+                    current_raw_efficiency = calculate_adjusted_efficiency(
+                        rating_df, calculate_efficiency(rating_df)
+                    )
+                    solve_cache[month_index], solve_cache_dirty = current_raw_efficiency, True
                 games_played_per_team = games_before.groupby('team_id').size()
                 blended_efficiency = blend_efficiency_ratings(
                     current_raw_efficiency, prior_season_efficiency,
-                    games_played_per_team.reset_index(name='n')
+                    games_played_per_team.reset_index(name='n'), prior_games=prior_k
                 )
                 current_season_pace = self._compute_team_pace(games_before)
 
@@ -840,6 +1144,9 @@ class TempoPredictor(IsotonicPredictor):
 
             _flush_pending_log_entries()
 
+        if solve_cache_path and solve_cache_dirty:
+            with open(solve_cache_path, 'wb') as handle:
+                pickle.dump(solve_cache, handle)
         return pd.DataFrame(training_rows)
 
     def train(self, calibration_year):
@@ -904,25 +1211,26 @@ class TempoPredictor(IsotonicPredictor):
         if prior_season is None:
             prior_season = current_season - 1
 
-        current_season_game_df = feeds.load_team_box_numpy(current_season)
+        current_season_game_df = self._load_box(current_season)
         if as_of_date is not None:
             current_season_game_df = current_season_game_df[
                 pd.to_datetime(current_season_game_df['game_date']) <= pd.Timestamp(as_of_date)
             ]
-        prior_season_game_df    = feeds.load_team_box_numpy(prior_season)
+        prior_season_game_df    = self._load_box(prior_season)
 
         prior_rating_df   = self._rating_input(prior_season_game_df)
         current_rating_df = self._rating_input(current_season_game_df)
         prior_season_efficiency = calculate_adjusted_efficiency(
             prior_rating_df, calculate_efficiency(prior_rating_df)
         )
+        prior_season_efficiency, prior_k = self._prior_adjustment(prior_season_efficiency, current_season)
         current_raw_efficiency  = calculate_adjusted_efficiency(
             current_rating_df, calculate_efficiency(current_rating_df)
         )
         game_counts_per_team = current_season_game_df.groupby('team_id').size()
         blended_efficiency   = blend_efficiency_ratings(
             current_raw_efficiency, prior_season_efficiency,
-            game_counts_per_team.reset_index(name='n')
+            game_counts_per_team.reset_index(name='n'), prior_games=prior_k
         )
         self.current_efficiency = blended_efficiency.set_index('team_id')
         self.team_lookup = (
@@ -950,8 +1258,8 @@ class TempoPredictor(IsotonicPredictor):
             )
 
         # Home-court advantage
-        prior_home_adv_dict, prior_league_home_adv = self._compute_home_adv(prior_season_game_df)
-        curr_home_adv_dict,  curr_league_home_adv  = self._compute_home_adv(current_season_game_df)
+        prior_home_adv_dict, prior_league_home_adv = self._compute_home_adv(prior_season_game_df, fix=self.HOME_ADV_FIX)
+        curr_home_adv_dict,  curr_league_home_adv  = self._compute_home_adv(current_season_game_df, fix=self.HOME_ADV_FIX)
         self._league_home_adv = curr_league_home_adv
         for team_id in set(prior_home_adv_dict) | set(curr_home_adv_dict):
             n = game_counts_per_team.get(team_id, 0)

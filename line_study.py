@@ -46,6 +46,41 @@ OUT_DIR = os.path.join(ROOT, "raw_hogcharts", "data", "line_study")
 BOOK_ORDER = ["DraftKings", "ESPN BET", "consensus"]
 
 
+SOLVE_DIR = os.path.join(OUT_DIR, "solves")
+
+
+def _frame_job(args):
+    predictor, season, refit, path = args
+    warnings.filterwarnings("ignore")
+    frame = predictor._walk_forward_frame(season, season - 1, refit=refit)
+    frame.to_parquet(path, index=False)
+    return season, refit
+
+
+def cached_frames(predictor, refresh, tag="", jobs=1):
+    """{refit: {season: frame}} for month + day, building missing ones `jobs` at a time."""
+    todo = []
+    for refit in ("month", "day"):
+        for season in SEASONS:
+            path = os.path.join(OUT_DIR, f"walk_{refit}{tag}_{season}.parquet")
+            if refresh or not os.path.exists(path):
+                todo.append((predictor, season, refit, path))
+    if todo:
+        print(f"  building {len(todo)} walk-forward frames ({jobs} at a time)…", flush=True)
+        if jobs > 1:
+            from concurrent.futures import ProcessPoolExecutor
+            # day frames first: they're the long ones
+            todo.sort(key=lambda job: job[2] != "day")
+            with ProcessPoolExecutor(max_workers=jobs) as pool:
+                for season, refit in pool.map(_frame_job, todo):
+                    print(f"    done {season} {refit}", flush=True)
+        else:
+            for job in todo:
+                _frame_job(job)
+    return {refit: {s: pd.read_parquet(os.path.join(OUT_DIR, f"walk_{refit}{tag}_{s}.parquet"))
+                    for s in SEASONS} for refit in ("month", "day")}
+
+
 def cached_frame(predictor, season, refit, refresh, tag=""):
     path = os.path.join(OUT_DIR, f"walk_{refit}{tag}_{season}.parquet")
     if os.path.exists(path) and not refresh:
@@ -81,14 +116,45 @@ def season_conferences(season):
         return {t["team_id"]: t.get("conf") for t in json.load(handle)["team_stats"]}
 
 
-def build(refresh=False, three_point=None):
-    """three_point=(k_off, k_def) rates teams on 3P%-regressed scores (experimental)."""
+def build(refresh=False, three_point=None, prior_games=None, returning=None, fast=False,
+          neutral_fix=False, home_adv_fix=False):
+    """three_point=(k_off, k_def) rates teams on 3P%-regressed scores.
+    prior_games: k in last season's weight k/(n+k) (default 7).
+    returning: {"floor": f, "scale_k": bool} — regress last season by roster turnover."""
     os.makedirs(OUT_DIR, exist_ok=True)
     predictor = TempoPredictor()
     predictor.THREE_PT_REGRESSION = three_point
+    predictor.NEUTRAL_FIX, predictor.HOME_ADV_FIX = neutral_fix, home_adv_fix
+    if fast:
+        predictor.SOLVE_CACHE_DIR = SOLVE_DIR
+    if prior_games is not None:
+        predictor.PRIOR_GAMES = prior_games
+    predictor.RETURNING_PRIOR = returning
     tag = f"_3pt{three_point[0]}-{three_point[1]}" if three_point else ""
-    monthly = {s: cached_frame(predictor, s, "month", refresh, tag) for s in SEASONS}
-    daily = {s: cached_frame(predictor, s, "day", refresh, tag) for s in SEASONS}
+    if prior_games is not None:
+        tag += f"_k{prior_games:g}"
+    tag += ("_neu" if neutral_fix else "") + ("_hadv" if home_adv_fix else "")
+    if returning and returning.get("mode") == "projection":
+        tag += "_proj" + ("shift" if returning.get("shift_only") else "") + ("tr" if returning.get("transfers") else "")
+        tag += ("cap" if returning.get("transfer_cap") else "") + ("hist" if returning.get("history") else "") \
+             + ("elite" if returning.get("elite") else "")
+    elif returning:
+        tag += f"_ret{returning['floor']:g}" + ("k" if returning.get("scale_k") else "")
+    if fast:
+        if returning and returning.get("mode") == "projection":
+            # fill the projection's caches once here so workers don't each rebuild them
+            for s in SEASONS:
+                predictor._projection_coefs(exclude=s)
+        # class-level caches don't travel to worker processes; instance copies do
+        predictor._returning_cache = dict(TempoPredictor._returning_cache)
+        predictor._projection_rows = dict(TempoPredictor._projection_rows)
+        predictor._roster_cache = dict(TempoPredictor._roster_cache)
+        predictor._ratings_cache = dict(TempoPredictor._ratings_cache)
+        frames = cached_frames(predictor, refresh, tag, jobs=min(len(SEASONS) * 2, (os.cpu_count() or 2) - 1))
+        monthly, daily = frames["month"], frames["day"]
+    else:
+        monthly = {s: cached_frame(predictor, s, "month", refresh, tag) for s in SEASONS}
+        daily = {s: cached_frame(predictor, s, "day", refresh, tag) for s in SEASONS}
 
     games = []
     for season in SEASONS:
@@ -105,7 +171,9 @@ def build(refresh=False, three_point=None):
         day = daily[season].astype({"game_id": "int64", "team_id": "int64"})
         # One row per game, from ESPN's designated home team's side (the line's side).
         day = day.merge(sched, on="game_id").query("team_id == home_id").drop_duplicates("game_id")
-        feats = day[TempoPredictor.SPREAD_FEATURES]
+        feats = day[TempoPredictor.SPREAD_FEATURES].copy()
+        # The live site gives no home court at a neutral site; grade the same way.
+        feats.loc[day["neutral_site"].astype(bool).values, "home_court"] = 0.0
         home_margin = spread_m.predict(feats)
         book = pick_book(pd.read_parquet(odds_path))
         df = pd.DataFrame({
@@ -156,8 +224,33 @@ def main():
     parser.add_argument("--refresh", action="store_true", help="rebuild cached walk-forward frames")
     parser.add_argument("--three-point", nargs=2, type=int, metavar=("K_OFF", "K_DEF"),
                         help="experimental: rate teams on 3P%%-regressed scores (e.g. 600 5000)")
+    parser.add_argument("--prior-games", type=float, help="k in last season's weight k/(n+k); default 7")
+    parser.add_argument("--returning-floor", type=float,
+                        help="regress last season by roster turnover, keeping at least this share (0-1)")
+    parser.add_argument("--returning-scale-k", action="store_true",
+                        help="with --returning-floor: also shrink k by the kept share")
+    parser.add_argument("--fast", action="store_true",
+                        help="cache the in-season rating solves on disk (reused by every prior experiment) "
+                             "and build seasons in parallel")
+    parser.add_argument("--returning-projection", choices=["full", "shift", "transfers"],
+                        help="replace last season's rating with a returning-share projection fit on other seasons")
+    parser.add_argument("--transfer-cap", action="store_true",
+                        help="with --returning-projection transfers: cap incoming minutes at a full roster")
+    parser.add_argument("--neutral-fix", action="store_true", help="relabel neutral-site games from the schedule")
+    parser.add_argument("--home-adv-fix", action="store_true", help="league home edge over teams with home AND away games")
+    parser.add_argument("--history", action="store_true", help="add the rating from two seasons back")
+    parser.add_argument("--elite", action="store_true", help="add an above-average-program term")
     args = parser.parse_args()
-    df = build(refresh=args.refresh, three_point=tuple(args.three_point) if args.three_point else None)
+    returning = ({"floor": args.returning_floor, "scale_k": args.returning_scale_k}
+                 if args.returning_floor is not None else None)
+    if args.returning_projection:
+        returning = {"mode": "projection", "shift_only": args.returning_projection == "shift",
+                     "transfers": args.returning_projection == "transfers",
+                     "transfer_cap": 1.0 if args.transfer_cap else None,
+                     "history": args.history, "elite": args.elite}
+    df = build(refresh=args.refresh, three_point=tuple(args.three_point) if args.three_point else None,
+               prior_games=args.prior_games, returning=returning, fast=args.fast,
+               neutral_fix=args.neutral_fix, home_adv_fix=args.home_adv_fix)
     df = df.dropna(subset=["model_spread", "close_spread", "home_pts", "away_pts"])
     print(f"\nHog Charts model vs. historical lines — {df['season'].min()}–{df['season'].max()}, "
           f"{len(df):,} games")
