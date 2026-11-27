@@ -86,6 +86,17 @@ function fmtPct(v, decimals = 1) {
   return v != null ? (Number(v) * 100).toFixed(decimals) : "—";
 }
 
+// Default games filter as the season fills in (same rule as hoglib.season.scaled_min_games):
+// three games behind the leader, holding at LIVE_MIN_GAMES in the live season so
+// slower-scheduled teams aren't hidden; a finished season climbs to its full minimum.
+const LIVE_MIN_GAMES = 4;
+function scaledMinGames(fullMin, mostPlayed, live) {
+  if (!(mostPlayed > 0)) return fullMin;
+  let gate = Math.max(1, Math.floor(mostPlayed) - 3);
+  if (live) gate = Math.min(gate, LIVE_MIN_GAMES);
+  return Math.min(fullMin, gate);
+}
+
 // ?embed=1: this page is showing inside another page (the team page's tabs).
 // style.css hides the site chrome and the page's own team picker under .embedded.
 const EMBEDDED = new URLSearchParams(location.search).get("embed") === "1";

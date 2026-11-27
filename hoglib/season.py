@@ -53,18 +53,41 @@ def leader_games(games, rank=5):
     return sorted(games, reverse=True)[min(rank, len(games)) - 1]
 
 
-def scaled_min_games(full_min, most_played):
+# The live season's games gates stop rising here: three games behind the leader
+# climbs past what slower-scheduled teams have played and hides them.
+LIVE_MIN_GAMES = 4
+
+
+def is_live_season(override_env="OVERRIDE_SEASON"):
+    """True for the nightly's current season; False for a past-season regen."""
+    return not os.environ.get(override_env)
+
+
+def scaled_min_games(full_min, most_played, live=None):
     """Scale a games-played gate to how far the season has got.
 
     The full gates (20 team games, 5 for net ratings, ...) would blank the live
     season's tables for weeks after opening night. Early on the gate is three games
-    behind whoever has played the most; once that passes full_min, full_min applies,
-    so finished seasons are unaffected. site/player-stats.html and net-ratings.html
-    apply the same rule to their default filters.
+    behind whoever has played the most. In the live season it then holds at
+    LIVE_MIN_GAMES; a finished season (past-season regen) climbs to full_min.
+    live defaults to is_live_season(). site/js/common.js scaledMinGames applies the
+    same rule to the pages' default filters.
     """
     if not most_played > 0:      # also False for NaN (no games at all)
         return full_min
-    return min(full_min, max(1, int(most_played) - 3))
+    gate = max(1, int(most_played) - 3)
+    if is_live_season() if live is None else live:
+        gate = min(gate, LIVE_MIN_GAMES)
+    return min(full_min, gate)
+
+
+def needs_conference_gate(most_played):
+    """Whether builders should drop teams with no conference (non-D-I opponents).
+
+    A games gate only screens them out once it's above the ~4 games they play:
+    early in any season, and all of the live season (its gate holds at 4).
+    """
+    return is_live_season() or not most_played >= NON_D1_GATE_GAMES
 
 
 def scaled_min_possessions(full_min, most_played):

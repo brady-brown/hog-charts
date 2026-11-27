@@ -465,8 +465,7 @@ function markScopeButtons() {
 function applyScopeMinDefaults(scope) {
   // Same rule as hoglib.season.scaled_min_games, so early-season tables aren't blank.
   const mostGp = (PS[scope] || []).reduce((most, p) => Math.max(most, p.gp || 0), 0);
-  document.getElementById("min-gp").value  = mostGp
-    ? Math.min(SCOPE_MIN_GP[scope], Math.max(1, mostGp - 3)) : SCOPE_MIN_GP[scope];
+  document.getElementById("min-gp").value  = scaledMinGames(SCOPE_MIN_GP[scope], mostGp, SEASON === CUR_SEASON);
   document.getElementById("min-mpg").value = SCOPE_MIN_MPG[scope];
 }
 
@@ -742,9 +741,10 @@ let PCT_SORTED = {};   // curScope -> { statKey: ascending-sorted value array }
 // Percentiles are computed against players with a real sample only: at least
 // pctMinGp games AND PCT_MIN_MPG minutes per game. Players below that don't
 // enter the pool, and their own percentiles are blurred out (they'd be noise).
-// The games floor is PCT_MIN_GP once the season is underway; early on it scales
-// to three games behind the leader (hoglib.season.scaled_min_games), or nobody
-// qualifies and every percentile is blurred (Nov 2026: leader at 8 games).
+// The games floor scales to three games behind the leader, or nobody qualifies
+// early and every percentile is blurred (Nov 2026: leader at 8 games). In the live
+// season it holds at LIVE_MIN_GAMES (common.js scaledMinGames); a finished season
+// uses PCT_MIN_GP.
 const PCT_MIN_GP = 10, PCT_MIN_MPG = 10;
 const PCT_MIN_GP_BY_SCOPE = {};   // scope -> games floor used for that scope's pool
 const pctMinGp = () => PCT_MIN_GP_BY_SCOPE[curScope] ?? PCT_MIN_GP;
@@ -752,7 +752,7 @@ const pctQualified = p => (p.gp ?? 0) >= pctMinGp() && (p.mpg ?? 0) >= PCT_MIN_M
 
 function buildPctSorted(scope) {
   const mostGp = (PS[scope] || []).reduce((most, p) => Math.max(most, p.gp || 0), 0);
-  PCT_MIN_GP_BY_SCOPE[scope] = mostGp ? Math.min(PCT_MIN_GP, Math.max(1, mostGp - 3)) : PCT_MIN_GP;
+  PCT_MIN_GP_BY_SCOPE[scope] = scaledMinGames(PCT_MIN_GP, mostGp, SEASON === CUR_SEASON);
   const keys = new Set();
   // Table columns (for display mode) plus every filterable stat (for %ile thresholds).
   Object.values(COL_GROUPS).forEach(g => g.forEach(c => { if (!PCT_EXCLUDE.has(c.key)) keys.add(c.key); }));

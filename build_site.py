@@ -42,7 +42,8 @@ import requests
 # Season detection
 # ---------------------------------------------------------------------------
 from hoglib.season import (detect_season, scaled_min_games, scaled_min_possessions,
-                           leader_games, NON_D1_GATE_GAMES, MIN_BASELINE_SHOTS)
+                           leader_games, needs_conference_gate, NON_D1_GATE_GAMES,
+                           MIN_BASELINE_SHOTS)
 SEASON = detect_season()
 
 PROJECT_ROOT    = os.path.dirname(os.path.abspath(__file__))
@@ -222,7 +223,7 @@ else:
 # ===========================================================================
 net_ratings_df = net_ratings_raw_df.copy()
 net_ratings_df["conf"] = net_ratings_df["team"].map(conference_label_map).fillna("")
-if leader_games(net_ratings_df["games"]) < NON_D1_GATE_GAMES:
+if needs_conference_gate(leader_games(net_ratings_df["games"])):
     net_ratings_df = net_ratings_df[net_ratings_df["conf"] != ""].copy()
 if "wins" in net_ratings_df.columns and "losses" in net_ratings_df.columns:
     net_ratings_df["record"] = (
@@ -783,7 +784,10 @@ def build_player_stats_json(csv_path, onoff_csv_path, bios_dict=None,
     team_games = player_stats_df.groupby("team_id")["games_played"].transform("max")
     min_games_played = scaled_min_games(min_games_played, player_stats_df["games_played"].max())
     team_leader_games = leader_games(player_stats_df.groupby("team_id")["games_played"].max())
-    is_early_season = team_leader_games < NON_D1_GATE_GAMES
+    # The team gate is what screens out non-D-I teams; with it capped low in the live
+    # season, drop conference-less teams instead. Ungated calls (careers) unchanged.
+    is_early_season = (needs_conference_gate(team_leader_games) if min_team_games
+                       else team_leader_games < NON_D1_GATE_GAMES)
     min_team_games = scaled_min_games(min_team_games, team_leader_games)
     player_stats_df = player_stats_df[
         (not is_early_season or player_stats_df["conf."].fillna("").ne(""))
@@ -1226,7 +1230,7 @@ if os.path.exists(shots_parquet_path) and os.path.exists(box_score_parquet_path)
         if not team_display_name:
             continue
         # Shot Charts' min-games filter is too low to hide non-D-I teams this early.
-        if most_games_played < NON_D1_GATE_GAMES and team_display_name not in conference_label_map:
+        if needs_conference_gate(most_games_played) and team_display_name not in conference_label_map:
             continue
         zone_record_list = build_zone_records(team_shot_group)
         if zone_record_list:

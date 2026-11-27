@@ -425,8 +425,7 @@ async function reload() {
   earlyNote.hidden = !(SEASON === CUR_SEASON && typicalGames < EARLY_NOTE_GAMES);
   earlyNote.textContent = EARLY_NOTE_TEXT;
   const fullMin = SCOPE_MIN_GAMES[curScope] ?? 0;
-  document.getElementById("min-games").value = mostGames
-    ? Math.min(fullMin, Math.max(1, mostGames - 3)) : fullMin;
+  document.getElementById("min-games").value = scaledMinGames(fullMin, mostGames, SEASON === CUR_SEASON);
   if (!allRows.length) {
     document.getElementById("count-label").textContent = "Data not found for this season.";
     document.getElementById("ts-body").innerHTML = "";
